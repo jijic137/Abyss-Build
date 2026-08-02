@@ -453,121 +453,157 @@ canvas#game{
 
 /* ---------------- 封面 ---------------- */
 .screen-cover{ overflow:hidden; }
+/* 边缘暗角：增强纵深，盖在漩涡画布之上、内容之下 */
+.screen-cover::before{
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(ellipse 78% 72% at 50% 53%, transparent 36%, rgba(4,5,10,.5) 76%, rgba(3,4,8,.92) 100%);
+}
 .cover-inner{
-  position:absolute; top:5.5%; left:50%; transform:translateX(-50%);
-  z-index:3; width:min(860px,94vw);
+  position:absolute; top:6.5%; left:50%; transform:translateX(-50%);
+  z-index:3; width:min(880px,94vw);
   display:flex; flex-direction:column; align-items:center; text-align:center;
   padding:0 20px; pointer-events:none;
 }
 .cover-tag{
-  font-size:12px; letter-spacing:9px; color:#7f8bb0;
-  margin-bottom:20px; animation:tagFloat 4s ease-in-out infinite;
+  font-size:11px; letter-spacing:11px; color:#8da4d8;
+  margin-bottom:22px; text-transform:uppercase;
+  animation:tagFloat 5s ease-in-out infinite;
 }
-@keyframes tagFloat{ 0%,100%{opacity:.55; transform:translateY(0);} 50%{opacity:1; transform:translateY(-4px);} }
+@keyframes tagFloat{ 0%,100%{opacity:.5; transform:translateY(0);} 50%{opacity:1; transform:translateY(-4px);} }
 
 .screen-cover .game-title{
-  font-size:84px; letter-spacing:20px; margin:0; line-height:1.1;
-  background:linear-gradient(100deg,#ffffff 0%,#8fb4ff 34%,#b98bff 55%,#ffffff 78%);
-  background-size:220% 100%;
+  font-size:88px; letter-spacing:22px; margin:0; line-height:1.05; font-weight:900;
+  background:linear-gradient(100deg,#ffffff 0%,#cfe0ff 30%,#9ab6ff 50%,#d8c4ff 66%,#ffffff 92%);
+  background-size:240% 100%;
   -webkit-background-clip:text; background-clip:text; color:transparent;
-  text-shadow:0 0 70px #3f7dff50;
-  animation:titleShine 6s linear infinite;
+  text-shadow:0 0 60px rgba(120,160,255,.26);
+  animation:titleShine 9s linear infinite;
 }
-@keyframes titleShine{ 0%{background-position:0% 50%;} 100%{background-position:220% 50%;} }
-.screen-cover .game-sub{ margin:10px 0 0; }
+@keyframes titleShine{ 0%{background-position:0% 50%;} 100%{background-position:240% 50%;} }
+.screen-cover .game-sub{ margin:14px 0 0; letter-spacing:7px; font-size:12px; color:#7e88ad; }
 
 .cover-hook{ margin:14px 0 0; color:#9aa2c0; font-size:14px; letter-spacing:2px; max-width:520px; line-height:1.7; }
 
-/* 深渊入口：圆形传送门（对齐漩涡 / 深渊元素，去除方块感） */
+/* 深渊入口：同心裂隙传送门 */
 .abyss-core{
-  position:absolute; left:50%; top:55%; transform:translate(-50%,-50%);
-  z-index:2; --orbit-d:540px; --portal:158px;
+  position:absolute; left:50%; top:56%; transform:translate(-50%,-50%);
+  z-index:2; --orbit-d:560px; --portal:160px;
 }
 .btn-portal{
   position:relative;
   width:var(--portal); height:var(--portal); border-radius:50%;
+  border:none; background:transparent; cursor:pointer; padding:0;
   display:flex; align-items:center; justify-content:center;
-  background:radial-gradient(circle at 50% 38%, #20305a, #0a1020 72%);
-  border:2px solid #5b8cff; color:#eaf1ff; cursor:pointer;
-  box-shadow:0 0 34px #2b6cff66, inset 0 0 30px #2b6cff33;
-  transition:transform .16s, box-shadow .2s, border-color .2s;
+  transition:transform .25s cubic-bezier(.2,.7,.3,1);
 }
-.btn-portal:hover{
-  transform:scale(1.05);
-  border-color:#bcd4ff;
-  box-shadow:0 0 56px #2b6cffaa, inset 0 0 40px #3f7dff55;
+/* 环境呼吸辉光 */
+.btn-portal::before{
+  content:''; position:absolute; inset:-34%; border-radius:50%; z-index:-1; pointer-events:none;
+  background:radial-gradient(circle, rgba(70,130,255,.28), rgba(70,130,255,.08) 45%, transparent 68%);
+  filter:blur(14px);
+  animation:portalBreathe 5.5s ease-in-out infinite;
 }
-/* 旋转光环（传送门边缘的能量环） */
-.btn-portal .portal-ring{
-  position:absolute; inset:-9px; border-radius:50%; pointer-events:none;
-  background:conic-gradient(from 0deg, transparent 0 56%, #6f9bff 70%, #cfe0ff 80%, transparent 92%);
-  -webkit-mask:radial-gradient(circle, transparent 60%, #000 61%);
-          mask:radial-gradient(circle, transparent 60%, #000 61%);
-  filter:drop-shadow(0 0 6px #4a7dff88);
-  animation:portalSpin 7s linear infinite;
+@keyframes portalBreathe{ 0%,100%{ opacity:.7; transform:scale(.96); } 50%{ opacity:1; transform:scale(1.06); } }
+/* 旋转能量环（双环异向缓转，仪式感） */
+.portal-ring{ position:absolute; inset:0; border-radius:50%; pointer-events:none; }
+.portal-ring-a{
+  background:conic-gradient(from 0deg, transparent 0 58%, rgba(120,165,255,.9) 72%, #dcebff 80%, rgba(120,165,255,.45) 88%, transparent 96%);
+  -webkit-mask:radial-gradient(circle, transparent 63%, #000 64%);
+          mask:radial-gradient(circle, transparent 63%, #000 64%);
+  filter:drop-shadow(0 0 6px rgba(90,140,255,.7));
+  animation:portalSpin 14s linear infinite;
 }
-.portal-core{ position:relative; z-index:1; display:flex; align-items:center; justify-content:center; }
-.portal-label{ font-size:21px; font-weight:900; letter-spacing:5px; text-shadow:0 0 18px #6f9bff, 0 0 8px #cfe0ff; }
+.portal-ring-b{
+  inset:14px;
+  background:conic-gradient(from 180deg, transparent 0 70%, rgba(150,190,255,.7) 82%, transparent 92%);
+  -webkit-mask:radial-gradient(circle, transparent 70%, #000 71%);
+          mask:radial-gradient(circle, transparent 70%, #000 71%);
+  opacity:.7;
+  animation:portalSpinRev 22s linear infinite;
+}
 @keyframes portalSpin{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
+@keyframes portalSpinRev{ from{ transform:rotate(0); } to{ transform:rotate(-360deg); } }
+/* 中心“深渊之窗” */
+.portal-core{
+  position:relative; z-index:2;
+  width:62%; height:62%; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle at 50% 40%, #0c1830 0%, #060b16 72%);
+  border:1px solid rgba(150,190,255,.45);
+  box-shadow:inset 0 0 26px rgba(70,130,255,.4), 0 0 26px rgba(60,120,255,.22);
+  transition:box-shadow .25s, border-color .25s, transform .25s;
+}
+.portal-label{
+  font-size:20px; font-weight:800; letter-spacing:6px; color:#e3ecff;
+  text-shadow:0 0 18px rgba(120,165,255,.9), 0 0 6px rgba(220,235,255,.6);
+}
+/* 悬停：裂隙张开 */
+.btn-portal:hover{ transform:scale(1.06); }
+.btn-portal:hover .portal-core{
+  border-color:rgba(200,222,255,.8);
+  box-shadow:inset 0 0 38px rgba(95,160,255,.65), 0 0 52px rgba(85,150,255,.5);
+}
+.btn-portal:hover .portal-ring-a{ filter:drop-shadow(0 0 10px rgba(120,170,255,1)); }
+.btn-portal:active{ transform:scale(1.02); }
 
-/* 记录 / 成就 / 存档 / 设置 / 继续：环绕漩涡的气泡 */
+/* 记录 / 成就 / 存档 / 设置 / 继续：环绕裂隙的符文节点 */
 .orbit-field{
   position:absolute; left:50%; top:50%; width:0; height:0;
   z-index:1; pointer-events:none;
 }
+/* 轨道：柔光环（非生硬虚线） */
 .orbit-path{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   width:var(--orbit-d); height:var(--orbit-d); border-radius:50%;
-  border:1px dashed #2b3a5e55;
+  border:1px solid rgba(130,170,255,.14);
+  box-shadow:0 0 36px rgba(60,120,255,.07), inset 0 0 30px rgba(60,120,255,.05);
+}
+.orbit-path.path2{
+  width:calc(var(--orbit-d) - 64px); height:calc(var(--orbit-d) - 64px);
+  border-color:rgba(130,170,255,.08); box-shadow:none;
 }
 .orbit-ring{
   position:absolute; left:0; top:0;
   width:var(--orbit-d); height:var(--orbit-d);
   margin-left:calc(var(--orbit-d) / -2); margin-top:calc(var(--orbit-d) / -2);
-  animation:orbitSpin 56s linear infinite;
+  animation:orbitSpin 72s linear infinite;
   animation-delay:var(--d,0s);
+  pointer-events:none;
+}
+/* 从中心延伸到节点的微光轨迹 */
+.orbit-ring::before{
+  content:''; position:absolute; left:50%; top:0; width:1px; height:50%;
+  transform:translateX(-50%);
+  background:linear-gradient(to top, rgba(80,130,255,0) 0%, rgba(110,160,255,.16) 100%);
   pointer-events:none;
 }
 .orbit-sat{
   position:absolute; top:0; left:50%;
-  animation:orbitCounter 56s linear infinite;
+  animation:orbitCounter 72s linear infinite;
   animation-delay:var(--d,0s);
 }
 .orbit-bubble{
   position:relative;
-  width:94px; height:94px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; text-align:center;
-  padding:4px;
-  font-size:12.5px; font-weight:700; letter-spacing:1px;
-  color:#dbe6ff;
-  text-shadow:0 0 10px #6f9bff, 0 0 4px #cfe0ff;
-  /* 光效：透亮核 + 柔光边 + 外发光（无生硬边框） */
-  background:radial-gradient(circle at 50% 42%, rgba(150,190,255,.22), rgba(70,120,235,.10) 52%, rgba(40,80,180,.04) 70%, transparent 76%);
-  border:1px solid rgba(150,185,255,.32);
-  box-shadow:0 0 22px 3px rgba(70,130,255,.40), inset 0 0 18px rgba(110,160,255,.38);
+  width:62px; height:62px; border-radius:50%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  font-size:11.5px; font-weight:700; letter-spacing:1px;
+  color:#cdd9ff; text-shadow:0 0 10px rgba(120,165,255,.8);
+  background:radial-gradient(circle at 50% 38%, rgba(150,190,255,.16), rgba(60,110,220,.08) 55%, rgba(30,60,140,.03) 74%, transparent 80%);
+  border:1px solid rgba(150,185,255,.3);
+  box-shadow:0 0 16px rgba(70,130,255,.28), inset 0 0 12px rgba(110,160,255,.22);
   cursor:pointer; pointer-events:auto;
-  transition:transform .18s, box-shadow .25s, border-color .25s, background .25s, color .25s;
+  transition:transform .2s cubic-bezier(.2,.7,.3,1), box-shadow .25s, border-color .25s, color .25s, background .25s;
 }
-/* 背后柔光晕（独立呼吸，不干扰悬停与自转） */
-.orbit-bubble::before{
-  content:''; position:absolute; inset:-6px; border-radius:50%; z-index:-1;
-  background:radial-gradient(circle, rgba(95,160,255,.40), transparent 68%);
-  filter:blur(9px);
-  animation:bubblePulse 3.4s ease-in-out infinite;
-  pointer-events:none;
-}
+.bubble-glyph{ font-size:16px; line-height:1; color:#a9c6ff; text-shadow:0 0 10px rgba(120,165,255,.9); opacity:.9; }
 .orbit-bubble:hover{
-  transform:scale(1.14);
+  transform:scale(1.16);
   color:#ffffff;
-  border-color:rgba(205,225,255,.7);
-  background:radial-gradient(circle at 50% 42%, rgba(185,215,255,.34), rgba(95,150,250,.18) 52%, transparent 75%);
-  box-shadow:0 0 40px 7px rgba(95,155,255,.72), inset 0 0 24px rgba(155,195,255,.6);
+  border-color:rgba(210,228,255,.7);
+  background:radial-gradient(circle at 50% 38%, rgba(185,215,255,.3), rgba(95,150,250,.18) 55%, transparent 80%);
+  box-shadow:0 0 30px rgba(95,155,255,.6), inset 0 0 18px rgba(155,195,255,.5);
 }
+.orbit-bubble:hover .bubble-glyph{ color:#eaf1ff; }
 .orbit-bubble.hidden{ display:none !important; }
-@keyframes bubblePulse{
-  0%,100%{ opacity:.45; transform:scale(.88); }
-  50%{ opacity:1; transform:scale(1.18); }
-}
 @keyframes orbitSpin{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
 @keyframes orbitCounter{ from{ transform:translate(-50%,-50%) rotate(0); } to{ transform:translate(-50%,-50%) rotate(-360deg); } }
 
@@ -628,19 +664,20 @@ canvas#game{
 
 /* 窄屏适配 */
 @media (max-width:980px){
-  .abyss-core{ --orbit-d:430px; --portal:134px; }
-  .orbit-bubble{ width:82px; height:82px; font-size:11.5px; }
-  .portal-label{ font-size:18px; letter-spacing:4px; }
+  .abyss-core{ --orbit-d:450px; --portal:138px; }
+  .orbit-bubble{ width:56px; height:56px; font-size:11px; }
+  .portal-label{ font-size:17px; letter-spacing:4px; }
+  .bubble-glyph{ font-size:14px; }
 }
 @media (max-width:680px){
   .screen-cover .game-title{ font-size:54px; letter-spacing:12px; }
   .screen-cover .game-sub{ letter-spacing:3px; }
-  .abyss-core{ top:56%; --orbit-d:340px; --portal:116px; }
-  .orbit-bubble{ width:72px; height:72px; font-size:11px; letter-spacing:.5px; }
+  .abyss-core{ top:57%; --orbit-d:344px; --portal:116px; }
+  .orbit-bubble{ width:50px; height:50px; font-size:10px; letter-spacing:.5px; }
   .cover-inner{ top:4%; }
 }
 @media (max-height:600px){
-  .abyss-core{ --orbit-d:360px; --portal:120px; top:56%; }
+  .abyss-core{ --orbit-d:380px; --portal:122px; top:57%; }
 }
 @media (max-width:880px){
   .sub-body{ max-height:70vh; }

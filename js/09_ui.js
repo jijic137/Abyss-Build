@@ -250,6 +250,7 @@
       this.hue = opt.hue || '#3f7dff';
       this.base = opt.speed || 1;
       this.alpha = (opt.alpha == null) ? 1 : opt.alpha;
+      this.coreBoost = opt.coreBoost || 1;
       this.parts = [];
       this.spin = Math.random() * Math.PI * 2;
       this.pulse = 0;
@@ -317,8 +318,8 @@
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, w, h);
       var gl = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.5);
-      gl.addColorStop(0, 'rgba(120,160,255,' + (0.16 + 0.22 * this.pulse) + ')');
-      gl.addColorStop(0.5, 'rgba(70,110,220,' + (0.06 + 0.10 * this.pulse) + ')');
+      gl.addColorStop(0, 'rgba(120,160,255,' + ((0.16 + 0.22 * this.pulse) * this.coreBoost) + ')');
+      gl.addColorStop(0.5, 'rgba(70,110,220,' + ((0.06 + 0.10 * this.pulse) * this.coreBoost) + ')');
       gl.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = gl;
       ctx.fillRect(0, 0, w, h);
@@ -355,7 +356,7 @@
     if (!UI._vortices[which]) {
       var cv = $('vortex' + (which === 'cover' ? 'Cover' : 'Wheel'));
       UI._vortices[which] = new Vortex(cv, which === 'cover'
-        ? { count: 230, hue: '#3f7dff', speed: 1.0, alpha: 0.95 }
+        ? { count: 230, hue: '#3f7dff', speed: 1.0, alpha: 0.95, coreBoost: 1.6 }
         : { count: 170, hue: '#6a4bd6', speed: 0.8, alpha: 0.8 });
     }
     return UI._vortices[which];

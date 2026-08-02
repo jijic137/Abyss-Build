@@ -73,10 +73,12 @@ function simWave(cfg, wave) {
   return { regMats, eb };
 }
 
-// 真实 dropLoot：普通怪 total = max(1, round(e.mat * m))，精英/BOSS 不缩放
+// 真实 dropLoot（10_game.js）为概率化掉落：每杀普通怪的【期望值】= e.mat × m，
+// 用「整数必掉 + 小数按概率补 1 材料包」实现，故不加每杀硬下限（否则经济压不下去）。
+// 精英/BOSS 不缩放，作为里程碑奖励。
 function waveTotal(sim, m) {
   let s = sim.eb;
-  for (const em of sim.regMats) s += Math.max(1, Math.round(em * m));
+  for (const em of sim.regMats) s += em * m;
   return s;
 }
 
@@ -89,17 +91,17 @@ let lo = 0.01, hi = 1.0;
 for (let k = 0; k < 48; k++) {
   const mid = (lo + hi) / 2;
   const tot = neu.reduce((s, w) => s + waveTotal(w, mid), 0);
-  if (tot > oldTot) lo = mid; else hi = mid;
+  // tot 随 m 单调递增：tot>目标 ⇒ m 偏大 ⇒ 收上限；否则收下限
+  if (tot > oldTot) hi = mid; else lo = mid;
 }
 const MAT_MUL = (lo + hi) / 2;
 
-console.log('方案 B（floor 感知）：普通怪 ×MAT_MUL，精英/BOSS 不缩放');
+console.log('方案（期望值模型，匹配真实概率化 dropLoot）：普通怪 ×MAT_MUL，精英/BOSS 不缩放');
 console.log('波次 |   旧材料 |  新材料 | ×MAT_MUL后 | 偏差%');
 console.log('-----+---------+---------+------------+------');
 let maxDev = 0;
 for (let i = 0; i < 20; i++) {
   const adj = waveTotal(neu[i], MAT_MUL);
-  const dev = (adj - old[i].total ? (adj - oldTot) : 0); // placeholder
   const devPct = (adj - waveTotal(old[i], 1)) / waveTotal(old[i], 1) * 100;
   maxDev = Math.max(maxDev, Math.abs(devPct));
   console.log(

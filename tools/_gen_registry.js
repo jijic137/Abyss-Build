@@ -8,7 +8,7 @@ const vm = require('vm');
 const path = require('path');
 
 const ROOT = __dirname;
-const FILES = ['js/00_util.js', 'js/05_enemies.js', 'js/04_weapons.js', 'js/03_items.js', 'js/02_stats.js'];
+const FILES = ['../js/00_util.js', '../js/05_enemies.js', '../js/04_weapons.js', '../js/03_items.js', '../js/02_stats.js'];
 
 const sandbox = {};
 sandbox.window = sandbox;
@@ -166,7 +166,7 @@ md += '- **调平衡**：05_enemies.js 的 waveScale 与敌人基础值；精英
 md += '- **改完后**：node --check 各文件 → 重跑 _gen_registry.js 刷新本表 → 追加变更日志。\n\n';
 
 md += '<!--CHANGELOG_START-->\n';
-const CL_PATH = path.join(ROOT, 'content_registry.md');
+const CL_PATH = path.join(ROOT, '..', 'docs', 'content_registry.md');
 if (fs.existsSync(CL_PATH)) {
   const prev = fs.readFileSync(CL_PATH, 'utf8');
   const m = prev.match(/<!--CHANGELOG_START-->([\s\S]*?)<!--CHANGELOG_END-->/);

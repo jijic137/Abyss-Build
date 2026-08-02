@@ -196,7 +196,7 @@
      使每波总材料≈旧配置（由 _calib_econ.js 无头模拟测得）。
      应用方式见 10_game.js dropLoot：普通怪走期望= e.mat*MAT_MUL 的概率化掉落；
      精英/BOSS 为里程碑奖励，不缩放（保持原设计）。 */
-  G.MAT_MUL = 0.493;
+  G.MAT_MUL = 0.494;
 
   /** 从波次池里按权重抽一个敌人 id */
   G.rollEnemy = function (wave) {

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>深渊构筑 · 音效试听台</title>
+<style>
+  :root{
+    --bg:#0e0f17; --panel:#171a26; --panel2:#1f2333; --line:#2a2f44;
+    --txt:#e6e9ff; --sub:#9aa3c7; --acc:#7d6bff; --acc2:#3b2f8c; --ok:#4fd6a0; --warn:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a1d2e,#0e0f17);
+       color:var(--txt);font:15px/1.5 "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+       min-height:100vh;padding:28px 16px 60px}
+  .wrap{max-width:880px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 4px;letter-spacing:1px}
+  .tip{color:var(--sub);margin:0 0 22px;font-size:13px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 20px;margin-bottom:18px}
+  .card h2{font-size:14px;margin:0 0 14px;color:var(--sub);text-transform:uppercase;letter-spacing:2px;font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+  button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--txt);
+         padding:11px 10px;border-radius:10px;font-size:14px;transition:.12s;display:flex;
+         flex-direction:column;align-items:center;gap:2px}
+  button:hover{border-color:var(--acc);background:#262b40;transform:translateY(-1px)}
+  button:active{transform:translateY(0);background:var(--acc2)}
+  button .zh{font-size:12px;color:var(--sub)}
+  button.primary{background:linear-gradient(180deg,#7d6bff,#5a48d6);border-color:#8b7cff;color:#fff;font-weight:600}
+  button.primary:hover{filter:brightness(1.08)}
+  button.danger{border-color:#5a2230;color:#ff9d9d}
+  button.danger:hover{background:#3a1a22}
+  .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .row label{color:var(--sub);min-width:84px;font-size:13px}
+  input[type=range]{flex:1;min-width:160px;accent-color:var(--acc)}
+  .panval{font-variant-numeric:tabular-nums;color:var(--ok);min-width:42px;text-align:right;font-size:13px}
+  .status{font-size:13px;color:var(--sub);margin-top:10px}
+  .status b{color:var(--ok)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;background:#20243a;border:1px solid var(--line);font-size:12px;color:var(--sub)}
+  .footer{color:var(--sub);font-size:12px;margin-top:8px;line-height:1.7}
+  code{background:#20243a;padding:1px 6px;border-radius:6px;color:#c9c9ff}
+  .demo-note{color:var(--sub);font-size:12px;margin:6px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>深渊构筑 · 音效试听台</h1>
+  <p class="tip">本页直接加载游戏里的 <code>js/12_audio.js</code> 合成引擎。点任意按钮即可试听（首次点击会解锁浏览器音频）。无需联网、无外部文件。</p>
+
+  <div class="card">
+    <h2>全部音效（15 个）</h2>
+    <div class="grid" id="sfxGrid"></div>
+    <p class="demo-note">提示：<b>开火 / 命中 / 暴击 / 击杀</b> 每次触发都有随机音高微调，连点能听出“非机械感”。</p>
+  </div>
+
+  <div class="card">
+    <h2>立体声定位</h2>
+    <div class="row">
+      <label>声像 Pan</label>
+      <input type="range" id="pan" min="-1" max="1" step="0.05" value="0">
+      <span class="panval" id="panVal">中 0.00</span>
+    </div>
+    <p class="demo-note">拖动滑块后点下面的按钮：负值=左耳，正值=右耳。俯视战斗里，左边挨打/右边开火就是这么定位的。</p>
+    <div class="row" id="panBtns" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <h2>音量 / 音乐</h2>
+    <div class="row">
+      <label>总音量</label>
+      <input type="range" id="vol" min="0" max="1" step="0.02" value="0.22">
+      <span class="panval" id="volVal">0.22</span>
+    </div>
+    <div class="row">
+      <label>音乐音量</label>
+      <input type="range" id="mvol" min="0" max="1" step="0.02" value="0.5">
+      <span class="panval" id="mvolVal">0.50</span>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button id="btnMusic" class="primary">▶ 播放 BGM（程序化芯片乐）</button>
+      <button id="btnMute">🔇 静音切换</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>状态</h2>
+    <div class="status" id="status">音频：<b id="actx">未解锁</b> ｜ <span class="pill" id="bpm">BGM 休止</span></div>
+    <p class="footer">
+      想听某音效在“战斗里”的感觉？打开游戏 <code>index.html</code> 直接玩即可，所有调用都走同一套引擎。<br>
+      接口：<code>G.Audio.sfx('fire', pan)</code> · <code>G.Audio.startMusic()</code> · <code>G.Audio.setVolume(v)</code>
+    </p>
+  </div>
+</div>
+
+<script src="js/12_audio.js"></script>
+<script>
+(function(){
+  var A = window.G && window.G.Audio;
+  if(!A){ document.getElementById('status').innerHTML='<span style="color:#ff6b6b">加载失败：未找到 G.Audio</span>'; return; }
+
+  var NAMES = [
+    ['fire','开火'], ['swing','挥击'], ['hit','命中'], ['crit','暴击'],
+    ['kill','击杀'], ['bossdie','BOSS亡'], ['pickup','拾取'], ['heal','治疗'],
+    ['wave','波次'], ['boss','BOSS现'], ['levelup','升级'], ['buy','购买'],
+    ['hurt','受伤'], ['death','死亡'], ['victory','胜利']
+  ];
+
+  var grid = document.getElementById('sfxGrid');
+  NAMES.forEach(function(n){
+    var b = document.createElement('button');
+    b.innerHTML = n[0] + '<span class="zh">'+n[1]+'</span>';
+    b.addEventListener('click', function(){ ensure(); A.sfx(n[0], curPan()); });
+    grid.appendChild(b);
+  });
+
+  // 立体声演示
+  var panBtns = document.getElementById('panBtns');
+  [['hit','左耳命中',-0.8],['hit','右耳命中',0.8],['crit','左暴击',-0.6],['crit','右暴击',0.6]]
+    .forEach(function(d){
+      var b = document.createElement('button');
+      b.innerHTML = d[1];
+      b.addEventListener('click', function(){ ensure(); A.sfx(d[0], d[2]); });
+      panBtns.appendChild(b);
+    });
+
+  var panEl = document.getElementById('pan'), panVal = document.getElementById('panVal');
+  function curPan(){ return parseFloat(panEl.value)||0; }
+  function fmtPan(p){
+    if(Math.abs(p)<0.02) return '中 '+p.toFixed(2);
+    return (p<0?'左 ':'右 ')+Math.abs(p).toFixed(2);
+  }
+  panEl.addEventListener('input', function(){ panVal.textContent = fmtPan(curPan()); });
+
+  // 音量
+  var vol = document.getElementById('vol'), volVal = document.getElementById('volVal');
+  vol.addEventListener('input', function(){ A.setVolume(parseFloat(vol.value)); volVal.textContent = parseFloat(vol.value).toFixed(2); });
+  var mvol = document.getElementById('mvol'), mvolVal = document.getElementById('mvolVal');
+  mvol.addEventListener('input', function(){ A.setMusicVolume(parseFloat(mvol.value)); mvolVal.textContent = parseFloat(mvol.value).toFixed(2); });
+
+  // 音乐
+  var musicOn = false, btnMusic = document.getElementById('btnMusic');
+  btnMusic.addEventListener('click', function(){
+    ensure();
+    if(!musicOn){ A.startMusic(); musicOn=true; btnMusic.textContent='⏸ 停止 BGM'; document.getElementById('bpm').textContent='BGM 播放中 · '+A._bpm+' BPM'; }
+    else { A.stopMusic(); musicOn=false; btnMusic.textContent='▶ 播放 BGM（程序化芯片乐）'; document.getElementById('bpm').textContent='BGM 休止'; }
+  });
+
+  document.getElementById('btnMute').addEventListener('click', function(){ A.toggleMute(); });
+
+  // 解锁
+  var unlocked = false;
+  function ensure(){
+    if(unlocked){ if(A.ctx && A.ctx.state==='suspended') A.ctx.resume(); return; }
+    A.unlock();
+    unlocked = true;
+    var st = document.getElementById('actx');
+    st.textContent = (A.ctx && A.ctx.state) ? A.ctx.state : '已解锁';
+    st.style.color = '#4fd6a0';
+  }
+  document.addEventListener('click', ensure, {once:false});
+})();
+</script>
+</body>
+</html>

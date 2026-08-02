@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>武器外观预览 · 深渊构筑</title>
+<style>
+  body { margin:0; background:#0e1018; color:#dfe4f2; font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  h1 { font-size:18px; padding:14px 18px 4px; margin:0; }
+  .hint { padding:0 18px 10px; color:#8b93a7; font-size:13px; line-height:1.6; max-width:880px; }
+  .cmp { display:flex; gap:28px; padding:10px 18px 4px; align-items:flex-end; }
+  .cmp .lab { font-size:12px; color:#8b93a7; text-align:center; margin-top:6px; }
+  .cmp canvas { background:#11141d; border:1px solid #2a3042; border-radius:8px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:12px; padding:14px 18px 40px; }
+  .card { background:#161a26; border:1px solid #2a3042; border-radius:10px; padding:10px; text-align:center; }
+  .card .prev { background:radial-gradient(circle at 50% 45%, #1d2333, #11141d); border-radius:8px; display:block; margin:0 auto; }
+  .card .icon { background:#11141d; border-radius:6px; margin-top:8px; display:block; }
+  .card .name { font-size:13px; font-weight:600; margin:6px 0 2px; }
+  .card .meta { font-size:11px; color:#8b93a7; }
+</style>
+</head>
+<body>
+<h1>武器外观与局内绘制预览</h1>
+<div class="hint">
+  上方左侧为「增强前」纯像素图标（<code>PX.getTint</code>），右侧为「增强后」武器图标（<code>weaponIcon</code>：柔和投影 + 同色辉光轮廓）。<br>
+  下方每张卡片含<strong>动态手持造型预览</strong>：角色 + 该武器按 kind 循环播放挥砍 / 突刺 / 开火后坐动画（与局内 <code>Player.draw</code> 同一套逻辑）。
+</div>
+<div class="cmp" id="cmp"></div>
+<div class="grid" id="grid"></div>
+
+<script src="js/00_util.js"></script>
+<script src="js/12_audio.js"></script>
+<script src="js/01_pixel.js"></script>
+<script src="js/02_stats.js"></script>
+<script src="js/03_items.js"></script>
+<script src="js/04_weapons.js"></script>
+<script>
+(function () {
+  var WS = G.WEAPONS || [];
+  function mkCanvas(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+
+  // —— 对比区（用第一把武器）——
+  var cmp = document.getElementById('cmp');
+  var sample = WS[0];
+  var before = G.PX.getTint(sample.icon, sample.col, 4);
+  var after = G.weaponIcon(sample, 0, 4);
+  [['增强前 (getTint)', before], ['增强后 (weaponIcon)', after]].forEach(function (p) {
+    var wrap = document.createElement('div');
+    var c = mkCanvas(before.width + 20, before.height + 20);
+    c.getContext('2d').drawImage(p[1], 10, 10);
+    wrap.appendChild(c);
+    var l = document.createElement('div'); l.className = 'lab'; l.textContent = p[0];
+    wrap.appendChild(l);
+    cmp.appendChild(wrap);
+  });
+
+  // —— 卡片网格 ——
+  var cards = [];
+  var IW = after.width, IH = after.height;
+  WS.forEach(function (def) {
+    var card = document.createElement('div'); card.className = 'card';
+    var prev = mkCanvas(72, 72); prev.className = 'prev'; card.appendChild(prev);
+    var icon = mkCanvas(IW, IH); icon.className = 'icon';
+    icon.getContext('2d').drawImage(G.weaponIcon(def, 0, 3), 0, 0);
+    card.appendChild(icon);
+    var nm = document.createElement('div'); nm.className = 'name'; nm.textContent = def.name || def.id;
+    var mt = document.createElement('div'); mt.className = 'meta';
+    mt.textContent = (def.kind || '') + ' · ' + (def.tags ? def.tags.join('/') : '');
+    card.appendChild(nm); card.appendChild(mt);
+    document.getElementById('grid').appendChild(card);
+    cards.push({ def: def, ctx: prev.getContext('2d'), w: 72, h: 72 });
+  });
+
+  // —— 动画循环（与 Player.draw 武器段同逻辑）——
+  var charCv = G.PX.get('char_knight', 3);
+  function drawCard(o, t) {
+    var ctx = o.ctx, W = o.w, H = o.h;
+    ctx.clearRect(0, 0, W, H);
+    var cx = W / 2, cy = H / 2;
+    var bob = Math.sin(t * 3) * 1.4;
+    G.PX.draw(ctx, charCv, cx, cy + bob, {});
+    var def = o.def;
+    var ang = -Math.PI / 2 + Math.sin(t * 0.9) * 0.7;
+    var sw = 0;
+    var cyc = (t % 1.3) / 1.3;
+    if (def.kind === 'swing') sw = cyc < 0.5 ? 0.18 * (1 - cyc / 0.5) : 0;
+    else if (def.kind === 'thrust') sw = cyc < 0.5 ? 0.16 * (1 - cyc / 0.5) : 0;
+    else sw = cyc < 0.3 ? 0.07 : 0;
+    var a = ang, reach = 15, rot = a + Math.PI / 2;
+    if (def.kind === 'swing') {
+      var sp = sw > 0 ? (1 - sw / 0.18) : 0, half = (def.arc || 1.6) / 2;
+      a = a - half + sp * 2 * half; rot = a + Math.PI / 2; reach += 3;
+    } else if (def.kind === 'thrust') {
+      var tp = sw > 0 ? (1 - sw / 0.16) : 0;
+      reach += Math.sin(tp * Math.PI) * 16; rot = a + Math.PI / 2;
+    } else if (sw > 0) reach -= 5;
+    var wc = G.weaponIcon(def, 0, 2);
+    G.PX.draw(ctx, wc, cx + Math.cos(a) * reach, cy + Math.sin(a) * reach + bob, { rot: rot, alpha: 0.96 });
+  }
+  function loop(ts) {
+    var t = ts / 1000;
+    for (var i = 0; i < cards.length; i++) drawCard(cards[i], t + i * 0.13);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

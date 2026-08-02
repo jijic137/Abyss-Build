@@ -1,0 +1,13 @@
+# 依赖
+node_modules/
+
+# 本地日志 / 临时产物
+*.log
+.trash/
+
+# 助手内部数据（非游戏内容）
+.workbuddy/
+
+# 系统
+.DS_Store
+Thumbs.db

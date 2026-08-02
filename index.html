@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深渊构筑 · Abyss Build</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+  <canvas id="game"></canvas>
+
+  <!-- ============ 战斗 HUD ============ -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="hpbar">
+          <div class="hpbar-fill" id="hpFill"></div>
+          <div class="hpbar-text" id="hpText">100 / 100</div>
+        </div>
+        <div class="mini-stats">
+          <span class="chip chip-armor" id="chipArmor">护甲 0</span>
+          <span class="chip chip-dodge" id="chipDodge">闪避 0%</span>
+          <span class="chip chip-spd" id="chipSpd">速度 100%</span>
+        </div>
+      </div>
+
+      <div class="hud-center">
+        <div class="wave-label" id="waveLabel">第 1 波</div>
+        <div class="wave-timer" id="waveTimer">20</div>
+        <div class="wave-prog"><div class="wave-prog-fill" id="waveProg"></div></div>
+        <div class="wave-sub" id="waveSub">生存</div>
+        <div class="combo" id="comboLabel"></div>
+      </div>
+
+      <div class="hud-right">
+        <div class="mat-row"><span class="mat-icon"></span><span id="matText">0</span></div>
+        <div class="xpbar">
+          <div class="xpbar-fill" id="xpFill"></div>
+          <div class="xpbar-text" id="xpText">Lv.1</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-bottom">
+      <div id="statusBar" class="status-bar"></div>
+      <div id="weaponBar" class="weapon-bar"></div>
+      <div class="hint">WASD / 方向键 移动 &nbsp;·&nbsp; 武器自动攻击 &nbsp;·&nbsp; Tab 属性 &nbsp;·&nbsp; ESC 暂停</div>
+    </div>
+
+    <div id="bossBarWrap" class="boss-bar-wrap hidden">
+      <div class="boss-name" id="bossName">BOSS</div>
+      <div class="boss-bar"><div class="boss-bar-fill" id="bossFill"></div></div>
+    </div>
+
+    <div id="waveBanner" class="wave-banner"></div>
+  </div>
+
+  <!-- ============ 属性浮层 ============ -->
+  <div id="statPanel" class="stat-panel hidden">
+    <div class="stat-panel-title">角色属性</div>
+    <div id="statPanelBody" class="stat-panel-body"></div>
+  </div>
+
+  <!-- ============ 遮罩界面 ============ -->
+  <div id="overlay" class="overlay">
+
+    <!-- 标题 / 角色选择 -->
+    <section id="scrTitle" class="screen">
+      <h1 class="game-title">深渊构筑</h1>
+      <p class="game-sub">ABYSS&nbsp;BUILD &nbsp;— &nbsp;20 波 · 构筑 · 生存</p>
+      <div class="char-select" id="charSelect"></div>
+      <div class="title-foot">
+        <button class="btn btn-primary btn-lg" id="btnStart">开始游戏</button>
+        <button class="btn btn-lg" id="btnResumeRun">继续游戏</button>
+        <button class="btn" id="btnSettings">设置</button>
+        <div class="title-tip">提示：物品几乎都带负面属性，构筑的核心是让优点叠成体系、把缺点藏起来。</div>
+      </div>
+    </section>
+
+    <!-- 设置 -->
+    <section id="scrSettings" class="screen">
+      <h2 class="lv-title">设置</h2>
+      <div class="set-row">
+        <label>音量</label>
+        <input type="range" id="setVolume" min="0" max="1" step="0.02">
+        <span class="set-val" id="setVolumeVal"></span>
+      </div>
+      <div class="set-row">
+        <label>音乐音量</label>
+        <input type="range" id="setMusic" min="0" max="1" step="0.02">
+        <span class="set-val" id="setMusicVal"></span>
+      </div>
+      <div class="set-row">
+        <label>背景音乐</label>
+        <label class="switch"><input type="checkbox" id="setBgm"><span class="track"></span></label>
+        <span class="set-val" id="setBgmVal"></span>
+      </div>
+      <div class="set-row">
+        <label>震屏强度</label>
+        <input type="range" id="setShake" min="0" max="1" step="0.05">
+        <span class="set-val" id="setShakeVal"></span>
+      </div>
+      <div class="pause-btns">
+        <button class="btn btn-primary" id="btnSettingsBack">返回</button>
+      </div>
+    </section>
+
+    <!-- 商店 -->
+    <section id="scrShop" class="screen shop-screen">
+      <div class="shop-head">
+        <div class="shop-head-l">
+          <div class="shop-title">商店</div>
+          <div class="shop-wave" id="shopWave">第 1 波结束</div>
+        </div>
+        <div class="shop-head-r">
+          <div class="shop-mat"><span class="mat-icon"></span><span id="shopMat">0</span></div>
+          <button class="btn btn-reroll" id="btnReroll">重掷 <span id="rerollCost">3</span></button>
+          <button class="btn btn-primary" id="btnNextWave">进入下一波 →</button>
+        </div>
+      </div>
+
+      <div class="shop-body">
+        <div class="shop-cards" id="shopCards"></div>
+        <aside class="shop-side">
+          <div class="side-block">
+            <div class="side-title">武器 <span id="wpnCount" class="dim">0/6</span></div>
+            <div class="inv-grid" id="invWeapons"></div>
+          </div>
+          <div class="side-block">
+            <div class="side-title">物品 <span id="itemCount" class="dim">0</span></div>
+            <div class="inv-grid" id="invItems"></div>
+          </div>
+          <div class="side-block flex1">
+            <div class="side-title">属性</div>
+            <div class="side-stats" id="sideStats"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 升级 -->
+    <section id="scrLevel" class="screen level-screen">
+      <h2 class="lv-title">等级提升！</h2>
+      <p class="lv-sub" id="lvSub">Lv.2 — 选择一项强化</p>
+      <div class="lv-options" id="lvOptions"></div>
+    </section>
+
+    <!-- 暂停 -->
+    <section id="scrPause" class="screen">
+      <h2 class="lv-title">已暂停</h2>
+      <div class="pause-btns">
+        <button class="btn btn-primary" id="btnResume">继续</button>
+        <button class="btn" id="btnPauseSettings">设置</button>
+        <button class="btn" id="btnQuit">放弃本局</button>
+      </div>
+    </section>
+
+    <!-- 结算 -->
+    <section id="scrResult" class="screen">
+      <h1 class="result-title" id="resultTitle">你倒下了</h1>
+      <p class="result-sub" id="resultSub"></p>
+      <div class="result-stats" id="resultStats"></div>
+      <button class="btn btn-primary btn-lg" id="btnRestart">再来一局</button>
+    </section>
+  </div>
+
+  <div id="tooltip" class="tooltip hidden"></div>
+</div>
+
+<script src="js/00_util.js"></script>
+<script src="js/12_audio.js"></script>
+<script src="js/01_pixel.js"></script>
+<script src="js/02_stats.js"></script>
+<script src="js/03_items.js"></script>
+<script src="js/04_weapons.js"></script>
+<script src="js/05_enemies.js"></script>
+<script src="js/06_entities.js"></script>
+<script src="js/07_player.js"></script>
+<script src="js/07b_enemy.js"></script>
+<script src="js/08_shop.js"></script>
+<script src="js/09_ui.js"></script>
+<script src="js/10_game.js"></script>
+<script src="js/11_main.js"></script>
+</body>
+</html>

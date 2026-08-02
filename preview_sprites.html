@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>BOSS / 精英 精灵预览</title>
+<style>
+  body { background:#0c0d12; color:#cfd3e0; font-family:system-ui,"Microsoft YaHei",sans-serif; margin:0; padding:24px; }
+  h1 { font-size:18px; font-weight:600; }
+  .grid { display:flex; flex-wrap:wrap; gap:18px; margin-top:16px; }
+  .card { background:#15171f; border:1px solid #2a2d3a; border-radius:10px; padding:14px; width:200px; text-align:center; }
+  .card canvas { image-rendering:pixelated; background:#0a0b10; border-radius:6px; }
+  .name { margin-top:10px; font-size:14px; color:#e8ebf5; }
+  .desc { margin-top:4px; font-size:12px; color:#8b90a3; line-height:1.4; }
+  .tip { color:#6f7488; font-size:12px; margin-top:8px; }
+</style>
+</head>
+<body>
+  <h1>深渊构筑 · BOSS / 精英 像素精灵预览</h1>
+  <div class="tip">以下为按游戏内缩放（sc）渲染的实际精灵，来自 js/01_pixel.js。</div>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    // 提供全局 G，供 01_pixel.js 挂载
+    window.G = {};
+  </script>
+  <script src="js/01_pixel.js"></script>
+  <script>
+    var list = [
+      { id:'boss_behemoth', sc:5, name:'腐化巨兽', desc:'多眼 · 獠牙 · 犄角 · 腐化(绿)' },
+      { id:'boss_abyss',    sc:5, name:'深渊之主', desc:'王冠 · 发光核心 · 触手' },
+      { id:'el_ironclad',   sc:4, name:'精英·铁卫', desc:'重甲 · 巨盾(十字)' },
+      { id:'el_butcher',    sc:4, name:'精英·血屠', desc:'血红 · 獠牙 · 滴血' },
+      { id:'el_hexer',      sc:4, name:'精英·术法者', desc:'兜帽 · 法球' },
+      { id:'el_brood',      sc:4, name:'精英·孵化者', desc:'孵母 · 卵' },
+      { id:'el_reaper',     sc:4, name:'精英·收割者', desc:'兜帽 · 镰刀' }
+    ];
+    var grid = document.getElementById('grid');
+    list.forEach(function (s) {
+      var cv = G.PX.get(s.id, s.sc);
+      var card = document.createElement('div');
+      card.className = 'card';
+      var c = document.createElement('canvas');
+      c.width = cv.width; c.height = cv.height;
+      var ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(cv, 0, 0);
+      var n = document.createElement('div'); n.className='name'; n.textContent = s.name;
+      var d = document.createElement('div'); d.className='desc'; d.textContent = s.desc;
+      card.appendChild(c); card.appendChild(n); card.appendChild(d);
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>

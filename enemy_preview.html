@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深渊构筑 · 敌人外观预览</title>
+<style>
+  :root { --bg:#0e1018; --card:#171a26; --line:#2a2f42; --txt:#dfe4f5; --sub:#8b93b0; --acc:#7fd8ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+  header { padding:18px 22px; border-bottom:1px solid var(--line); }
+  h1 { margin:0 0 4px; font-size:19px; }
+  .tip { color:var(--sub); font-size:13px; }
+  .wrap { padding:18px 22px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .nm { font-size:14px; font-weight:600; }
+  .meta { font-size:11px; color:var(--sub); }
+  .stage { background:#0a0c12; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    width:100%; height:120px; position:relative; overflow:hidden; }
+  .stage.big { height:150px; }
+  canvas { image-rendering:pixelated; }
+  .row { display:flex; gap:10px; width:100%; }
+  .row .stage { height:88px; }
+  .lbl { font-size:10px; color:var(--sub); text-align:center; margin-top:2px; }
+  .col { flex:1; display:flex; flex-direction:column; align-items:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>深渊构筑 · 普通敌人外观预览</h1>
+  <div class="tip">全部普通怪已重绘到 14~16px 网格（放大 ~1.5×），并同步加厚命中半径 r。下方左为「局内实际尺寸 ×3」，右为「放大查看 ×7」以便检查辨识度。</div>
+</header>
+<div class="wrap">
+  <div class="grid" id="grid"></div>
+</div>
+
+<script src="js/00_util.js"></script>
+<script src="js/01_pixel.js"></script>
+<script>
+  // 普通怪：精灵名 -> 显示名（含命中半径 r，局内 ×3 像素）
+  var LIST = [
+    ['e_worm','腐虫',15], ['e_bat','尖啸蝠',14], ['e_slime','裂胶怪',17], ['e_slime','小裂胶',11],
+    ['e_skeleton','枯骨兵',15], ['e_beetle','铁甲虫',18], ['e_eye','窥视者',16], ['e_spider','跃蛛',15],
+    ['e_wraith','游魂',16], ['e_bomber','爆弹虫',16], ['e_warlock','邪术师',17], ['e_stone','石傀',21],
+    ['e_charger','犀角兽',20], ['e_swarmling','虫群',10], ['e_mimic','拟态箱',16], ['e_gargoyle','石像鬼',19],
+    ['e_hex_archer','咒术弓手',16], ['e_void_horror','虚空恐魔',16], ['e_glutton','贪食体',18],
+    ['e_mite','噬螨',10], ['e_crystal','寒晶',16], ['e_ogre','石拳魔',19]
+  ];
+
+  function drawTo(canvas, name, scale) {
+    var cv = G.PX.get(name, scale);
+    canvas.width = cv.width; canvas.height = cv.height;
+    var c = canvas.getContext('2d');
+    c.clearRect(0,0,canvas.width,canvas.height);
+    c.drawImage(cv, 0, 0);
+  }
+
+  var grid = document.getElementById('grid');
+  LIST.forEach(function (it) {
+    var name = it[0], disp = it[1], r = it[2];
+    var card = document.createElement('div'); card.className = 'card';
+    var nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = disp;
+    var meta = document.createElement('div'); meta.className = 'meta';
+    meta.textContent = '半径 r=' + r + ' · 局内 ' + (14*3) + '~' + (16*3) + 'px';
+
+    // 局内实际尺寸
+    var stageA = document.createElement('div'); stageA.className = 'stage';
+    var cA = document.createElement('canvas'); drawTo(cA, name, 3); stageA.appendChild(cA);
+    var lbA = document.createElement('div'); lbA.className = 'lbl'; lbA.textContent = '局内 ×3';
+
+    // 放大查看
+    var stageB = document.createElement('div'); stageB.className = 'stage big';
+    var cB = document.createElement('canvas'); drawTo(cB, name, 7); stageB.appendChild(cB);
+    var lbB = document.createElement('div'); lbB.className = 'lbl'; lbB.textContent = '放大 ×7';
+
+    card.appendChild(nm); card.appendChild(meta);
+    card.appendChild(stageA); card.appendChild(lbA);
+    card.appendChild(stageB); card.appendChild(lbB);
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>

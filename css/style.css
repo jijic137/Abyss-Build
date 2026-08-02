@@ -454,10 +454,10 @@ canvas#game{
 /* ---------------- 封面 ---------------- */
 .screen-cover{ overflow:hidden; }
 .cover-inner{
-  position:relative; z-index:1;
-  width:min(840px,94vw);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; padding:28px;
+  position:absolute; top:5.5%; left:50%; transform:translateX(-50%);
+  z-index:3; width:min(860px,94vw);
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  padding:0 20px; pointer-events:none;
 }
 .cover-tag{
   font-size:12px; letter-spacing:9px; color:#7f8bb0;
@@ -476,35 +476,98 @@ canvas#game{
 @keyframes titleShine{ 0%{background-position:0% 50%;} 100%{background-position:220% 50%;} }
 .screen-cover .game-sub{ margin:10px 0 0; }
 
-.cover-actions{ margin-top:40px; display:flex; flex-direction:column; align-items:center; gap:18px; }
 .cover-hook{ margin:14px 0 0; color:#9aa2c0; font-size:14px; letter-spacing:2px; max-width:520px; line-height:1.7; }
-.cover-menu{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
-.cover-menu .btn{ font-size:13px; padding:8px 16px; letter-spacing:1px; }
-.btn-explore{
-  font-size:22px; letter-spacing:8px; padding:16px 54px;
-  position:relative; display:inline-flex; align-items:center; gap:12px;
-  color:#eaf1ff;
-  background:linear-gradient(180deg,#3a7bff,#1f49b8);
-  border:1px solid #7da6ff;
-  box-shadow:0 3px 0 #143a8a, 0 0 30px #2b6cff66;
-  animation:explorePulse 2.4s ease-in-out infinite;
+
+/* 深渊入口：圆形传送门（对齐漩涡 / 深渊元素，去除方块感） */
+.abyss-core{
+  position:absolute; left:50%; top:55%; transform:translate(-50%,-50%);
+  z-index:2; --orbit-d:540px; --portal:158px;
 }
-.btn-explore:hover{ background:linear-gradient(180deg,#5290ff,#2a5bd6); border-color:#bcd4ff; transform:translateY(-2px); }
-.btn-explore::before, .btn-explore::after{ border-color:#bcd4ff; }
-@keyframes explorePulse{
-  0%,100%{ box-shadow:0 3px 0 #143a8a, 0 0 22px #2b6cff44; }
-  50%{ box-shadow:0 3px 0 #143a8a, 0 0 48px #2b6cff88; }
+.btn-portal{
+  position:relative;
+  width:var(--portal); height:var(--portal); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle at 50% 38%, #20305a, #0a1020 72%);
+  border:2px solid #5b8cff; color:#eaf1ff; cursor:pointer;
+  box-shadow:0 0 34px #2b6cff66, inset 0 0 30px #2b6cff33;
+  transition:transform .16s, box-shadow .2s, border-color .2s;
 }
-/* 进入深渊的向下箭头（轻浮动，明确「下沉」而非加载圈） */
-.explore-glyph{
+.btn-portal:hover{
+  transform:scale(1.05);
+  border-color:#bcd4ff;
+  box-shadow:0 0 56px #2b6cffaa, inset 0 0 40px #3f7dff55;
+}
+/* 旋转光环（传送门边缘的能量环） */
+.btn-portal .portal-ring{
+  position:absolute; inset:-9px; border-radius:50%; pointer-events:none;
+  background:conic-gradient(from 0deg, transparent 0 56%, #6f9bff 70%, #cfe0ff 80%, transparent 92%);
+  -webkit-mask:radial-gradient(circle, transparent 60%, #000 61%);
+          mask:radial-gradient(circle, transparent 60%, #000 61%);
+  filter:drop-shadow(0 0 6px #4a7dff88);
+  animation:portalSpin 7s linear infinite;
+}
+.portal-core{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:10px; }
+.portal-label{ font-size:21px; font-weight:900; letter-spacing:5px; text-shadow:0 0 18px #6f9bff; }
+/* 向下箭头（轻浮动，象征「沉入深渊」而非加载圈） */
+.portal-glyph{
   width:0; height:0;
-  border-left:7px solid transparent; border-right:7px solid transparent;
-  border-top:11px solid #cfe0ff;
+  border-left:8px solid transparent; border-right:8px solid transparent;
+  border-top:12px solid #cfe0ff;
   animation:glyphBob 1.6s ease-in-out infinite;
 }
+@keyframes portalSpin{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
 @keyframes glyphBob{ 0%,100%{ transform:translateY(-2px); } 50%{ transform:translateY(3px); } }
-.cover-secondary{ display:flex; gap:14px; }
-.screen-cover .title-tip{ margin-top:34px; color:#6b728f; max-width:520px; }
+
+/* 记录 / 成就 / 存档 / 设置 / 继续：环绕漩涡的气泡 */
+.orbit-field{
+  position:absolute; left:50%; top:50%; width:0; height:0;
+  z-index:1; pointer-events:none;
+}
+.orbit-path{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:var(--orbit-d); height:var(--orbit-d); border-radius:50%;
+  border:1px dashed #2b3a5e55;
+}
+.orbit-ring{
+  position:absolute; left:0; top:0;
+  width:var(--orbit-d); height:var(--orbit-d);
+  margin-left:calc(var(--orbit-d) / -2); margin-top:calc(var(--orbit-d) / -2);
+  animation:orbitSpin 56s linear infinite;
+  animation-delay:var(--d,0s);
+  pointer-events:none;
+}
+.orbit-sat{
+  position:absolute; top:0; left:50%;
+  animation:orbitCounter 56s linear infinite;
+  animation-delay:var(--d,0s);
+}
+.orbit-bubble{
+  width:94px; height:94px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  padding:4px;
+  font-size:12.5px; font-weight:700; letter-spacing:1px; color:#dfe6ff;
+  background:radial-gradient(circle at 50% 34%, #1c2a48, #0b1322 76%);
+  border:1.5px solid #3c5390;
+  box-shadow:0 0 16px #2b6cff33, inset 0 0 14px #2b6cff22;
+  cursor:pointer; pointer-events:auto;
+  transition:transform .15s, box-shadow .2s, border-color .2s, background .2s;
+}
+.orbit-bubble:hover{
+  transform:scale(1.12);
+  border-color:#a9c6ff;
+  background:radial-gradient(circle at 50% 34%, #28406e, #0e1830 76%);
+  box-shadow:0 0 28px #2b6cff99, inset 0 0 18px #3f7dff55;
+}
+.orbit-bubble.hidden{ display:none !important; }
+@keyframes orbitSpin{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
+@keyframes orbitCounter{ from{ transform:translate(-50%,-50%) rotate(0); } to{ transform:translate(-50%,-50%) rotate(-360deg); } }
+
+.title-tip{
+  position:absolute; bottom:4%; left:50%; transform:translateX(-50%);
+  width:min(560px,90vw); text-align:center; z-index:3;
+  color:#6b728f; font-size:11.5px; letter-spacing:.5px;
+  pointer-events:none;
+}
 
 /* ---------------- 子页（记录 / 成就 / 存档） ---------------- */
 .sub-screen{
@@ -555,9 +618,22 @@ canvas#game{
 .save-btns .btn{ flex:1; text-align:center; }
 
 /* 窄屏适配 */
+@media (max-width:980px){
+  .abyss-core{ --orbit-d:430px; --portal:134px; }
+  .orbit-bubble{ width:82px; height:82px; font-size:11.5px; }
+  .portal-label{ font-size:18px; letter-spacing:4px; }
+}
+@media (max-width:680px){
+  .screen-cover .game-title{ font-size:54px; letter-spacing:12px; }
+  .screen-cover .game-sub{ letter-spacing:3px; }
+  .abyss-core{ top:56%; --orbit-d:340px; --portal:116px; }
+  .orbit-bubble{ width:72px; height:72px; font-size:11px; letter-spacing:.5px; }
+  .cover-inner{ top:4%; }
+}
+@media (max-height:600px){
+  .abyss-core{ --orbit-d:360px; --portal:120px; top:56%; }
+}
 @media (max-width:880px){
-  .screen-cover .game-title{ font-size:60px; letter-spacing:12px; }
-  .cover-menu{ gap:10px; }
   .sub-body{ max-height:70vh; }
 }
 

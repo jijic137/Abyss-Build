@@ -69,40 +69,48 @@
     <!-- ============ 封面（首页） ============ -->
     <section id="scrTitle" class="screen screen-cover">
       <canvas class="vortex-canvas" id="vortexCover"></canvas>
+      <div class="cover-inner">
+        <div class="cover-tag">THE&nbsp;ABYSS&nbsp;AWAITS</div>
+        <h1 class="game-title">深渊构筑</h1>
+        <p class="game-sub">ABYSS&nbsp;BUILD &nbsp;— &nbsp;20 波 · 构筑 · 生存</p>
+        <p class="cover-hook">在层层深渊中构筑你的流派，撑过二十波，直面终焉之主。</p>
 
-      <div class="cover-grid">
-        <!-- 左：英雄区 -->
-        <div class="cover-hero">
-          <div class="cover-tag">THE&nbsp;ABYSS&nbsp;AWAITS</div>
-          <h1 class="game-title">深渊构筑</h1>
-          <p class="game-sub">ABYSS&nbsp;BUILD &nbsp;— &nbsp;20 波 · 构筑 · 生存</p>
-
-          <div class="cover-actions">
-            <button class="btn btn-primary btn-lg btn-explore" id="btnExplore">
-              <span class="explore-glyph"></span>探索深渊
-            </button>
-            <div class="cover-secondary">
-              <button class="btn btn-lg" id="btnResumeRun">继续游戏</button>
-              <button class="btn" id="btnSettings">设置</button>
-            </div>
+        <div class="cover-actions">
+          <button class="btn btn-primary btn-lg btn-explore" id="btnExplore">
+            <span class="explore-glyph"></span>探索深渊
+          </button>
+          <div class="cover-menu">
+            <button class="btn" id="btnResumeRun">继续游戏</button>
+            <button class="btn" id="btnRecords">记录</button>
+            <button class="btn" id="btnAch">成就</button>
+            <button class="btn" id="btnSave">存档</button>
+            <button class="btn" id="btnSettings">设置</button>
           </div>
-          <div class="title-tip">物品几乎都带负面属性——让优点叠成体系，把缺点藏进构筑里。</div>
         </div>
 
-        <!-- 右：档案面板（记录 / 成就 / 存档） -->
-        <aside class="cover-panel">
-          <div class="panel-tabs">
-            <button class="tab tab-on" id="tabRecords" data-tab="records">记录</button>
-            <button class="tab" id="tabAch" data-tab="ach">成就</button>
-            <button class="tab" id="tabSave" data-tab="save">存档</button>
-          </div>
-          <div class="panel-body">
-            <div class="panel-pane pane-on" id="paneRecords"></div>
-            <div class="panel-pane" id="paneAch"></div>
-            <div class="panel-pane" id="paneSave"></div>
-          </div>
-        </aside>
+        <div class="title-tip">物品几乎都带负面属性——让优点叠成体系，把缺点藏进构筑里。</div>
       </div>
+    </section>
+
+    <!-- ============ 记录（子页） ============ -->
+    <section id="scrRecords" class="screen sub-screen">
+      <h2 class="lv-title">记录</h2>
+      <div class="sub-body" id="recBody"></div>
+      <div class="pause-btns"><button class="btn" id="btnRecordsBack">返回</button></div>
+    </section>
+
+    <!-- ============ 成就（子页） ============ -->
+    <section id="scrAch" class="screen sub-screen">
+      <h2 class="lv-title">成就</h2>
+      <div class="sub-body" id="achBody"></div>
+      <div class="pause-btns"><button class="btn" id="btnAchBack">返回</button></div>
+    </section>
+
+    <!-- ============ 存档（子页） ============ -->
+    <section id="scrSave" class="screen sub-screen">
+      <h2 class="lv-title">存档</h2>
+      <div class="sub-body" id="saveBody"></div>
+      <div class="pause-btns"><button class="btn" id="btnSaveBack">返回</button></div>
     </section>
 
     <!-- ============ 角色选择（轮盘） ============ -->

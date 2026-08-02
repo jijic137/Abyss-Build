@@ -71,6 +71,22 @@ try {
   console.log('LOAD OK (boot ran, buttons bound)');
   console.log('initial: scrTitle on =', elCache['scrTitle'].classList.contains('on'));
 
+  // 0) 子页开合校验：封面点开 记录/成就/存档 再返回
+  function checkSub(btn, scr, bodyId, backBtn) {
+    elCache[btn].fire('click');
+    const on = elCache[scr].classList.contains('on');
+    const n = elCache[bodyId].children.length;
+    console.log('open', scr, 'on =', on, '| body children =', n);
+    elCache[backBtn].fire('click');
+    console.log('  back → scrTitle on =', elCache['scrTitle'].classList.contains('on'), '|', scr, 'on =', elCache[scr].classList.contains('on'));
+    return on && n > 0 && !elCache[scr].classList.contains('on');
+  }
+  const subOk =
+    checkSub('btnRecords', 'scrRecords', 'recBody', 'btnRecordsBack') &&
+    checkSub('btnAch', 'scrAch', 'achBody', 'btnAchBack') &&
+    checkSub('btnSave', 'scrSave', 'saveBody', 'btnSaveBack');
+  console.log('SUB-PANELS:', subOk ? 'PASS' : 'FAIL');
+
   // 1) 点击「探索深渊」
   elCache['btnExplore'].fire('click');
   console.log('after explore fire: scrTitle leaving =', elCache['scrTitle'].classList.contains('leaving'));

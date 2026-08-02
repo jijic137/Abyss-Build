@@ -453,14 +453,12 @@ canvas#game{
 
 /* ---------------- 封面 ---------------- */
 .screen-cover{ overflow:hidden; }
-.cover-grid{
+.cover-inner{
   position:relative; z-index:1;
-  width:min(1080px,94vw);
-  display:grid; grid-template-columns:minmax(0,1.05fr) minmax(300px,0.95fr);
-  gap:46px; align-items:center; justify-content:center;
-  padding:32px;
+  width:min(840px,94vw);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:28px;
 }
-.cover-hero{ display:flex; flex-direction:column; align-items:flex-start; }
 .cover-tag{
   font-size:12px; letter-spacing:9px; color:#7f8bb0;
   margin-bottom:20px; animation:tagFloat 4s ease-in-out infinite;
@@ -478,7 +476,10 @@ canvas#game{
 @keyframes titleShine{ 0%{background-position:0% 50%;} 100%{background-position:220% 50%;} }
 .screen-cover .game-sub{ margin:10px 0 0; }
 
-.cover-actions{ margin-top:42px; display:flex; flex-direction:column; align-items:flex-start; gap:16px; }
+.cover-actions{ margin-top:40px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+.cover-hook{ margin:14px 0 0; color:#9aa2c0; font-size:14px; letter-spacing:2px; max-width:520px; line-height:1.7; }
+.cover-menu{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.cover-menu .btn{ font-size:13px; padding:8px 16px; letter-spacing:1px; }
 .btn-explore{
   font-size:22px; letter-spacing:8px; padding:16px 54px;
   position:relative; display:inline-flex; align-items:center; gap:12px;
@@ -505,32 +506,16 @@ canvas#game{
 .cover-secondary{ display:flex; gap:14px; }
 .screen-cover .title-tip{ margin-top:34px; color:#6b728f; max-width:520px; }
 
-/* ---------------- 封面右侧档案面板（记录 / 成就 / 存档） ---------------- */
-.cover-panel{
-  position:relative; z-index:1; width:100%; align-self:center;
-  background:linear-gradient(180deg,#11151fee,#0d1018f2);
-  border:1px solid var(--line);
-  border-radius:14px;
-  box-shadow:0 14px 44px #000a, inset 0 0 0 1px #ffffff08;
-  overflow:hidden; display:flex; flex-direction:column;
-  max-height:76vh;
+/* ---------------- 子页（记录 / 成就 / 存档） ---------------- */
+.sub-screen{
+  flex-direction:column; align-items:center; justify-content:center;
+  gap:22px; padding:40px 20px; overflow-y:auto;
 }
-.panel-tabs{ display:flex; border-bottom:1px solid var(--line); background:#0e1220aa; }
-.tab{
-  flex:1; padding:12px 0; font-size:14px; letter-spacing:2px;
-  color:var(--dim); background:transparent; border:none; cursor:pointer;
-  border-bottom:2px solid transparent;
-  transition:color .15s, border-color .15s, background .15s;
+.sub-body{
+  width:min(560px,92vw); max-height:64vh; overflow-y:auto;
+  background:#0e1220cc; border:1px solid var(--line); border-radius:12px;
+  padding:18px 20px; box-shadow:0 14px 44px #0008;
 }
-.tab:hover{ color:#cdd4ea; }
-.tab.tab-on{
-  color:#dfe6ff; border-bottom-color:#5b8cff;
-  background:#16203a; text-shadow:0 0 14px #5b8cff66;
-}
-.panel-body{ position:relative; padding:16px 18px; overflow-y:auto; flex:1; }
-.panel-pane{ display:none; }
-.panel-pane.pane-on{ display:block; animation:paneIn .25s ease-out; }
-@keyframes paneIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
 
 /* 记录 */
 .rec-row{ display:flex; justify-content:space-between; align-items:center; padding:8px 4px; border-bottom:1px dashed #2a304a; font-size:13px; }
@@ -569,12 +554,11 @@ canvas#game{
 .save-btns{ display:flex; gap:12px; margin-top:16px; }
 .save-btns .btn{ flex:1; text-align:center; }
 
-/* 窄屏：封面由两栏堆叠为单栏 */
+/* 窄屏适配 */
 @media (max-width:880px){
-  .cover-grid{ grid-template-columns:1fr; gap:26px; width:94vw; padding:22px; }
-  .cover-hero{ align-items:center; text-align:center; }
   .screen-cover .game-title{ font-size:60px; letter-spacing:12px; }
-  .cover-panel{ max-height:none; }
+  .cover-menu{ gap:10px; }
+  .sub-body{ max-height:70vh; }
 }
 
 /* 进入漩涡：封面缩放淡出 */

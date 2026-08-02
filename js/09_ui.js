@@ -40,17 +40,20 @@
   /* ------------------------------------------------------------
      通用：屏幕切换
      ------------------------------------------------------------ */
-  var SCREENS = ['scrTitle', 'scrCharSelect', 'scrShop', 'scrLevel', 'scrPause', 'scrResult', 'scrSettings'];
+  var SCREENS = ['scrTitle', 'scrCharSelect', 'scrShop', 'scrLevel', 'scrPause', 'scrResult', 'scrSettings', 'scrRecords', 'scrAch', 'scrSave'];
   UI.showScreen = function (id) {
     var ov = $('overlay');
     SCREENS.forEach(function (s) { $(s).classList.toggle('on', s === id); });
     ov.classList.toggle('on', !!id);
     UI.hideTip();
-    // 标题界面时，依据续局存档是否存在显示「继续游戏」，并刷新档案面板
+    // 标题 / 子页（记录·成就·存档）需要刷新数据
+    if (id === 'scrTitle' || id === 'scrRecords' || id === 'scrAch' || id === 'scrSave') {
+      UI.renderSubPanels();
+    }
+    // 标题界面时，依据续局存档是否存在显示「继续游戏」
     if (id === 'scrTitle') {
       var rb = $('btnResumeRun');
       if (rb) rb.classList.toggle('hidden', !G.Save.getRun());
-      UI.renderCover();
     }
     // 菜单漩涡背景：封面 / 轮盘随界面启停
     if (id === 'scrTitle') UI._vortex('cover').start();
@@ -60,26 +63,16 @@
   };
 
   /* ------------------------------------------------------------
-     封面档案面板：记录 / 成就 / 存档
+     子页：记录 / 成就 / 存档（从封面点开，不在封面上直接展示）
      ------------------------------------------------------------ */
-  UI.renderCover = function () {
-    if (!($('paneRecords') && $('paneAch') && $('paneSave'))) return;   // 缺节点则跳过（无头环境）
-    UI.renderCoverRecords();
-    UI.renderCoverAch();
-    UI.renderCoverSave();
-    if (UI._coverWired) return;            // tab 绑定只做一次
-    UI._coverWired = true;
-    [['tabRecords', 'paneRecords'], ['tabAch', 'paneAch'], ['tabSave', 'paneSave']].forEach(function (pair) {
-      var tb = $(pair[0]); if (!tb) return;
-      tb.addEventListener('click', function () {
-        ['tabRecords', 'tabAch', 'tabSave'].forEach(function (id) { $(id).classList.toggle('tab-on', id === pair[0]); });
-        ['paneRecords', 'paneAch', 'paneSave'].forEach(function (id) { $(id).classList.toggle('pane-on', id === pair[1]); });
-        G.Audio.sfx('select');
-      });
-    });
+  UI.renderSubPanels = function () {
+    if (!($('recBody') && $('achBody') && $('saveBody'))) return;   // 缺节点则跳过（无头环境）
+    UI.renderSubRecords();
+    UI.renderSubAch();
+    UI.renderSubSave();
   };
 
-  UI.renderCoverRecords = function () {
+  UI.renderSubRecords = function () {
     var d = G.Save.get();
     var s = d.stats;
     var won = 0; for (var k in s.charsWon) if (s.charsWon[k]) won++;
@@ -94,7 +87,7 @@
       ['最快通关', s.fastestWin ? fmtTime(s.fastestWin) : '—'],
       ['已通关职业', won + ' / ' + G.CHARACTERS.length]
     ];
-    var host = $('paneRecords'); host.innerHTML = '';
+    var host = $('recBody'); host.innerHTML = '';
     rows.forEach(function (r) {
       var row = el('div', 'rec-row');
       row.appendChild(el('span', 'rec-k', r[0]));
@@ -103,9 +96,9 @@
     });
   };
 
-  UI.renderCoverAch = function () {
+  UI.renderSubAch = function () {
     var got = G.Save.getAch();
-    var host = $('paneAch'); host.innerHTML = '';
+    var host = $('achBody'); host.innerHTML = '';
     var cnt = 0; G.ACHIEVEMENTS.forEach(function (a) { if (got[a.id]) cnt++; });
     host.appendChild(el('div', 'ach-count', '已解锁 ' + cnt + ' / ' + G.ACHIEVEMENTS.length));
     var grid = el('div', 'ach-grid');
@@ -122,8 +115,8 @@
     host.appendChild(grid);
   };
 
-  UI.renderCoverSave = function () {
-    var host = $('paneSave'); host.innerHTML = '';
+  UI.renderSubSave = function () {
+    var host = $('saveBody'); host.innerHTML = '';
     var run = G.Save.getRun();
     if (!run) {
       host.appendChild(el('div', 'save-empty', '暂无进行中的存档。<br>每通过一波会自动保存，可在此继续或抹除。'));
@@ -139,14 +132,14 @@
       G.Audio.sfx('confirm');
       var data = G.Save.getRun(); if (!data) return;
       G.Audio.unlock(); G.Audio.setBgm(G.Save.getSettings().bgm);
-      if (!G.game.resumeRun(data)) { G.Save.clearRun(); UI.renderCover(); }
+      if (!G.game.resumeRun(data)) { G.Save.clearRun(); UI.renderSubSave(); }
     });
     var bErase = el('button', 'btn', '抹除');
     bErase.addEventListener('click', function () {
       G.Audio.sfx('back');
       G.Save.clearRun();
       var rb = $('btnResumeRun'); if (rb) rb.classList.add('hidden');
-      UI.renderCover();
+      UI.renderSubSave();
     });
     btnRow.appendChild(bContinue);
     btnRow.appendChild(bErase);

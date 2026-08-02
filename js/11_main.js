@@ -23,7 +23,8 @@
 
     /* 全部按钮悬停音效 */
     ['btnExplore','btnResumeRun','btnSettings','btnBack','btnConfirm',
-     'btnNextWave','btnReroll','btnResume','btnQuit','btnRestart','btnSettingsBack']
+     'btnNextWave','btnReroll','btnResume','btnQuit','btnRestart','btnSettingsBack',
+     'btnRecords','btnAch','btnSave','btnRecordsBack','btnAchBack','btnSaveBack']
       .forEach(function (id) {
         var b = byId(id);
         if (b) b.addEventListener('mouseenter', function () { G.Audio.sfx('hover'); });
@@ -94,6 +95,20 @@
     byId('btnSettings').addEventListener('click', function () { openSettings('title'); });
     /* 设置（对局内暂停进入） */
     byId('btnPauseSettings').addEventListener('click', function () { openSettings('pause'); });
+
+    /* 封面 → 子页：记录 / 成就 / 存档 */
+    function openSub(subId) {
+      G.Audio.unlock();
+      G.Audio.sfx('select');
+      G.UI.showScreen(subId);
+    }
+    byId('btnRecords').addEventListener('click', function () { openSub('scrRecords'); });
+    byId('btnAch').addEventListener('click', function () { openSub('scrAch'); });
+    byId('btnSave').addEventListener('click', function () { openSub('scrSave'); });
+    /* 子页 → 返回封面 */
+    byId('btnRecordsBack').addEventListener('click', function () { G.Audio.sfx('back'); G.UI.showScreen('scrTitle'); });
+    byId('btnAchBack').addEventListener('click', function () { G.Audio.sfx('back'); G.UI.showScreen('scrTitle'); });
+    byId('btnSaveBack').addEventListener('click', function () { G.Audio.sfx('back'); G.UI.showScreen('scrTitle'); });
 
     byId('btnSettingsBack').addEventListener('click', function () {
       G.UI.closeSettings();      // 回到来处（标题或暂停）

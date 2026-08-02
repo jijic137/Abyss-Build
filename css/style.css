@@ -482,17 +482,27 @@ canvas#game{
 /* ---------------- 轮盘角色选择 ---------------- */
 .screen-wheel{
   overflow-x:hidden; overflow-y:auto;
-  justify-content:flex-start; gap:8px;
-  padding-top:18px; padding-bottom:18px;
+  display:grid;
+  grid-template-columns:minmax(150px,1fr) auto minmax(150px,1fr);
+  grid-template-rows:1fr auto;
+  grid-template-areas:
+    "wheelhead wheelstage wheelinfo"
+    "wheelfoot wheelfoot wheelfoot";
+  align-items:center; justify-items:center;
+  gap:12px 28px; padding:18px 30px; min-height:100%;
 }
 .screen-wheel .vortex-canvas{ opacity:.82; }
-.wheel-head{ position:relative; z-index:1; text-align:center; margin-bottom:4px; }
-.wheel-title{ font-size:30px; font-weight:900; letter-spacing:6px; color:#dfe6ff; text-shadow:0 0 30px #5b8cff55; }
-.wheel-sub{ font-size:12px; color:#8a90a8; letter-spacing:2px; margin-top:7px; }
+.wheel-head{ grid-area:wheelhead; justify-self:start; align-self:center; position:relative; z-index:1; text-align:left; }
+.wheel-title{
+  font-size:30px; font-weight:900; letter-spacing:6px; color:#dfe6ff; text-shadow:0 0 30px #5b8cff55;
+  padding-left:14px; border-left:4px solid #5b8cff; line-height:1.15;
+}
+.wheel-sub{ font-size:12px; color:#8a90a8; letter-spacing:1px; margin-top:14px; max-width:210px; line-height:1.7; }
 
 .wheel-stage{
+  grid-area:wheelstage;
   position:relative; z-index:1;
-  width:min(820px,92vw); height:min(520px,60vh);
+  width:min(640px,58vw); height:min(580px,68vh);
   margin:6px 0;
   touch-action:none;
 }
@@ -520,11 +530,12 @@ canvas#game{
 }
 
 .wheel-info{
+  grid-area:wheelinfo; justify-self:center; align-self:center;
   position:relative; z-index:2;
-  width:min(560px,90vw); text-align:center;
+  width:100%; max-width:320px; text-align:left;
   background:#0e1220cc; border:2px solid #2a3150; border-radius:4px;
-  padding:12px 18px; min-height:98px;
-  max-height:30vh; overflow-y:auto;
+  padding:14px 16px; min-height:98px;
+  max-height:72vh; overflow-y:auto;
   overflow-wrap:anywhere; word-break:break-word;
   scrollbar-width:thin; scrollbar-color:#2a3150 transparent;
 }
@@ -538,8 +549,20 @@ canvas#game{
 .wi-mods .p{ color:var(--good); }
 .wi-mods .n{ color:var(--bad); }
 .wi-weapon{ font-size:11.5px; color:#8a90a8; margin-top:5px; }
-.wheel-foot{ position:relative; z-index:2; display:flex; gap:18px; margin-top:16px; }
+.wheel-foot{ grid-area:wheelfoot; justify-self:center; position:relative; z-index:2; display:flex; gap:18px; margin-top:14px; }
 
+@media (max-width:1024px){
+  .screen-wheel{
+    grid-template-columns:1fr; grid-template-rows:auto auto auto auto;
+    grid-template-areas:"wheelhead" "wheelstage" "wheelinfo" "wheelfoot";
+    justify-items:center; padding:14px 16px; gap:10px;
+  }
+  .wheel-head{ justify-self:center; text-align:center; }
+  .wheel-title{ border-left:none; padding-left:0; }
+  .wheel-sub{ max-width:none; margin-top:8px; }
+  .wheel-info{ justify-self:center; width:min(560px,92vw); max-width:none; text-align:center; }
+  .wheel-stage{ width:min(560px,86vw); height:min(440px,52vh); }
+}
 @media (max-width:760px){
   .screen-cover .game-title{ font-size:56px; letter-spacing:12px; }
   .wheel-token{ width:84px; height:84px; }

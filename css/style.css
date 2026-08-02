@@ -506,17 +506,9 @@ canvas#game{
   filter:drop-shadow(0 0 6px #4a7dff88);
   animation:portalSpin 7s linear infinite;
 }
-.portal-core{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:10px; }
-.portal-label{ font-size:21px; font-weight:900; letter-spacing:5px; text-shadow:0 0 18px #6f9bff; }
-/* 向下箭头（轻浮动，象征「沉入深渊」而非加载圈） */
-.portal-glyph{
-  width:0; height:0;
-  border-left:8px solid transparent; border-right:8px solid transparent;
-  border-top:12px solid #cfe0ff;
-  animation:glyphBob 1.6s ease-in-out infinite;
-}
+.portal-core{ position:relative; z-index:1; display:flex; align-items:center; justify-content:center; }
+.portal-label{ font-size:21px; font-weight:900; letter-spacing:5px; text-shadow:0 0 18px #6f9bff, 0 0 8px #cfe0ff; }
 @keyframes portalSpin{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
-@keyframes glyphBob{ 0%,100%{ transform:translateY(-2px); } 50%{ transform:translateY(3px); } }
 
 /* 记录 / 成就 / 存档 / 设置 / 继续：环绕漩涡的气泡 */
 .orbit-field{
@@ -542,23 +534,40 @@ canvas#game{
   animation-delay:var(--d,0s);
 }
 .orbit-bubble{
+  position:relative;
   width:94px; height:94px; border-radius:50%;
   display:flex; align-items:center; justify-content:center; text-align:center;
   padding:4px;
-  font-size:12.5px; font-weight:700; letter-spacing:1px; color:#dfe6ff;
-  background:radial-gradient(circle at 50% 34%, #1c2a48, #0b1322 76%);
-  border:1.5px solid #3c5390;
-  box-shadow:0 0 16px #2b6cff33, inset 0 0 14px #2b6cff22;
+  font-size:12.5px; font-weight:700; letter-spacing:1px;
+  color:#dbe6ff;
+  text-shadow:0 0 10px #6f9bff, 0 0 4px #cfe0ff;
+  /* 光效：透亮核 + 柔光边 + 外发光（无生硬边框） */
+  background:radial-gradient(circle at 50% 42%, rgba(150,190,255,.22), rgba(70,120,235,.10) 52%, rgba(40,80,180,.04) 70%, transparent 76%);
+  border:1px solid rgba(150,185,255,.32);
+  box-shadow:0 0 22px 3px rgba(70,130,255,.40), inset 0 0 18px rgba(110,160,255,.38);
   cursor:pointer; pointer-events:auto;
-  transition:transform .15s, box-shadow .2s, border-color .2s, background .2s;
+  transition:transform .18s, box-shadow .25s, border-color .25s, background .25s, color .25s;
+}
+/* 背后柔光晕（独立呼吸，不干扰悬停与自转） */
+.orbit-bubble::before{
+  content:''; position:absolute; inset:-6px; border-radius:50%; z-index:-1;
+  background:radial-gradient(circle, rgba(95,160,255,.40), transparent 68%);
+  filter:blur(9px);
+  animation:bubblePulse 3.4s ease-in-out infinite;
+  pointer-events:none;
 }
 .orbit-bubble:hover{
-  transform:scale(1.12);
-  border-color:#a9c6ff;
-  background:radial-gradient(circle at 50% 34%, #28406e, #0e1830 76%);
-  box-shadow:0 0 28px #2b6cff99, inset 0 0 18px #3f7dff55;
+  transform:scale(1.14);
+  color:#ffffff;
+  border-color:rgba(205,225,255,.7);
+  background:radial-gradient(circle at 50% 42%, rgba(185,215,255,.34), rgba(95,150,250,.18) 52%, transparent 75%);
+  box-shadow:0 0 40px 7px rgba(95,155,255,.72), inset 0 0 24px rgba(155,195,255,.6);
 }
 .orbit-bubble.hidden{ display:none !important; }
+@keyframes bubblePulse{
+  0%,100%{ opacity:.45; transform:scale(.88); }
+  50%{ opacity:1; transform:scale(1.18); }
+}
 @keyframes orbitSpin{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
 @keyframes orbitCounter{ from{ transform:translate(-50%,-50%) rotate(0); } to{ transform:translate(-50%,-50%) rotate(-360deg); } }
 

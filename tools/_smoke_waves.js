@@ -153,12 +153,15 @@ try {
   const skipA = process.env.SKIP_A === '1';
   const okA = skipA ? true : runProfile('new-alchemist', 'alchemist', null);
   const okB = runProfile('kitchenSink-mage', 'mage', function (p, g) {
-    p.maxWeapons = 8;
-    ['spark_rod','club','trident','blunderbuss','throwing_axe'].forEach(id =>
+    p.maxWeapons = 12;
+    ['spark_rod','club','trident','blunderbuss','throwing_axe',
+     'gravity_cannon','storm_staff','spike_shotgun','pulse_core','orbit_blade'].forEach(id =>
       p.addWeapon(G.makeWeapon(id, 4)));
     ['cloth_wrap','pebble','wood_stick','cheap_ring','rope_belt','dry_berry',
      'spiked_boot','quiver','focus_lens','war_paint','spring_coil','blood_charm',
-     'storm_brand','frost_sigil','iron_will'].forEach(id => {
+     'storm_brand','frost_sigil','iron_will',
+     'tin_can','greased_gear','razor_edge','vampiric_charm','soul_reaver',
+     'frost_mail','abyssal_blade','glutton_core'].forEach(id => {
        const d = G.ITEM_MAP[id]; if (d) p.addItem(d);
      });
     p.recalc();

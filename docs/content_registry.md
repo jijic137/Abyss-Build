@@ -322,6 +322,30 @@ mat = 1 + 0.13*(wave-1)
 
 
 
+## 设计规范 · 武器伤害加成来源
+
+每把武器的伤害按 `kind` 对应的 `tags` 加成**一项专属伤害属性**，最后再乘全局「伤害%」。规则固化在 `js/02_stats.js` 的 `F.weaponDamage`，并由 `F.damageAttrText(tags)` 生成给 UI 显示的文本——商店卡与悬停提示均自动展示「伤害加成 · XXX」，单一权威来源，永不脱节。
+
+| 武器标签 `tags` | 加成的伤害属性 | 适用范围 |
+|---|---|---|
+| `melee` | 近战伤害 | 所有近战武器（swing / thrust） |
+| `ranged` | 远程伤害 | 所有远程武器（shot / spread / lob / returner / bouncer / pulse / orbit） |
+| `elemental` | 元素伤害 | 所有元素武器（cone / chain / homing 元素系） |
+| `engineering` | 工程学（×0.85） | 哨戒炮（turret） |
+
+通用结算规则：
+- 基础伤害 = `def.base × 档位系数 TIER_DMG[tier]`
+- 最终伤害 = `(基础伤害 + 对应属性加成) × (1 + 伤害%/100)`，再叠暴击与 ±8% 浮动
+- 全局「伤害%」（`damage` 属性）对**所有武器**生效，是唯一通用加成；其余四项为各武器专属
+- 当前 37 把武器均为单一标签，每把只吃一种专属属性；若未来某武器需双标签，`weaponDamage` 会自动叠加两项加成（UI 也会并列显示）
+
+武器归类（按加成属性）：
+- **近战伤害**：knife / sword / hammer / spear / fist / chainsaw / katana / halberd / club / trident
+- **远程伤害**：pistol / shotgun / smg / sniper / crossbow / grenade / boomerang / shuriken / railgun / magma_launcher / blunderbuss / throwing_axe / gravity_cannon / spike_shotgun / pulse_core / orbit_blade
+- **元素伤害**：flamer / wand / lightning / ice / dart / frost_staff / venom_spray / tesla_orb / spark_rod / storm_staff
+- **工程学**：turret
+
+
 ## 变更日志
 
 ### 2026-08-01 · 内容扩充 + 平衡（第二批）

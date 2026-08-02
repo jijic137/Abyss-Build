@@ -546,6 +546,11 @@
     if (p.hasSp('explodeOnKill')) {
       G.explode(e.x, e.y, 82, 12 + p.st.elementalDamage, { col: '#ff6b3a' });
     }
+    // 噬魂：击杀回复生命（新特效 leechOnKill）
+    if (p.hasSp('leechOnKill')) {
+      var heal = Math.max(1, Math.round(p.st.maxHp * 0.012));
+      p.heal(heal);
+    }
 
     this.dropLoot(e);
   };

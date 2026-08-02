@@ -227,6 +227,38 @@
       tags: ['elemental'], base: 11, cd: 1.0, range: 280, chain: 3, chainRange: 140, falloff: 0.8,
       mods: { attackSpeed: -2 },
       desc: '瞬发连锁，在敌群里跳三下。'
+    },
+
+    /* ---------------- 第三批新增武器（新机制） ---------------- */
+    {
+      id: 'gravity_cannon', name: '重力炮', icon: 'w_grenade', col: '#7b6cff', kind: 'shot',
+      tags: ['ranged'], base: 34, cd: 1.7, range: 360, bspd: 520, boom: 78,
+      mods: { attackSpeed: -8 },
+      desc: '沉重的一击，落地炸开并把敌人轰飞。'
+    },
+    {
+      id: 'storm_staff', name: '风暴法杖', icon: 'w_wand', col: '#9b6bff', kind: 'homing',
+      tags: ['elemental'], base: 8, cd: 0.92, range: 350, bspd: 340, turn: 4.5, count: 3,
+      bullet: 'b_orb',
+      desc: '同时放出三枚追踪法球，各自寻找目标。'
+    },
+    {
+      id: 'spike_shotgun', name: '钉刺霰弹', icon: 'w_shotgun', col: '#b0763f', kind: 'spread',
+      tags: ['ranged'], base: 6, cd: 1.25, range: 210, bspd: 560, count: 4, spread: 0.55,
+      pierce: 2, bullet: 'b_small', knock: 70,
+      desc: '四发散射且贯穿两个目标，贴脸火力凶猛。'
+    },
+    {
+      id: 'pulse_core', name: '脉冲星', icon: 'w_tesla', col: '#7fe8ff', kind: 'pulse',
+      tags: ['ranged'], base: 16, cd: 1.35, range: 150,
+      mods: { attackSpeed: -4 },
+      desc: '以自身为中心周期性爆发冲击波，清场兼控场。'
+    },
+    {
+      id: 'orbit_blade', name: '环绕刃', icon: 'w_shuriken', col: '#c0d8ff', kind: 'orbit',
+      tags: ['ranged'], base: 11, cd: 1.1, range: 150, count: 2, orbSpd: 2.6,
+      bullet: 'w_shuriken',
+      desc: '两把卫星刃绕身旋转，持续削切靠近的一切。'
     }
   ];
 

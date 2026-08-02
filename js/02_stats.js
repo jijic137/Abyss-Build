@@ -147,6 +147,22 @@
     return { dmg: Math.max(1, dmg), crit: crit };
   };
 
+  /**
+   * 武器的「伤害加成来源」显示名（供 UI 描述使用）。
+   * 规则与 weaponDamage 完全一致：melee→近战伤害 / ranged→远程伤害 /
+   * elemental→元素伤害 / engineering→工程学(×0.85)；所有武器额外吃全局「伤害%」。
+   * 由 tags 推导，单一权威来源，避免与武器描述文本脱节。
+   */
+  F.damageAttrText = function (tags) {
+    if (!tags) return '通用伤害';
+    var parts = [];
+    if (tags.indexOf('melee') >= 0)       parts.push('近战伤害');
+    if (tags.indexOf('ranged') >= 0)      parts.push('远程伤害');
+    if (tags.indexOf('elemental') >= 0)   parts.push('元素伤害');
+    if (tags.indexOf('engineering') >= 0) parts.push('工程学');
+    return parts.length ? parts.join('、') : '通用伤害';
+  };
+
   /** 商店稀有度权重（受波次与幸运影响） */
   F.rarityWeights = function (wave, luck) {
     var l = luck / 100;

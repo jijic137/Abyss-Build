@@ -183,6 +183,12 @@
     this.maxDist = o.maxDist || 0;
     this.travel = 0;
     this.back = false;
+
+    // orbit 专用（绕玩家旋转的卫星刃）
+    this.orbAng = o.orbAng || 0;
+    this.orbR = o.orbR || 0;
+    this.orbSpd = o.orbSpd || 2.0;
+    this.lastHit = {};
   }
 
   Bullet.prototype.update = function (dt) {
@@ -215,6 +221,32 @@
         this.vx = Math.cos(a) * sp2; this.vy = Math.sin(a) * sp2;
         if (G.dist2(this.x, this.y, p.x, p.y) < 400) { this.dead = true; return; }
       }
+    }
+
+    // orbit：绕玩家旋转的卫星刃，持续命中（带每敌冷却避免单帧多次）
+    if (this.mode === 'orbit') {
+      var pl2 = g.player;
+      if (!pl2 || pl2.dead) { this.dead = true; return; }
+      for (var lk in this.lastHit) this.lastHit[lk] = Math.max(0, this.lastHit[lk] - dt);
+      this.orbAng += this.orbSpd * dt;
+      this.x = pl2.x + Math.cos(this.orbAng) * this.orbR;
+      this.y = pl2.y + Math.sin(this.orbAng) * this.orbR;
+      this.rot += this.spin * dt;
+      var ols = g.queryEnemies(this.x, this.y, this.r + 26);
+      for (i = 0; i < ols.length; i++) {
+        var oe = ols[i];
+        if (oe.dead) continue;
+        if (oe._oid === undefined) oe._oid = (G._eoid = (G._eoid || 0) + 1);
+        if (this.lastHit[oe._oid] > 0) continue;
+        var orr = this.r + oe.r;
+        if (G.dist2(this.x, this.y, oe.x, oe.y) > orr * orr) continue;
+        this.lastHit[oe._oid] = 0.4;   // 同一敌人 0.4s 内不重复受击
+        g.damageEnemy(oe, this.dmg, {
+          crit: this.crit, x: oe.x, y: oe.y, knock: 50,
+          kx: oe.x - this.x, ky: oe.y - this.y, srcW: this.srcW
+        });
+      }
+      return;
     }
 
     this.x += this.vx * dt;

@@ -230,7 +230,7 @@
 
     var rng = def.range * G.F.rangeMul(st.range);
     var target = g.nearestEnemy(this.x, this.y, rng);
-    if (!target && def.kind !== 'turret') return;
+    if (!target && def.kind !== 'turret' && def.kind !== 'pulse' && def.kind !== 'orbit') return;
 
     var cd = G.wCooldown(w) * G.F.cdMul(st.attackSpeed);
     w.timer = cd;
@@ -316,7 +316,8 @@
             vx: Math.cos(a2) * def.bspd * G.rand(0.88, 1.12),
             vy: Math.sin(a2) * def.bspd * G.rand(0.88, 1.12),
             dmg: d.dmg, crit: d.crit, r: 5, sprite: def.bullet || 'b_small',
-            col: def.col, knock: def.knock || 0,
+            col: def.col, knock: def.knock || 0, pierce: def.pierce || 0,
+            trail: def.pierce ? 2 : 0,
             life: rng / def.bspd + 0.1, srcW: w
           }));
         }
@@ -377,14 +378,18 @@
       }
 
       case 'homing': {
-        d = G.F.weaponDamage(st, { base: G.wDamage(w), tags: def.tags });
-        g.bullets.push(new G.Bullet({
-          x: this.x + Math.cos(ang) * 14, y: this.y + Math.sin(ang) * 14,
-          vx: Math.cos(ang) * def.bspd, vy: Math.sin(ang) * def.bspd,
-          dmg: d.dmg, crit: d.crit, r: 7, sprite: def.bullet || 'b_orb',
-          col: def.col, mode: 'homing', turn: def.turn,
-          life: 2.6, srcW: w, trail: 3
-        }));
+        var hn = def.count || 1;
+        for (i = 0; i < hn; i++) {
+          d = G.F.weaponDamage(st, { base: G.wDamage(w), tags: def.tags });
+          var ha = ang + (hn > 1 ? (i / (hn - 1) - 0.5) * 0.5 : 0);
+          g.bullets.push(new G.Bullet({
+            x: this.x + Math.cos(ha) * 14, y: this.y + Math.sin(ha) * 14,
+            vx: Math.cos(ha) * def.bspd, vy: Math.sin(ha) * def.bspd,
+            dmg: d.dmg, crit: d.crit, r: 7, sprite: def.bullet || 'b_orb',
+            col: def.col, mode: 'homing', turn: def.turn,
+            life: 2.6, srcW: w, trail: 3
+          }));
+        }
         break;
       }
 
@@ -416,6 +421,31 @@
         if (g.turrets.length >= 4) { w.timer = 1.2; break; }
         g.turrets.push(new G.Turret(this.x, this.y, w, st));
         G.fx('ring', { x: this.x, y: this.y, r0: 4, r1: 40, col: '#e0902a', w: 3, life: 0.3 });
+        break;
+      }
+
+      case 'pulse': {
+        d = G.F.weaponDamage(st, { base: G.wDamage(w), tags: def.tags });
+        G.explode(this.x, this.y, rng, d.dmg, { crit: d.crit, col: def.col, srcW: w });
+        break;
+      }
+
+      case 'orbit': {
+        var on = def.count || 2;
+        var od = G.F.weaponDamage(st, { base: G.wDamage(w), tags: def.tags });
+        var olife = cd + 0.25;
+        var oR = rng * (def.orbR || 0.62);
+        for (i = 0; i < on; i++) {
+          var oa = (i / on) * Math.PI * 2;
+          g.bullets.push(new G.Bullet({
+            x: this.x + Math.cos(oa) * oR, y: this.y + Math.sin(oa) * oR,
+            vx: 0, vy: 0,
+            dmg: od.dmg, crit: od.crit, r: 9, sprite: def.bullet || 'w_shuriken', scale: 2,
+            col: def.col, mode: 'orbit', orbR: oR, orbAng: oa,
+            orbSpd: def.orbSpd || 2.4, life: olife, srcW: w, spin: 18
+          }));
+        }
+        G.fx('ring', { x: this.x, y: this.y, r0: oR * 0.7, r1: oR, col: def.col, w: 3, life: 0.3 });
         break;
       }
     }

@@ -304,7 +304,35 @@
       sp: 'frostAura', spTxt: '身边 130 范围内的敌人移动速度降低 30%',
       mods: { elementalDamage: 5, armor: 3, speed: -5 }, fl: '贴身一股寒意。' },
     { id: 'iron_will', name: '钢铁意志', r: 2, icon: 'ic_shield', col: '#5a7d9c',
-      mods: { armor: 10, maxHp: 15, speed: -8 }, fl: '不躲，就不怕。' }
+      mods: { armor: 10, maxHp: 15, speed: -8 }, fl: '不躲，就不怕。' },
+
+    /* ================= 第三批新增 · 白（权衡卡） ================= */
+    { id: 'tin_can', name: '铁皮罐头', r: 0, icon: 'ic_shield', col: '#9aa0b0',
+      mods: { maxHp: 10, damage: -2 }, fl: '装进去就出不来了，包括你。' },
+    { id: 'greased_gear', name: '油滑齿轮', r: 0, icon: 'ic_gear', col: '#a08a5a',
+      mods: { speed: 6, armor: -2 }, fl: '滑，但好用。' },
+
+    /* ================= 第三批新增 · 绿 ================= */
+    { id: 'razor_edge', name: '利刃环', r: 1, icon: 'ic_blade', col: '#c0c8d8',
+      mods: { critChance: 6, armor: -3 }, fl: '转起来才锋利。' },
+    { id: 'vampiric_charm', name: '吸血符', r: 1, icon: 'ic_ring', col: '#c03a4a',
+      mods: { lifesteal: 4, maxHp: -5 }, fl: '戴久了手会暖。' },
+
+    /* ================= 第三批新增 · 蓝（含新特效） ================= */
+    { id: 'soul_reaver', name: '噬魂符', r: 2, icon: 'ic_skull', col: '#8f5cd6',
+      sp: 'leechOnKill', spTxt: '击杀敌人时回复 (1.2% 最大生命) 的生命',
+      mods: { damage: 6, maxHp: -6 }, fl: '它们最后的呼声是你的补给。' },
+    { id: 'frost_mail', name: '寒霜链甲', r: 2, icon: 'ic_shield', col: '#7fd8ff',
+      mods: { armor: 8, speed: -10 }, fl: '冷，但踏实。' },
+
+    /* ================= 第三批新增 · 紫 ================= */
+    { id: 'abyssal_blade', name: '深渊刃', r: 3, icon: 'ic_blade', col: '#9f5cff',
+      mods: { meleeDamage: 12, critChance: 10, maxHp: -12 }, fl: '刃上挂着一小片夜。' },
+
+    /* ================= 第三批新增 · 红（含新特效） ================= */
+    { id: 'glutton_core', name: '暴食核心', r: 4, icon: 'ic_skull', col: '#ff5fa8',
+      sp: 'leechOnKill', spTxt: '击杀敌人时回复 (1.2% 最大生命) 的生命',
+      mods: { damage: 20, maxHp: -16, armor: -4 }, fl: '它永远在饿。' }
   ];
 
   /* ic_hammer_r 复用锤子图标 */

@@ -91,6 +91,12 @@ G.Save = (function () {
       version: 1,
       settings: { volume: 0.22, shake: 0.4, bgm: true, music: 0.5 },   // 与 12_audio / 10_game 默认值对齐
       bestWave: 0, bestKills: 0, lastWin: false,
+      achievements: {},            // { [id]: { t: 解锁时间戳 } }
+      stats: {                     // 扩展记录（累计 / 最高）
+        totalRuns: 0, wins: 0, totalKills: 0,
+        bestCombo: 0, bestDps: 0, fastestWin: 0,
+        charsWon: {}               // { [charId]: true } 已通关职业
+      },
       run: null
     };
   }
@@ -113,6 +119,10 @@ G.Save = (function () {
             mem.bestWave = d.bestWave || 0;
             mem.bestKills = d.bestKills || 0;
             mem.lastWin = !!d.lastWin;
+            if (d.achievements && typeof d.achievements === 'object') mem.achievements = d.achievements;
+            if (d.stats && typeof d.stats === 'object') {
+              for (var sk in d.stats) { if (d.stats.hasOwnProperty(sk)) mem.stats[sk] = d.stats[sk]; }
+            }
             mem.run = d.run || null;
           }
         }
@@ -144,6 +154,37 @@ G.Save = (function () {
       persist();
       return rec;
     },
+    /* ---------- 成就 ---------- */
+    getAch: function () { return load().achievements; },
+    unlockAch: function (id) {
+      var d = load();
+      if (d.achievements[id]) return false;     // 已解锁：返回 false（非本次新解锁）
+      d.achievements[id] = { t: Date.now() };
+      persist();
+      return true;
+    },
+    /* ---------- 扩展记录 ---------- */
+    getStats: function () { return load().stats; },
+    addStats: function (add) {                  // 累加型指标
+      var s = load().stats;
+      for (var k in add) { if (add[k] == null) continue; s[k] = (s[k] || 0) + add[k]; }
+      persist();
+      return s;
+    },
+    setStats: function (set) {                  // 取最大值型指标（仅当更大时更新）
+      var s = load().stats;
+      for (var k in set) { if (set[k] == null) continue; if (s[k] == null || set[k] > s[k]) s[k] = set[k]; }
+      persist();
+      return s;
+    },
+    markCharWon: function (id) {                // 标记某职业已通关
+      var s = load().stats;
+      s.charsWon[id] = true;
+      persist();
+      return s.charsWon;
+    },
+    flush: function () { persist(); },         // 直接持久化当前内存态（用于手动改 stats 后）
+    /* ---------- 续局存档（读档） ---------- */
     saveRun: function (obj) { var d = load(); d.run = obj; persist(); },
     getRun: function () { return load().run; },
     clearRun: function () { var d = load(); d.run = null; persist(); }

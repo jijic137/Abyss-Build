@@ -46,16 +46,112 @@
     SCREENS.forEach(function (s) { $(s).classList.toggle('on', s === id); });
     ov.classList.toggle('on', !!id);
     UI.hideTip();
-    // 标题界面时，依据续局存档是否存在显示「继续游戏」
+    // 标题界面时，依据续局存档是否存在显示「继续游戏」，并刷新档案面板
     if (id === 'scrTitle') {
       var rb = $('btnResumeRun');
       if (rb) rb.classList.toggle('hidden', !G.Save.getRun());
+      UI.renderCover();
     }
     // 菜单漩涡背景：封面 / 轮盘随界面启停
     if (id === 'scrTitle') UI._vortex('cover').start();
     else UI._vortex('cover').stop();
     if (id === 'scrCharSelect') UI._vortex('wheel').start();
     else { UI._vortex('wheel').stop(); UI.stopWheel(); }
+  };
+
+  /* ------------------------------------------------------------
+     封面档案面板：记录 / 成就 / 存档
+     ------------------------------------------------------------ */
+  UI.renderCover = function () {
+    if (!($('paneRecords') && $('paneAch') && $('paneSave'))) return;   // 缺节点则跳过（无头环境）
+    UI.renderCoverRecords();
+    UI.renderCoverAch();
+    UI.renderCoverSave();
+    if (UI._coverWired) return;            // tab 绑定只做一次
+    UI._coverWired = true;
+    [['tabRecords', 'paneRecords'], ['tabAch', 'paneAch'], ['tabSave', 'paneSave']].forEach(function (pair) {
+      var tb = $(pair[0]); if (!tb) return;
+      tb.addEventListener('click', function () {
+        ['tabRecords', 'tabAch', 'tabSave'].forEach(function (id) { $(id).classList.toggle('tab-on', id === pair[0]); });
+        ['paneRecords', 'paneAch', 'paneSave'].forEach(function (id) { $(id).classList.toggle('pane-on', id === pair[1]); });
+        G.Audio.sfx('select');
+      });
+    });
+  };
+
+  UI.renderCoverRecords = function () {
+    var d = G.Save.get();
+    var s = d.stats;
+    var won = 0; for (var k in s.charsWon) if (s.charsWon[k]) won++;
+    var rows = [
+      ['历史最佳波次', d.bestWave + ' / ' + G.MAX_WAVE],
+      ['历史最多击杀', d.bestKills],
+      ['总场次', s.totalRuns],
+      ['通关次数', s.wins],
+      ['累计击杀', s.totalKills],
+      ['最高连击', s.bestCombo + ' 连'],
+      ['最高 DPS', s.bestDps ? s.bestDps.toLocaleString() : '—'],
+      ['最快通关', s.fastestWin ? fmtTime(s.fastestWin) : '—'],
+      ['已通关职业', won + ' / ' + G.CHARACTERS.length]
+    ];
+    var host = $('paneRecords'); host.innerHTML = '';
+    rows.forEach(function (r) {
+      var row = el('div', 'rec-row');
+      row.appendChild(el('span', 'rec-k', r[0]));
+      row.appendChild(el('span', 'rec-v', String(r[1])));
+      host.appendChild(row);
+    });
+  };
+
+  UI.renderCoverAch = function () {
+    var got = G.Save.getAch();
+    var host = $('paneAch'); host.innerHTML = '';
+    var cnt = 0; G.ACHIEVEMENTS.forEach(function (a) { if (got[a.id]) cnt++; });
+    host.appendChild(el('div', 'ach-count', '已解锁 ' + cnt + ' / ' + G.ACHIEVEMENTS.length));
+    var grid = el('div', 'ach-grid');
+    G.ACHIEVEMENTS.forEach(function (a) {
+      var unlocked = !!got[a.id];
+      var tile = el('div', 'ach-tile' + (unlocked ? ' got' : ''));
+      tile.appendChild(el('div', 'ach-ico', unlocked ? a.icon : '?'));
+      var txt = el('div', 'ach-txt');
+      txt.appendChild(el('div', 'ach-name', a.name));
+      txt.appendChild(el('div', 'ach-desc', a.desc));
+      tile.appendChild(txt);
+      grid.appendChild(tile);
+    });
+    host.appendChild(grid);
+  };
+
+  UI.renderCoverSave = function () {
+    var host = $('paneSave'); host.innerHTML = '';
+    var run = G.Save.getRun();
+    if (!run) {
+      host.appendChild(el('div', 'save-empty', '暂无进行中的存档。<br>每通过一波会自动保存，可在此继续或抹除。'));
+      return;
+    }
+    var ch = G.CHAR_BY_ID[run.charId];
+    var slot = el('div', 'save-slot');
+    slot.appendChild(el('div', 'save-ch', ch ? ch.name : run.charId));
+    slot.appendChild(el('div', 'save-wave', '第 ' + run.wave + ' 波 · ' + fmtTime(run.runTime || 0)));
+    var btnRow = el('div', 'save-btns');
+    var bContinue = el('button', 'btn btn-primary', '继续');
+    bContinue.addEventListener('click', function () {
+      G.Audio.sfx('confirm');
+      var data = G.Save.getRun(); if (!data) return;
+      G.Audio.unlock(); G.Audio.setBgm(G.Save.getSettings().bgm);
+      if (!G.game.resumeRun(data)) { G.Save.clearRun(); UI.renderCover(); }
+    });
+    var bErase = el('button', 'btn', '抹除');
+    bErase.addEventListener('click', function () {
+      G.Audio.sfx('back');
+      G.Save.clearRun();
+      var rb = $('btnResumeRun'); if (rb) rb.classList.add('hidden');
+      UI.renderCover();
+    });
+    btnRow.appendChild(bContinue);
+    btnRow.appendChild(bErase);
+    slot.appendChild(btnRow);
+    host.appendChild(slot);
   };
 
   // 判断某屏是否处于显示态（用于 ESC 等键盘逻辑判断）
@@ -768,6 +864,49 @@
   };
 
   /* ------------------------------------------------------------
+     结算时评定成就 + 扩展记录（在提交最高分之后调用，确保 stats 已落库）
+     返回本次「新解锁」的成就数组
+     ------------------------------------------------------------ */
+  UI.evaluateEnd = function (g, p, win) {
+    var t = g.runTime || 0;
+    var dps = t > 0 ? p.stats.dmgDealt / t : 0;
+    var s = G.Save.getStats();
+
+    // 累计 / 最高类记录
+    G.Save.addStats({ totalRuns: 1, totalKills: p.stats.kills, wins: win ? 1 : 0 });
+    G.Save.setStats({ bestCombo: p.stats.comboMax, bestDps: Math.round(dps) });
+    if (win) G.Save.setStats({ fastestWin: Math.round(t) });
+
+    // 通关则标记职业并判定「全职业通关」
+    if (win) {
+      G.Save.markCharWon(p.char.id);
+      var won = G.Save.getStats().charsWon;
+      var all = G.CHARACTERS.every(function (c) { return won[c.id]; });
+      if (all) G.Save.unlockAch('collector');
+    }
+
+    // 逐条评定成就
+    var checks = {
+      first_dive:   g.wave >= 2,
+      halfway:      g.wave >= 10,
+      conqueror:    win,
+      slayer100:    p.stats.kills >= 100,
+      elite_hunter: p.stats.eliteKills >= 5,
+      boss_slayer:  p.stats.bossKills >= 2,
+      combo_master: p.stats.comboMax >= 30,
+      annihilator:  dps >= 5000,
+      ascetic:      win && p.items.length === 0,
+      speedrun:     win && t <= 600,
+      tycoon:       p.stats.matEarned >= 500
+    };
+    var unlocked = [];
+    for (var id in checks) {
+      if (checks[id] && G.Save.unlockAch(id)) unlocked.push(id);
+    }
+    return unlocked;
+  };
+
+  /* ------------------------------------------------------------
      结算
      ------------------------------------------------------------ */
   UI.showResult = function (g, win) {
@@ -783,6 +922,10 @@
     var dps = t > 0 ? Math.round(p.stats.dmgDealt / t) : 0;
     var best = G.Save.get();
     var star = function (b) { return b ? '　★ 新纪录' : ''; };
+
+    // 评定成就与扩展记录（在提交最高分之后）
+    var newAch = UI.evaluateEnd(g, p, win);
+
     var rows = [
       ['角色', p.char.name],
       ['抵达波次', g.wave + ' / ' + G.MAX_WAVE + star(rec.newWave)],
@@ -798,6 +941,13 @@
       ['武器 / 物品', p.weapons.length + ' / ' + p.items.length],
       ['历史最佳', '第 ' + best.bestWave + ' 波 · ' + best.bestKills + ' 击杀']
     ];
+    if (newAch.length) {
+      var names = newAch.map(function (id) {
+        var a = G.ACHIEVEMENTS.filter(function (x) { return x.id === id; })[0];
+        return a ? a.icon + ' ' + a.name : id;
+      });
+      rows.push(['★ 新成就', names.join('　')]);
+    }
     var host = $('resultStats');
     host.innerHTML = '';
     rows.forEach(function (r) {

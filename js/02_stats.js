@@ -323,4 +323,23 @@
     return Math.floor(6 + lv * 4 + lv * lv * 1.35);
   };
 
+  /* ------------------------------------------------------------
+     成就表（在结算时根据战局指标评定）
+     icon 为装饰性符号（非 emoji），契合暗色像素风
+     ------------------------------------------------------------ */
+  G.ACHIEVEMENTS = [
+    { id: 'first_dive',  name: '初入深渊',   icon: '✦', desc: '完成第一波战斗' },
+    { id: 'halfway',     name: '半程',       icon: '⟁', desc: '抵达第 10 波' },
+    { id: 'conqueror',   name: '深渊征服者', icon: '☉', desc: '通关全部 20 波' },
+    { id: 'slayer100',   name: '百杀',       icon: '⚔', desc: '单局击杀 ≥ 100' },
+    { id: 'elite_hunter',name: '精英猎手',   icon: '✸', desc: '单局精英击杀 ≥ 5' },
+    { id: 'boss_slayer', name: '屠龙者',     icon: '☠', desc: '单局击败 2 个 BOSS' },
+    { id: 'combo_master',name: '连击大师',   icon: '✺', desc: '单局最高连击 ≥ 30' },
+    { id: 'annihilator', name: '毁灭输出',   icon: '✹', desc: '单局 DPS ≥ 10000' },
+    { id: 'ascetic',     name: '苦行者',     icon: '✠', desc: '不持有任何物品通关' },
+    { id: 'collector',   name: '全职业通关', icon: '⬡', desc: '用全部职业各通关一次' },
+    { id: 'speedrun',    name: '速通',       icon: '⟳', desc: '10 分钟内通关' },
+    { id: 'tycoon',      name: '暴富',       icon: '❖', desc: '单局累计材料 ≥ 500' }
+  ];
+
 })();

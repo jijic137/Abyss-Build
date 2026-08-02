@@ -54,25 +54,51 @@ canvas#game{
 .dim{ color:var(--dim); font-weight:400; }
 .flex1{ flex:1; min-height:0; }
 
-/* ---------------- 按钮 ---------------- */
+/* ---------------- 按钮（圆角 + HUD 角标 + 辉光，去除生硬长方形感） ---------------- */
 .btn{
+  position:relative;
   font-family:inherit; font-size:14px; font-weight:600;
   color:var(--text);
-  background:var(--panel2);
-  border:2px solid var(--line);
-  border-radius:2px;
-  padding:9px 18px;
-  cursor:pointer;
-  letter-spacing:.5px;
-  transition:background .12s, border-color .12s, transform .06s;
+  background:linear-gradient(180deg,#2a3045,#1b2030);
+  border:1px solid var(--line2);
+  border-radius:10px;
+  padding:10px 20px;
+  cursor:pointer; letter-spacing:.5px;
+  transition:transform .08s, background .15s, border-color .15s, box-shadow .15s;
+  box-shadow:0 2px 0 #0a0c14;
 }
-.btn:hover{ background:#2d3348; border-color:#5a6386; }
-.btn:active{ transform:translateY(1px); }
+/* 四角 HUD 角标装饰 */
+.btn::before, .btn::after{
+  content:''; position:absolute; width:7px; height:7px; pointer-events:none;
+  border:2px solid var(--line2); opacity:.85;
+}
+.btn::before{ top:5px; left:5px; border-right:none; border-bottom:none; border-radius:3px 0 0 0; }
+.btn::after{ bottom:5px; right:5px; border-left:none; border-top:none; border-radius:0 0 3px 0; }
+.btn:hover{
+  background:linear-gradient(180deg,#323a52,#222838);
+  border-color:#6a76a0;
+  box-shadow:0 2px 0 #0a0c14, 0 6px 18px #0008, 0 0 0 1px #4a557a55;
+  transform:translateY(-1px);
+}
+.btn:active{ transform:translateY(1px); box-shadow:0 1px 0 #0a0c14; }
 .btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
-.btn-primary{ background:#2b6cff22; border-color:#3f7dff; color:#cfe0ff; }
-.btn-primary:hover{ background:#2b6cff40; border-color:#6a9bff; }
+.btn-primary{
+  color:#eaf1ff;
+  background:linear-gradient(180deg,#3a7bff,#2350c8);
+  border-color:#6f9bff;
+  box-shadow:0 2px 0 #16327a, 0 0 22px #2b6cff55;
+}
+.btn-primary::before, .btn-primary::after{ border-color:#bcd4ff; }
+.btn-primary:hover{
+  background:linear-gradient(180deg,#4d8bff,#2c5fdb);
+  border-color:#9ec2ff;
+  box-shadow:0 3px 0 #16327a, 0 10px 30px #2b6cff77;
+  transform:translateY(-1px);
+}
 .btn-lg{ font-size:17px; padding:13px 40px; }
-.btn-reroll{ border-color:#7a6520; background:#3a300f; color:var(--gold); }
+.btn-reroll{ border-color:#7a6520; background:linear-gradient(180deg,#3a300f,#2a2408); color:var(--gold); box-shadow:0 2px 0 #1a1604; }
+.btn-reroll::before, .btn-reroll::after{ border-color:#7a6520; }
+.btn-reroll:hover{ border-color:var(--gold); box-shadow:0 2px 0 #1a1604, 0 0 20px #ffd24a44; }
 .btn-reroll:hover{ background:#4d400f; border-color:#a98a25; }
 
 /* ============================================================
@@ -427,11 +453,14 @@ canvas#game{
 
 /* ---------------- 封面 ---------------- */
 .screen-cover{ overflow:hidden; }
-.cover-inner{
+.cover-grid{
   position:relative; z-index:1;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; padding:24px;
+  width:min(1080px,94vw);
+  display:grid; grid-template-columns:minmax(0,1.05fr) minmax(300px,0.95fr);
+  gap:46px; align-items:center; justify-content:center;
+  padding:32px;
 }
+.cover-hero{ display:flex; flex-direction:column; align-items:flex-start; }
 .cover-tag{
   font-size:12px; letter-spacing:9px; color:#7f8bb0;
   margin-bottom:20px; animation:tagFloat 4s ease-in-out infinite;
@@ -449,28 +478,104 @@ canvas#game{
 @keyframes titleShine{ 0%{background-position:0% 50%;} 100%{background-position:220% 50%;} }
 .screen-cover .game-sub{ margin:10px 0 0; }
 
-.cover-actions{ margin-top:42px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+.cover-actions{ margin-top:42px; display:flex; flex-direction:column; align-items:flex-start; gap:16px; }
 .btn-explore{
-  font-size:22px; letter-spacing:8px; padding:16px 56px;
-  position:relative; display:inline-flex; align-items:center; gap:14px;
-  background:linear-gradient(180deg,#2b6cff33,#2b6cff14);
-  border-color:#5b8cff; color:#dbe8ff;
-  box-shadow:0 0 0 1px #3f7dff55, 0 0 30px #2b6cff44;
+  font-size:22px; letter-spacing:8px; padding:16px 54px;
+  position:relative; display:inline-flex; align-items:center; gap:12px;
+  color:#eaf1ff;
+  background:linear-gradient(180deg,#3a7bff,#1f49b8);
+  border:1px solid #7da6ff;
+  box-shadow:0 3px 0 #143a8a, 0 0 30px #2b6cff66;
   animation:explorePulse 2.4s ease-in-out infinite;
 }
-.btn-explore:hover{ background:linear-gradient(180deg,#2b6cff55,#2b6cff22); border-color:#8fb4ff; }
+.btn-explore:hover{ background:linear-gradient(180deg,#5290ff,#2a5bd6); border-color:#bcd4ff; transform:translateY(-2px); }
+.btn-explore::before, .btn-explore::after{ border-color:#bcd4ff; }
 @keyframes explorePulse{
-  0%,100%{ box-shadow:0 0 0 1px #3f7dff55, 0 0 22px #2b6cff33; }
-  50%{ box-shadow:0 0 0 1px #3f7dff88, 0 0 46px #2b6cff66; }
+  0%,100%{ box-shadow:0 3px 0 #143a8a, 0 0 22px #2b6cff44; }
+  50%{ box-shadow:0 3px 0 #143a8a, 0 0 48px #2b6cff88; }
 }
-.spiral-mark{
-  width:16px; height:16px; border-radius:50%;
-  border:2px solid #cfe0ff; border-top-color:transparent; border-right-color:transparent;
-  display:inline-block; animation:spinMark 2.2s linear infinite;
+/* 进入深渊的向下箭头（轻浮动，明确「下沉」而非加载圈） */
+.explore-glyph{
+  width:0; height:0;
+  border-left:7px solid transparent; border-right:7px solid transparent;
+  border-top:11px solid #cfe0ff;
+  animation:glyphBob 1.6s ease-in-out infinite;
 }
-@keyframes spinMark{ to{ transform:rotate(360deg); } }
+@keyframes glyphBob{ 0%,100%{ transform:translateY(-2px); } 50%{ transform:translateY(3px); } }
 .cover-secondary{ display:flex; gap:14px; }
-.screen-cover .title-tip{ margin-top:36px; color:#6b728f; max-width:520px; }
+.screen-cover .title-tip{ margin-top:34px; color:#6b728f; max-width:520px; }
+
+/* ---------------- 封面右侧档案面板（记录 / 成就 / 存档） ---------------- */
+.cover-panel{
+  position:relative; z-index:1; width:100%; align-self:center;
+  background:linear-gradient(180deg,#11151fee,#0d1018f2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:0 14px 44px #000a, inset 0 0 0 1px #ffffff08;
+  overflow:hidden; display:flex; flex-direction:column;
+  max-height:76vh;
+}
+.panel-tabs{ display:flex; border-bottom:1px solid var(--line); background:#0e1220aa; }
+.tab{
+  flex:1; padding:12px 0; font-size:14px; letter-spacing:2px;
+  color:var(--dim); background:transparent; border:none; cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:color .15s, border-color .15s, background .15s;
+}
+.tab:hover{ color:#cdd4ea; }
+.tab.tab-on{
+  color:#dfe6ff; border-bottom-color:#5b8cff;
+  background:#16203a; text-shadow:0 0 14px #5b8cff66;
+}
+.panel-body{ position:relative; padding:16px 18px; overflow-y:auto; flex:1; }
+.panel-pane{ display:none; }
+.panel-pane.pane-on{ display:block; animation:paneIn .25s ease-out; }
+@keyframes paneIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+
+/* 记录 */
+.rec-row{ display:flex; justify-content:space-between; align-items:center; padding:8px 4px; border-bottom:1px dashed #2a304a; font-size:13px; }
+.rec-row:last-child{ border-bottom:none; }
+.rec-k{ color:var(--dim); }
+.rec-v{ color:#e6ecff; font-weight:700; font-variant-numeric:tabular-nums; }
+
+/* 成就 */
+.ach-count{ font-size:12px; color:var(--gold); letter-spacing:1px; margin-bottom:12px; text-align:center; }
+.ach-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.ach-tile{
+  display:flex; gap:10px; align-items:center;
+  padding:10px 12px; border-radius:10px;
+  background:#141828; border:1px solid var(--line);
+  opacity:.5; filter:grayscale(.6);
+  transition:transform .12s, opacity .2s, border-color .2s;
+}
+.ach-tile.got{ opacity:1; filter:none; border-color:#3f7dff; background:#16213c; box-shadow:0 0 16px #2b6cff33; }
+.ach-tile.got:hover{ transform:translateY(-2px); }
+.ach-ico{ font-size:22px; width:30px; text-align:center; color:var(--line2); flex:none; }
+.ach-tile.got .ach-ico{ color:#ffd98a; text-shadow:0 0 12px #ffd24a66; }
+.ach-name{ font-size:13px; font-weight:800; color:#cfd4e6; }
+.ach-tile.got .ach-name{ color:#eaf1ff; }
+.ach-desc{ font-size:11px; color:var(--dim2); line-height:1.4; margin-top:2px; }
+
+/* 存档槽 */
+.save-empty{ color:var(--dim); font-size:13px; line-height:1.7; text-align:center; padding:24px 8px; }
+.save-slot{
+  padding:16px; border-radius:12px;
+  background:linear-gradient(180deg,#16213c,#10162400);
+  border:1px solid #34508f;
+  box-shadow:0 0 22px #2b6cff22;
+}
+.save-ch{ font-size:18px; font-weight:900; color:#eaf1ff; letter-spacing:1px; }
+.save-wave{ font-size:12px; color:var(--dim); margin-top:6px; letter-spacing:1px; }
+.save-btns{ display:flex; gap:12px; margin-top:16px; }
+.save-btns .btn{ flex:1; text-align:center; }
+
+/* 窄屏：封面由两栏堆叠为单栏 */
+@media (max-width:880px){
+  .cover-grid{ grid-template-columns:1fr; gap:26px; width:94vw; padding:22px; }
+  .cover-hero{ align-items:center; text-align:center; }
+  .screen-cover .game-title{ font-size:60px; letter-spacing:12px; }
+  .cover-panel{ max-height:none; }
+}
 
 /* 进入漩涡：封面缩放淡出 */
 .screen.leaving{ animation:coverOut .62s ease-in forwards; }

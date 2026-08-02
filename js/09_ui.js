@@ -23,7 +23,8 @@
     critExplode: { sym: '星', col: '#ffd24a', name: '暴击新星', desc: '暴击时引发爆炸' },
     poisonOnHit: { sym: '毒', col: '#7ee06a', name: '淬毒', desc: '命中敌人有几率中毒' },
     thunderAura: { sym: '雷', col: '#c9a6ff', name: '雷霆光环', desc: '周期性释放连锁闪电' },
-    critSlow:    { sym: '缓', col: '#ff9ad0', name: '暴击迟滞', desc: '暴击使目标减速' }
+    critSlow:    { sym: '缓', col: '#ff9ad0', name: '暴击迟滞', desc: '暴击使目标减速' },
+    leechOnKill: { sym: '噬', col: '#ff5fa8', name: '噬魂', desc: '击杀敌人回复生命' }
   };
   function collectSp(p) {
     var out = [];
@@ -39,7 +40,7 @@
   /* ------------------------------------------------------------
      通用：屏幕切换
      ------------------------------------------------------------ */
-  var SCREENS = ['scrTitle', 'scrShop', 'scrLevel', 'scrPause', 'scrResult', 'scrSettings'];
+  var SCREENS = ['scrTitle', 'scrCharSelect', 'scrShop', 'scrLevel', 'scrPause', 'scrResult', 'scrSettings'];
   UI.showScreen = function (id) {
     var ov = $('overlay');
     SCREENS.forEach(function (s) { $(s).classList.toggle('on', s === id); });
@@ -50,6 +51,11 @@
       var rb = $('btnResumeRun');
       if (rb) rb.classList.toggle('hidden', !G.Save.getRun());
     }
+    // 菜单漩涡背景：封面 / 轮盘随界面启停
+    if (id === 'scrTitle') UI._vortex('cover').start();
+    else UI._vortex('cover').stop();
+    if (id === 'scrCharSelect') UI._vortex('wheel').start();
+    else { UI._vortex('wheel').stop(); UI.stopWheel(); }
   };
 
   // 判断某屏是否处于显示态（用于 ESC 等键盘逻辑判断）
@@ -125,6 +131,7 @@
       '<div class="p">冷却 ' + G.fmt(cd, 2) + 's　射程 ' + Math.round(def.range) + '</div>';
     var m = G.weaponMods(def, tier);
     if (m) h += modsHtml(m);
+    h += '<div class="tt-attr">伤害加成 · ' + G.F.damageAttrText(def.tags) + '（额外受全局「伤害%」影响）</div>';
     h += '<div class="tt-f">' + def.desc + '</div>';
     return h;
   }
@@ -132,28 +139,330 @@
   UI.weaponTip = weaponTip;
 
   /* ------------------------------------------------------------
-     角色选择
+     漩涡背景动画（封面 / 轮盘共用）
+     requestAnimationFrame 驱动；无头 / 无 canvas 时自动降级为静默
      ------------------------------------------------------------ */
-  UI.renderCharSelect = function (onPick) {
-    var box = $('charSelect');
-    box.innerHTML = '';
-    G.CHARACTERS.forEach(function (ch, i) {
-      var card = el('div', 'char-card' + (i === 0 ? ' sel' : ''));
-      card.appendChild(G.PX.node(G.PX.get(ch.sprite, 4)));
-      card.appendChild(el('div', 'char-name', ch.name));
-      card.appendChild(el('div', 'char-desc', ch.desc));
-      var wpn = G.WEAPON_MAP[ch.startWeapon];
-      card.appendChild(el('div', 'char-mods',
-        modsHtml(ch.mods) +
-        '<div style="color:#8a90a8;margin-top:4px">起始武器：' + wpn.name + '</div>'));
-      card.addEventListener('click', function () {
-        Array.prototype.forEach.call(box.children, function (n) { n.classList.remove('sel'); });
-        card.classList.add('sel');
-        onPick(ch);
-      });
-      box.appendChild(card);
+  var Vortex = (function () {
+    function nowMs() {
+      if (typeof performance !== 'undefined' && performance.now) return performance.now();
+      return Date.now();
+    }
+    function mix(c1, c2, t) {
+      var a = G.PX.hex2rgb(c1), b = G.PX.hex2rgb(c2);
+      return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * t) + ',' +
+        Math.round(a[1] + (b[1] - a[1]) * t) + ',' +
+        Math.round(a[2] + (b[2] - a[2]) * t) + ')';
+    }
+    function Inst(canvas, opt) {
+      opt = opt || {};
+      this.canvas = canvas;
+      this.ctx = canvas ? canvas.getContext('2d') : null;
+      this.count = opt.count || 200;
+      this.hue = opt.hue || '#3f7dff';
+      this.base = opt.speed || 1;
+      this.alpha = (opt.alpha == null) ? 1 : opt.alpha;
+      this.parts = [];
+      this.spin = Math.random() * Math.PI * 2;
+      this.pulse = 0;
+      this.running = false;
+      this.w = 1; this.h = 1; this.dpr = 1;
+      this._raf = null;
+      if (this.ctx) { this.resize(); this._seed(); }
+    }
+    Inst.prototype.resize = function () {
+      if (!this.ctx) return;
+      var c = this.canvas;
+      var w = c.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 1);
+      var h = c.clientHeight || (typeof window !== 'undefined' ? window.innerHeight : 1);
+      this.dpr = Math.min((window.devicePixelRatio || 1), 2);
+      c.width = Math.max(1, Math.floor(w * this.dpr));
+      c.height = Math.max(1, Math.floor(h * this.dpr));
+      this.w = w; this.h = h;
+      this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    };
+    Inst.prototype._seed = function () {
+      this.parts.length = 0;
+      for (var i = 0; i < this.count; i++) this.parts.push(this._mk(true));
+    };
+    Inst.prototype._mk = function (any) {
+      return {
+        a: Math.random() * Math.PI * 2,
+        r: any ? Math.random() : 1,
+        sp: 0.4 + Math.random() * 0.9,
+        vr: 0.05 + Math.random() * 0.10,
+        sz: 1.2 + Math.random() * 2.4,
+        tw: Math.random() * Math.PI * 2,
+        gold: Math.random() < 0.08
+      };
+    };
+    Inst.prototype.pulseUp = function () { this.pulse = 1; };
+    Inst.prototype.start = function () {
+      if (this.running || !this.ctx) return;
+      if (typeof requestAnimationFrame !== 'function') return;
+      this.running = true;
+      var self = this, last = nowMs();
+      function step(now) {
+        if (!self.running) return;
+        var dt = Math.min(0.05, (now - last) / 1000); last = now;
+        self.frame(dt || 0.016);
+        self._raf = requestAnimationFrame(step);
+      }
+      self._raf = requestAnimationFrame(step);
+    };
+    Inst.prototype.stop = function () {
+      this.running = false;
+      if (this._raf && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(this._raf);
+      this._raf = null;
+    };
+    Inst.prototype.frame = function (dt) {
+      var ctx = this.ctx; if (!ctx) return;
+      var w = this.w, h = this.h, cx = w / 2, cy = h / 2;
+      var R = Math.min(w, h) * 0.62;
+      this.spin += (0.06 + 0.35 * this.pulse) * this.base * dt;
+      this.pulse *= Math.pow(0.9, dt * 60);
+      var bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.75);
+      bg.addColorStop(0, '#0a0e1a');
+      bg.addColorStop(0.55, '#070912');
+      bg.addColorStop(1, '#04050a');
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+      var gl = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.5);
+      gl.addColorStop(0, 'rgba(120,160,255,' + (0.16 + 0.22 * this.pulse) + ')');
+      gl.addColorStop(0.5, 'rgba(70,110,220,' + (0.06 + 0.10 * this.pulse) + ')');
+      gl.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = gl;
+      ctx.fillRect(0, 0, w, h);
+      var inner = '#e6eeff';
+      ctx.globalCompositeOperation = 'lighter';
+      for (var i = 0; i < this.parts.length; i++) {
+        var p = this.parts[i];
+        p.a += (p.sp + 0.3) * this.base * (1 + this.pulse * 2.2) * dt;
+        p.r -= p.vr * this.base * (1 + this.pulse * 3) * dt;
+        p.tw += dt * 4;
+        if (p.r <= 0.03) { this.parts[i] = this._mk(false); continue; }
+        var ang = p.a + this.spin;
+        var rad = p.r * R;
+        var x = cx + Math.cos(ang) * rad;
+        var y = cy + Math.sin(ang) * rad;
+        var m = 1 - p.r;
+        var col = p.gold ? mix('#ffd24a', '#fff4cf', m) : mix(this.hue, inner, m * 0.9);
+        var sz = p.sz * (0.5 + m * 1.6);
+        var tw = 0.6 + 0.4 * Math.sin(p.tw);
+        ctx.globalAlpha = (0.12 + 0.6 * m) * tw * this.alpha;
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(x, y, sz, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    };
+    return Inst;
+  })();
+
+  UI._vortices = {};
+  UI._vortex = function (which) {
+    if (!UI._vortices[which]) {
+      var cv = $('vortex' + (which === 'cover' ? 'Cover' : 'Wheel'));
+      UI._vortices[which] = new Vortex(cv, which === 'cover'
+        ? { count: 230, hue: '#3f7dff', speed: 1.0, alpha: 0.95 }
+        : { count: 170, hue: '#6a4bd6', speed: 0.8, alpha: 0.8 });
+    }
+    return UI._vortices[which];
+  };
+  if (typeof window !== 'undefined' && !UI._resizeBound) {
+    UI._resizeBound = true;
+    window.addEventListener('resize', function () {
+      UI._vortex('cover').resize();
+      UI._vortex('wheel').resize();
+      if (UI._wheel && UI._wheel.active) wheelLayout(UI._wheel);
     });
-    onPick(G.CHARACTERS[0]);
+  }
+
+  /* ------------------------------------------------------------
+     角色选择 —— 圆形轮盘
+     ------------------------------------------------------------ */
+  UI._wheel = { active: false };
+
+  function wheelLayout(w) {
+    var n = w.chars.length, stage = w.stage;
+    var R = Math.max(170, Math.min(300, Math.min(stage.clientWidth, stage.clientHeight) * 0.37));
+    for (var i = 0; i < n; i++) {
+      var it = w.items[i];
+      var va = (((it.base + w.rot) % 360) + 360) % 360;
+      var f = Math.cos((va - 180) * Math.PI / 180);
+      var half = (f + 1) / 2;
+      var scale = 0.6 + 0.45 * half;
+      var arcUp = -((1 - f) / 2) * 48;
+      it.el.style.transform = 'rotate(' + it.base + 'deg) translateY(' + (-R) + 'px) rotate(' + (-it.base) + 'deg) translateY(' + arcUp + 'px) scale(' + scale + ')';
+      it.el.style.opacity = (0.30 + 0.70 * half).toFixed(3);
+      it.el.style.zIndex = Math.round(f * 10) + 10;
+      it.el.classList.toggle('front', f > 0.92);
+    }
+    var best = -2, idx = w.selected;
+    for (var k = 0; k < n; k++) {
+      var vk = (((w.items[k].base + w.rot) % 360) + 360) % 360;
+      var fk = Math.cos((vk - 180) * Math.PI / 180);
+      if (fk > best) { best = fk; idx = k; }
+    }
+    if (!w.spinning && idx !== w.selected) {
+      w.selected = idx;
+      w.onPick(w.chars[idx]);
+      updateWheelInfo(w.chars[idx]);
+      G.Audio.sfx('select');
+      popToken(w.items[idx].token);
+      burstAt(stage, w.chars[idx].color);
+    }
+  }
+
+  function popToken(tok) {
+    if (!tok) return;
+    tok.classList.remove('pop');
+    void tok.offsetWidth;
+    tok.classList.add('pop');
+  }
+
+  function updateWheelInfo(ch) {
+    var box = $('wheelInfo');
+    $('wiName').textContent = ch.name;
+    $('wiName').style.color = ch.color;
+    $('wiName').style.setProperty('--c', ch.color);
+    $('wiDesc').textContent = ch.desc;
+    $('wiMods').innerHTML = modsHtml(ch.mods);
+    var wpn = G.WEAPON_MAP[ch.startWeapon];
+    $('wiWeapon').innerHTML = '起始武器：<b style="color:#cfd4e6">' + wpn.name + '</b>';
+    box.classList.remove('flash');
+    void box.offsetWidth;
+    box.classList.add('flash');
+  }
+
+  function burstAt(stage, color) {
+    var r = stage.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var i = 0; i < 10; i++) {
+      var d = document.createElement('div');
+      d.className = 'dom-particle';
+      d.style.left = cx + 'px';
+      d.style.top = cy + 'px';
+      d.style.color = color || '#ffd24a';
+      d.style.background = color || '#ffd24a';
+      var ang = Math.random() * Math.PI * 2, dist = 40 + Math.random() * 70;
+      d.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+      d.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+      document.body.appendChild(d);
+      (function (node) { setTimeout(function () { if (node.parentNode) node.parentNode.removeChild(node); }, 650); })(d);
+    }
+  }
+
+  UI.renderCharWheel = function (onPick) {
+    var stage = $('wheelStage');
+    var ring = $('wheelRing');
+    ring.innerHTML = '';
+    var chars = G.CHARACTERS, n = chars.length, step = 360 / n;
+    var w = UI._wheel;
+    w.chars = chars; w.onPick = onPick; w.stage = stage; w.ring = ring;
+    w.items = [];
+    for (var i = 0; i < n; i++) {
+      var ch = chars[i];
+      var item = document.createElement('div');
+      item.className = 'wheel-item';
+      var tok = document.createElement('div');
+      tok.className = 'wheel-token';
+      tok.style.setProperty('--c', ch.color);
+      var spr = G.PX.node(G.PX.get(ch.sprite, 4));
+      if (spr) { spr.style.width = '76px'; spr.style.height = '76px'; tok.appendChild(spr); }
+      var nm = document.createElement('div');
+      nm.className = 'wheel-token-name';
+      nm.textContent = ch.name;
+      nm.style.color = ch.color;
+      tok.appendChild(nm);
+      item.appendChild(tok);
+      (function (idx, itEl, tokEl) {
+        itEl.addEventListener('click', function () { selectWheelIndex(idx); });
+        itEl.addEventListener('mouseenter', function () { G.Audio.sfx('hover'); });
+      })(i, item, tok);
+      ring.appendChild(item);
+      w.items.push({ el: item, token: tok, ch: ch, base: i * step });
+    }
+    w.selected = 0;
+    w.targetRot = 180;
+    w.rot = 180 + 540;            // 入场旋转动画
+    w.spinning = true;            // 入场旋转期间暂不触发选中反馈
+    updateWheelInfo(chars[0]);
+    onPick(chars[0]);
+    UI._wheelActive = true;
+    bindWheelInput();
+    layoutWheelStart();
+  };
+
+  function selectWheelIndex(idx) {
+    var w = UI._wheel; if (!w.items) return;
+    w.spinning = false;
+    var step = 360 / w.chars.length;
+    var desired = 180 - w.items[idx].base;
+    while (desired - w.rot > 180) desired -= 360;
+    while (desired - w.rot < -180) desired += 360;
+    w.targetRot = desired;
+  }
+  UI.selectWheelIndex = selectWheelIndex;
+
+  function snapWheel() {
+    var w = UI._wheel; if (!w.items) return;
+    var step = 360 / w.chars.length;
+    w.targetRot = Math.round((w.rot - 180) / step) * step + 180;
+  }
+
+  function bindWheelInput() {
+    if (UI._wheelInputBound) return;
+    UI._wheelInputBound = true;
+    var stage = $('wheelStage');
+    var dragging = false, lastX = 0;
+    stage.addEventListener('pointerdown', function (e) { dragging = true; UI._wheel.spinning = false; lastX = e.clientX; e.preventDefault(); });
+    window.addEventListener('pointerup', function () { if (dragging) { dragging = false; snapWheel(); } });
+    window.addEventListener('pointermove', function (e) {
+      if (!dragging || !UI._wheel.active) return;
+      var dx = e.clientX - lastX; lastX = e.clientX;
+      UI._wheel.rot += dx * 0.5; UI._wheel.targetRot += dx * 0.5;
+    });
+    stage.addEventListener('wheel', function (e) {
+      if (!UI._wheel.active) return;
+      e.preventDefault();
+      UI._wheel.spinning = false;
+      var step = 360 / UI._wheel.chars.length;
+      UI._wheel.targetRot += (e.deltaY > 0 ? -step : step);
+    }, { passive: false });
+    window.addEventListener('keydown', function (e) {
+      if (!UI._wheel.active) return;
+      var step = 360 / UI._wheel.chars.length;
+      UI._wheel.spinning = false;
+      if (e.key === 'ArrowRight' || e.key === 'KeyD') { UI._wheel.targetRot -= step; e.preventDefault(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'KeyA') { UI._wheel.targetRot += step; e.preventDefault(); }
+      else if (e.key === 'Enter' || e.key === 'Space') { var b = $('btnConfirm'); if (b) b.click(); e.preventDefault(); }
+    });
+  }
+
+  function layoutWheelStart() {
+    var w = UI._wheel;
+    if (!w.active) {
+      w.active = true;
+      if (typeof requestAnimationFrame === 'function') w._raf = requestAnimationFrame(wheelTick);
+    }
+  }
+  function wheelTick() {
+    var w = UI._wheel;
+    if (!w || !w.active) return;
+    w.rot += (w.targetRot - w.rot) * 0.16;
+    if (Math.abs(w.targetRot - w.rot) < 0.02) w.rot = w.targetRot;
+    if (Math.abs(w.targetRot - w.rot) < 0.5) w.spinning = false;
+    wheelLayout(w);
+    w._raf = requestAnimationFrame(wheelTick);
+  }
+  UI.stopWheel = function () {
+    var w = UI._wheel;
+    w.active = false;
+    if (w._raf && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(w._raf);
+    w._raf = null;
   };
 
   /* ------------------------------------------------------------
@@ -334,6 +643,9 @@
         body.innerHTML = modsHtml(o.def.mods || {}, o.def.sp, o.def.spTxt);
       }
       card.appendChild(body);
+      if (o.kind === 'weapon') {
+        card.appendChild(el('div', 'card-dmgattr', '伤害加成 · ' + G.F.damageAttrText(o.def.tags)));
+      }
       card.appendChild(el('div', 'card-flavor', o.kind === 'weapon' ? o.def.desc : (o.def.fl || '')));
 
       var foot = el('div', 'card-foot');

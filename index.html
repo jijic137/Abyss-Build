@@ -66,16 +66,48 @@
   <!-- ============ 遮罩界面 ============ -->
   <div id="overlay" class="overlay">
 
-    <!-- 标题 / 角色选择 -->
-    <section id="scrTitle" class="screen">
-      <h1 class="game-title">深渊构筑</h1>
-      <p class="game-sub">ABYSS&nbsp;BUILD &nbsp;— &nbsp;20 波 · 构筑 · 生存</p>
-      <div class="char-select" id="charSelect"></div>
-      <div class="title-foot">
-        <button class="btn btn-primary btn-lg" id="btnStart">开始游戏</button>
-        <button class="btn btn-lg" id="btnResumeRun">继续游戏</button>
-        <button class="btn" id="btnSettings">设置</button>
-        <div class="title-tip">提示：物品几乎都带负面属性，构筑的核心是让优点叠成体系、把缺点藏起来。</div>
+    <!-- ============ 封面（首页） ============ -->
+    <section id="scrTitle" class="screen screen-cover">
+      <canvas class="vortex-canvas" id="vortexCover"></canvas>
+      <div class="cover-inner">
+        <div class="cover-tag">THE&nbsp;ABYSS&nbsp;AWAITS</div>
+        <h1 class="game-title">深渊构筑</h1>
+        <p class="game-sub">ABYSS&nbsp;BUILD &nbsp;— &nbsp;20 波 · 构筑 · 生存</p>
+        <div class="cover-actions">
+          <button class="btn btn-primary btn-lg btn-explore" id="btnExplore">
+            <span class="spiral-mark"></span>探索深渊
+          </button>
+          <div class="cover-secondary">
+            <button class="btn btn-lg" id="btnResumeRun">继续游戏</button>
+            <button class="btn" id="btnSettings">设置</button>
+          </div>
+        </div>
+        <div class="title-tip">物品几乎都带负面属性——让优点叠成体系，把缺点藏进构筑里。</div>
+      </div>
+    </section>
+
+    <!-- ============ 角色选择（轮盘） ============ -->
+    <section id="scrCharSelect" class="screen screen-wheel">
+      <canvas class="vortex-canvas" id="vortexWheel"></canvas>
+      <div class="wheel-head">
+        <h2 class="wheel-title">选择你的深渊行者</h2>
+        <p class="wheel-sub">拖动 / 方向键 / 滚轮 旋转轮盘 · 点击角色选中</p>
+      </div>
+
+      <div class="wheel-stage" id="wheelStage">
+        <div class="wheel-ring" id="wheelRing"></div>
+      </div>
+
+      <div class="wheel-info" id="wheelInfo">
+        <div class="wi-name" id="wiName"></div>
+        <div class="wi-desc" id="wiDesc"></div>
+        <div class="wi-mods" id="wiMods"></div>
+        <div class="wi-weapon" id="wiWeapon"></div>
+      </div>
+
+      <div class="wheel-foot">
+        <button class="btn btn-lg" id="btnBack">‹ 返回</button>
+        <button class="btn btn-primary btn-lg" id="btnConfirm">踏入深渊 ›</button>
       </div>
     </section>
 

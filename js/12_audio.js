@@ -36,7 +36,8 @@
     this._gap = {
       fire: 0.09, swing: 0.10, hit: 0.06, crit: 0.05, kill: 0.05,
       pickup: 0.06, heal: 0, wave: 0, boss: 0, levelup: 0,
-      buy: 0, hurt: 0, death: 0, victory: 0, bossdie: 0
+      buy: 0, hurt: 0, death: 0, victory: 0, bossdie: 0,
+      abyss: 0, select: 0, hover: 0.045, confirm: 0, back: 0
     };
   }
 
@@ -318,6 +319,29 @@
     // 胜利：大调上行琶音 + 混响（居中）
     victory: function (A, t) {
       A._chord(t, [523, 659, 784, 1047], { type: 'triangle', dur: 0.32, gain: 0.18, stagger: 0.12, send: 0.3, center: true });
+    },
+    // 漩涡吸入（进入深渊过渡）：低频膨胀 + 噪声扫频 + 回响（居中）
+    abyss: function (A, t) {
+      A._tone(t, { type: 'sawtooth', f0: 90, f1: 260, dur: 0.62, gain: 0.22, send: 0.32, center: true, lfo: { rate: 7, depth: 22, target: 'freq' } });
+      A._tone(t + 0.05, { type: 'sine', f0: 180, f1: 52, dur: 0.66, gain: 0.18, send: 0.26, center: true });
+      A._noise(t, { dur: 0.52, gain: 0.12, filt: { type: 'lowpass', f0: 300, f1: 1700 }, center: true });
+    },
+    // 轮盘选中：明亮双音上扬 + 混响
+    select: function (A, t) {
+      A._chord(t, [660, 990], { type: 'triangle', dur: 0.15, gain: 0.14, stagger: 0.05, f1: [780, 1180], send: 0.2 });
+      A._tone(t + 0.02, { type: 'square', f0: 1400, f1: 1900, dur: 0.06, gain: 0.06 });
+    },
+    // 悬停：极轻的滴音
+    hover: function (A, t) {
+      A._tone(t, { type: 'sine', f0: 880, f1: 1120, dur: 0.05, gain: 0.05, detune: 30 });
+    },
+    // 确认进入：大调上行琶音（居中）
+    confirm: function (A, t) {
+      A._chord(t, [523, 659, 784, 1047], { type: 'triangle', dur: 0.26, gain: 0.16, stagger: 0.06, send: 0.3, center: true });
+    },
+    // 返回：柔和下行双音
+    back: function (A, t) {
+      A._chord(t, [660, 440], { type: 'triangle', dur: 0.18, gain: 0.12, stagger: 0.05, f1: [520, 330], send: 0.12 });
     }
   };
 

@@ -496,55 +496,37 @@ canvas#game{
   display:flex; align-items:center; justify-content:center;
   transition:transform .25s cubic-bezier(.2,.7,.3,1);
 }
-/* 环境呼吸辉光 */
-.btn-portal::before{
-  content:''; position:absolute; inset:-34%; border-radius:50%; z-index:-1; pointer-events:none;
-  background:radial-gradient(circle, rgba(70,130,255,.28), rgba(70,130,255,.08) 45%, transparent 68%);
-  filter:blur(14px);
-  animation:portalBreathe 5.5s ease-in-out infinite;
-}
-@keyframes portalBreathe{ 0%,100%{ opacity:.7; transform:scale(.96); } 50%{ opacity:1; transform:scale(1.06); } }
-/* 旋转能量环（双环异向缓转，仪式感） */
-.portal-ring{ position:absolute; inset:0; border-radius:50%; pointer-events:none; }
-.portal-ring-a{
-  background:conic-gradient(from 0deg, transparent 0 58%, rgba(120,165,255,.9) 72%, #dcebff 80%, rgba(120,165,255,.45) 88%, transparent 96%);
-  -webkit-mask:radial-gradient(circle, transparent 63%, #000 64%);
-          mask:radial-gradient(circle, transparent 63%, #000 64%);
-  filter:drop-shadow(0 0 6px rgba(90,140,255,.7));
-  animation:portalSpin 14s linear infinite;
-}
-.portal-ring-b{
-  inset:14px;
-  background:conic-gradient(from 180deg, transparent 0 70%, rgba(150,190,255,.7) 82%, transparent 92%);
-  -webkit-mask:radial-gradient(circle, transparent 70%, #000 71%);
-          mask:radial-gradient(circle, transparent 70%, #000 71%);
-  opacity:.7;
-  animation:portalSpinRev 22s linear infinite;
-}
-@keyframes portalSpin{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
-@keyframes portalSpinRev{ from{ transform:rotate(0); } to{ transform:rotate(-360deg); } }
-/* 中心“深渊之窗” */
+/* 中心承载（无边框、无光圈） */
 .portal-core{
   position:relative; z-index:2;
-  width:62%; height:62%; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
-  background:radial-gradient(circle at 50% 40%, #0c1830 0%, #060b16 72%);
-  border:1px solid rgba(150,190,255,.45);
-  box-shadow:inset 0 0 26px rgba(70,130,255,.4), 0 0 26px rgba(60,120,255,.22);
-  transition:box-shadow .25s, border-color .25s, transform .25s;
 }
+/* 探索深渊：逐字晃动 / 扭曲，如自深渊中浮现 */
 .portal-label{
-  font-size:20px; font-weight:800; letter-spacing:6px; color:#e3ecff;
-  text-shadow:0 0 18px rgba(120,165,255,.9), 0 0 6px rgba(220,235,255,.6);
+  display:inline-flex; gap:8px;
+  font-size:26px; font-weight:900; letter-spacing:2px; color:#eaf1ff;
+  text-shadow:0 0 22px rgba(120,165,255,.95), 0 0 8px rgba(220,235,255,.7), 0 0 2px rgba(0,0,0,.6);
 }
-/* 悬停：裂隙张开 */
-.btn-portal:hover{ transform:scale(1.06); }
-.btn-portal:hover .portal-core{
-  border-color:rgba(200,222,255,.8);
-  box-shadow:inset 0 0 38px rgba(95,160,255,.65), 0 0 52px rgba(85,150,255,.5);
+.portal-label .pc{
+  display:inline-block;
+  transform-origin:50% 62%;
+  animation:charWobble 4.2s ease-in-out infinite;
+  will-change:transform;
 }
-.btn-portal:hover .portal-ring-a{ filter:drop-shadow(0 0 10px rgba(120,170,255,1)); }
-.btn-portal:active{ transform:scale(1.02); }
+.portal-label .pc:nth-child(1){ animation-delay:0s; }
+.portal-label .pc:nth-child(2){ animation-delay:.5s; }
+.portal-label .pc:nth-child(3){ animation-delay:1s; }
+.portal-label .pc:nth-child(4){ animation-delay:1.5s; }
+@keyframes charWobble{
+  0%,100%{ transform:translateY(0) rotate(0deg) skewX(0deg) scaleY(1); text-shadow:0 0 22px rgba(120,165,255,.95),0 0 8px rgba(220,235,255,.7); }
+  25%{ transform:translateY(-4px) rotate(-3deg) skewX(6deg) scaleY(1.08); text-shadow:0 0 30px rgba(150,190,255,1),0 0 12px rgba(220,235,255,.9); }
+  50%{ transform:translateY(0) rotate(0deg) skewX(0deg) scaleY(1); }
+  75%{ transform:translateY(3px) rotate(3deg) skewX(-6deg) scaleY(.94); text-shadow:0 0 18px rgba(120,165,255,.8),0 0 6px rgba(220,235,255,.6); }
+}
+/* 悬停：整体微亮放大 */
+.btn-portal:hover{ transform:scale(1.07); }
+.btn-portal:hover .portal-label{ color:#ffffff; }
+.btn-portal:active{ transform:scale(1.03); }
 
 /* 记录 / 成就 / 存档 / 设置 / 继续：环绕裂隙的符文节点 */
 .orbit-field{

@@ -482,7 +482,6 @@ canvas#game{
 /* ---------------- 轮盘角色选择 ---------------- */
 .screen-wheel{
   overflow-x:hidden; overflow-y:auto;
-  display:grid;
   grid-template-columns:minmax(150px,1fr) auto minmax(150px,1fr);
   grid-template-rows:1fr auto;
   grid-template-areas:
@@ -491,6 +490,7 @@ canvas#game{
   align-items:center; justify-items:center;
   gap:12px 28px; padding:18px 30px; min-height:100%;
 }
+.screen-wheel.on{ display:grid; }
 .screen-wheel .vortex-canvas{ opacity:.82; }
 .wheel-head{ grid-area:wheelhead; justify-self:start; align-self:center; position:relative; z-index:1; text-align:left; }
 .wheel-title{

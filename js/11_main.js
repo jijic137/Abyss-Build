@@ -36,7 +36,7 @@
       G.Audio.unlock();                 // 首次用户手势：解锁音频
       G.Audio.sfx('abyss');             // 漩涡吸入音效
       G.UI._vortex('cover').pulseUp();  // 漩涡加速
-      var cover = $('scrTitle');
+      var cover = byId('scrTitle');
       cover.classList.add('leaving');
       setTimeout(function () {
         cover.classList.remove('leaving');

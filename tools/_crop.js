@@ -1,4 +1,4 @@
-/* 用浏览器 canvas 裁剪掉封面图右下角水印区域，另存为 assets/cover_nwm.png */
+/* 用浏览器 canvas 裁剪掉封面图右下角水印区域，另存为 assets/art/covers/cover_nwm.png */
 'use strict';
 const fs = require('fs');
 const { chromium } = require('playwright-core');
@@ -28,13 +28,13 @@ const { chromium } = require('playwright-core');
         } catch (e) { reject(e); }
       };
       img.onerror = (e) => reject(e);
-      img.src = 'assets/cover.png?t=' + Date.now();
+      img.src = 'assets/art/covers/cover.png?t=' + Date.now();
     });
   });
 
   const base64 = dataUrl.split(',')[1];
   const buf = Buffer.from(base64, 'base64');
-  fs.writeFileSync('assets/cover_nwm.png', buf);
+  fs.writeFileSync('assets/art/covers/cover_nwm.png', buf);
   console.log('CROP_OK size=' + buf.length);
   await browser.close();
 })().catch(e => { console.error('CROP_FAIL: ' + e.message); process.exit(1); });

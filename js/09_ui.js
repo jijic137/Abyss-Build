@@ -496,7 +496,7 @@
     // 同步背景角色图（轻量淡入）
     var hero = $('wheelHero');
     if (hero) {
-      var src = 'assets/chars/' + ch.id + '.png';
+      var src = 'assets/art/chars/' + ch.id + '.png';
       if (hero.getAttribute('src') !== src) {
         hero.style.animation = 'none'; void hero.offsetWidth; hero.style.animation = '';
         hero.setAttribute('src', src);

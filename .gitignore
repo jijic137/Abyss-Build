@@ -5,6 +5,9 @@ node_modules/
 *.log
 .trash/
 
+# 临时截图 / 中间产物（tools/cache/ 统一存放，不入库）
+tools/cache/
+
 # 助手内部数据（非游戏内容）
 .workbuddy/
 

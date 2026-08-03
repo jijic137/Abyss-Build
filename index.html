@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>深渊构筑 · Abyss Build</title>
+<title>深渊猎手 · Abyss Hunter</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -69,16 +69,21 @@
     <!-- ============ 封面（首页） ============ -->
     <section id="scrTitle" class="screen screen-cover">
       <canvas class="vortex-canvas" id="vortexCover"></canvas>
+      <div class="cover-floor"></div>
 
       <div class="cover-inner">
-        <div class="cover-tag">THE&nbsp;ABYSS&nbsp;AWAITS</div>
-        <h1 class="game-title">深渊构筑</h1>
-        <p class="game-sub">ABYSS&nbsp;BUILD &nbsp;— &nbsp;20 波 · 构筑 · 生存</p>
-        <p class="cover-hook">在层层深渊中构筑你的流派，撑过二十波，直面终焉之主。</p>
+        <div class="cover-tag">ABYSS&nbsp;HUNTER&nbsp;·&nbsp;深渊档案</div>
+        <h1 class="game-title">深渊猎手</h1>
+        <p class="game-sub">ABYSS&nbsp;HUNTER &nbsp;—&nbsp; 20 波 · 猎杀 · 生存</p>
+        <canvas class="cover-hero" id="coverHero" width="260" height="220"></canvas>
+        <p class="cover-hook">猎杀深渊中的一切，撑过二十波，直面终焉之主。</p>
       </div>
 
       <div class="abyss-core">
-        <button class="btn-portal" id="btnExplore">
+        <button class="btn-portal" id="btnExplore" aria-label="探索深渊">
+          <span class="portal-rune"></span>
+          <span class="portal-disc"></span>
+          <span class="portal-fissure"></span>
           <span class="portal-core">
             <span class="portal-label">
               <span class="pc">探</span><span class="pc">索</span><span class="pc">深</span><span class="pc">渊</span>
@@ -86,14 +91,12 @@
           </span>
         </button>
 
-        <div class="orbit-field">
-          <div class="orbit-path"></div>
-          <div class="orbit-path path2"></div>
-          <div class="orbit-ring" style="--d:0s"><div class="orbit-sat"><button class="orbit-bubble" id="btnResumeRun"><span class="bubble-glyph">&#9656;</span>继续游戏</button></div></div>
-          <div class="orbit-ring" style="--d:-14.4s"><div class="orbit-sat"><button class="orbit-bubble" id="btnRecords"><span class="bubble-glyph">&#10038;</span>记录</button></div></div>
-          <div class="orbit-ring" style="--d:-28.8s"><div class="orbit-sat"><button class="orbit-bubble" id="btnAch"><span class="bubble-glyph">&#10022;</span>成就</button></div></div>
-          <div class="orbit-ring" style="--d:-43.2s"><div class="orbit-sat"><button class="orbit-bubble" id="btnSave"><span class="bubble-glyph">&#9672;</span>存档</button></div></div>
-          <div class="orbit-ring" style="--d:-57.6s"><div class="orbit-sat"><button class="orbit-bubble" id="btnSettings"><span class="bubble-glyph">&#9881;</span>设置</button></div></div>
+        <div class="cover-menu">
+          <button class="btn" id="btnResumeRun">继续游戏</button>
+          <button class="btn" id="btnRecords">记录</button>
+          <button class="btn" id="btnAch">成就</button>
+          <button class="btn" id="btnSave">存档</button>
+          <button class="btn" id="btnSettings">设置</button>
         </div>
       </div>
 

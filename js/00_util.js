@@ -84,7 +84,8 @@ G.now = function () { return performance.now() / 1000; };
    - run：进行中战局进度（关卡 + 构筑），可「继续游戏」
    ---------------------------------------------------------------- */
 G.Save = (function () {
-  var KEY = 'abyss_build_best_v1';
+  var KEY = 'abyss_hunter_best_v1';
+  var LEGACY_KEY = 'abyss_build_best_v1';   // 旧名存档：读到即迁移到新 key
   var mem = null;
   function defaults() {
     return {
@@ -107,6 +108,10 @@ G.Save = (function () {
     try {
       if (typeof localStorage !== 'undefined') {
         var raw = localStorage.getItem(KEY);
+        if (!raw && LEGACY_KEY) {                    // 旧名存档迁移
+          var legacy = localStorage.getItem(LEGACY_KEY);
+          if (legacy) { raw = legacy; localStorage.setItem(KEY, legacy); localStorage.removeItem(LEGACY_KEY); }
+        }
         if (raw) {
           var d = JSON.parse(raw);
           if (d && typeof d === 'object') {

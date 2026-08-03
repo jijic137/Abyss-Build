@@ -116,7 +116,7 @@ try {
   ok('失败局记录 胜场仍=2（未+1）', G.Save.getStats().wins === 2);
 
   // ---- 扩展记录持久化（localStorage 落库）----
-  const raw = JSON.parse(mem['abyss_build_best_v1']);
+  const raw = JSON.parse(mem['abyss_hunter_best_v1']);
   ok('achievements 已写入 localStorage', raw && raw.achievements && raw.achievements.conqueror);
   ok('stats 已写入 localStorage', raw && raw.stats && raw.stats.totalRuns === 3);
 

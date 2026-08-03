@@ -56,7 +56,7 @@
       if (rb) rb.classList.toggle('hidden', !G.Save.getRun());
     }
     // 菜单漩涡背景：封面 / 轮盘随界面启停
-    if (id === 'scrTitle') UI._vortex('cover').start();
+    if (id === 'scrTitle') { UI._vortex('cover').start(); UI.renderCoverHero(); }
     else UI._vortex('cover').stop();
     if (id === 'scrCharSelect') UI._vortex('wheel').start();
     else { UI._vortex('wheel').stop(); UI.stopWheel(); }
@@ -70,6 +70,54 @@
     UI.renderSubRecords();
     UI.renderSubAch();
     UI.renderSubSave();
+  };
+
+  /* ------------------------------------------------------------
+     封面猎手立绘：绘制深渊猎手（影刺精灵）站于深渊边缘
+     ------------------------------------------------------------ */
+  UI.renderCoverHero = function () {
+    var cv = $('coverHero');
+    if (!cv || !G.PX.get) return;
+    try {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = 260, H = 220;
+    cv.width = W * dpr; cv.height = H * dpr;
+    var c = cv.getContext('2d');
+    if (!c || !c.createRadialGradient) return;   // 无头桩容错
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, W, H);
+    c.imageSmoothingEnabled = false;
+
+    // 脚下深渊辉光
+    var glow = c.createRadialGradient(W / 2, H - 26, 6, W / 2, H - 26, 82);
+    glow.addColorStop(0, 'rgba(110,155,255,.30)');
+    glow.addColorStop(0.55, 'rgba(70,110,220,.12)');
+    glow.addColorStop(1, 'rgba(70,110,220,0)');
+    c.fillStyle = glow;
+    c.fillRect(0, 0, W, H);
+
+    // 影子
+    c.globalAlpha = 0.32; c.fillStyle = '#000';
+    c.beginPath(); c.ellipse(W / 2, H - 14, 30, 8, 0, 0, Math.PI * 2); c.fill();
+    c.globalAlpha = 1;
+
+    // 角色立绘（scale 6 → 72×72，居中偏下）
+    var spr = G.PX.get('char_shadow', 6);
+    if (spr) G.PX.draw(c, spr, W / 2, H - 34, {});
+
+    // 两侧深渊气息（细光丝）
+    c.save();
+    c.globalAlpha = 0.5;
+    for (var side = -1; side <= 1; side += 2) {
+      var gx = W / 2 + side * 46;
+      var g = c.createLinearGradient(gx, H - 20, gx, H - 70);
+      g.addColorStop(0, 'rgba(150,190,255,.0)');
+      g.addColorStop(1, 'rgba(150,190,255,.28)');
+      c.strokeStyle = g; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(gx, H - 18); c.quadraticCurveTo(gx + side * 8, H - 46, gx + side * 2, H - 72); c.stroke();
+    }
+    c.restore();
+    } catch (e) { /* 无头环境跳过 */ }
   };
 
   UI.renderSubRecords = function () {
@@ -412,7 +460,7 @@
     if (!UI._vortices[which]) {
       var cv = $('vortex' + (which === 'cover' ? 'Cover' : 'Wheel'));
       UI._vortices[which] = new Vortex(cv, which === 'cover'
-        ? { count: 230, hue: '#3f7dff', speed: 1.0, alpha: 0.95, coreBoost: 1.6 }
+        ? { count: 150, hue: '#3f7dff', speed: 0.7, alpha: 0.6, coreBoost: 1.6 }
         : { count: 170, hue: '#6a4bd6', speed: 0.8, alpha: 0.8 });
     }
     return UI._vortices[which];

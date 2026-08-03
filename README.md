@@ -1,4 +1,4 @@
-# 深渊构筑 / Abyss Build
+# 深渊猎手 / Abyss Hunter
 
 > 仿《土豆兄弟》(Brotato) 的 **HTML5 + Canvas 2D Roguelike**。纯前端、零依赖、零外部资源——美术是运行时字符网格拼装的像素风，音效与 BGM 是 WebAudio 程序化合成，**直接双击 index.html 即可游玩**。
 
@@ -40,7 +40,7 @@ python -m http.server 8000
 ## 目录结构
 
 ```
-Abyss-Build/
+Abyss-Hunter/
 ├── index.html            # 入口，加载 css/style.css 与 js/* 脚本
 ├── css/style.css         # 全部样式（像素开关、升级卡、粒子/辉光动画）
 ├── js/                   # 游戏源码（14 个脚本，按 00→12 顺序加载）

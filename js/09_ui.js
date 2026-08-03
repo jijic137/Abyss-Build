@@ -493,6 +493,15 @@
     $('wiMods').innerHTML = modsHtml(ch.mods);
     var wpn = G.WEAPON_MAP[ch.startWeapon];
     $('wiWeapon').innerHTML = '起始武器：<b style="color:#cfd4e6">' + wpn.name + '</b>';
+    // 同步背景角色图（轻量淡入）
+    var hero = $('wheelHero');
+    if (hero) {
+      var src = 'assets/chars/' + ch.id + '.png';
+      if (hero.getAttribute('src') !== src) {
+        hero.style.animation = 'none'; void hero.offsetWidth; hero.style.animation = '';
+        hero.setAttribute('src', src);
+      }
+    }
     box.classList.remove('flash');
     void box.offsetWidth;
     box.classList.add('flash');

@@ -744,29 +744,27 @@ canvas#game{
   width:min(640px,58vw); height:min(580px,68vh);
   margin:6px 0;
   touch-action:none;
-  border-radius:50%;
-  overflow:hidden;
-  box-shadow:0 0 70px #000c, inset 0 0 40px #000a;
   background:#0a0d16;
+  box-shadow:0 0 70px #000c;
 }
-/* 角色形象背景：随选中角色切换 */
+/* 角色形象背景：随选中角色切换；边缘径向渐隐（无硬边界） */
 .wheel-hero{
   position:absolute; inset:0; width:100%; height:100%;
   z-index:0; pointer-events:none; display:block;
   object-fit:cover; object-position:50% 38%;
   image-rendering:pixelated;
+  -webkit-mask-image:radial-gradient(ellipse 52% 52% at 50% 50%, #000 40%, transparent 74%);
+          mask-image:radial-gradient(ellipse 52% 52% at 50% 50%, #000 40%, transparent 74%);
   animation:heroFadeIn .42s ease-out;
 }
 @keyframes heroFadeIn{
   from{ opacity:0; transform:scale(1.04); filter:brightness(1.4) blur(2px); }
   to{ opacity:1; transform:scale(1); filter:brightness(1) blur(0); }
 }
-/* 角色色边缘辉光（跟随选中角色 --c 颜色） */
+/* 柔暗角：配合 mask 让角色图融入背景（无圆边） */
 .wheel-stage::before{
-  content:''; position:absolute; inset:0; border-radius:50%; z-index:2; pointer-events:none;
-  box-shadow:inset 0 0 40px 8px var(--bg), inset 0 0 60px rgba(120,160,255,.2);
-  background:radial-gradient(circle at 50% 55%, transparent 30%, rgba(4,6,12,.15) 55%, rgba(4,6,12,.55) 100%);
-  transition:background .4s;
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:radial-gradient(circle at 50% 55%, transparent 38%, rgba(4,6,12,.5) 100%);
 }
 .wheel-ring{ position:absolute; inset:0; z-index:3; }
 .wheel-item{ position:absolute; left:50%; top:50%; width:0; height:0; will-change:transform,opacity; }

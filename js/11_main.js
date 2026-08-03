@@ -152,6 +152,8 @@
       box.classList.remove('reroll');
       void box.offsetWidth;
       box.classList.add('reroll');
+      // 动画播完必须移除该类，否则后续购买/出售重建卡片时全部误触发 cardDeal 动画
+      setTimeout(function () { box.classList.remove('reroll'); }, 900);
       var br = byId('btnReroll').getBoundingClientRect();
       G.UI.burstDom(br.left + br.width / 2, br.top + br.height / 2, '#7fa8ff', 8);
       G.UI.renderShop(G.game);

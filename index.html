@@ -68,36 +68,33 @@
 
     <!-- ============ 封面（首页） ============ -->
     <section id="scrTitle" class="screen screen-cover">
-      <canvas class="vortex-canvas" id="vortexCover"></canvas>
-      <div class="cover-floor"></div>
+      <canvas class="cover-bg" id="coverBg"></canvas>
 
       <div class="cover-inner">
         <div class="cover-tag">ABYSS&nbsp;HUNTER&nbsp;·&nbsp;深渊档案</div>
         <h1 class="game-title">深渊猎手</h1>
-        <p class="game-sub">ABYSS&nbsp;HUNTER &nbsp;—&nbsp; 20 波 · 猎杀 · 生存</p>
-        <canvas class="cover-hero" id="coverHero" width="260" height="220"></canvas>
-        <p class="cover-hook">猎杀深渊中的一切，撑过二十波，直面终焉之主。</p>
+        <p class="game-sub">ABYSS&nbsp;HUNTER &nbsp;·&nbsp; 20 波 · 猎杀 · 生存</p>
       </div>
 
-      <div class="abyss-core">
-        <button class="btn-portal" id="btnExplore" aria-label="探索深渊">
-          <span class="portal-rune"></span>
-          <span class="portal-disc"></span>
-          <span class="portal-fissure"></span>
-          <span class="portal-core">
-            <span class="portal-label">
-              <span class="pc">探</span><span class="pc">索</span><span class="pc">深</span><span class="pc">渊</span>
-            </span>
-          </span>
-        </button>
+      <div class="cover-hero-wrap">
+        <canvas class="cover-hero" id="coverHero" width="280" height="260"></canvas>
+      </div>
 
-        <div class="cover-menu">
-          <button class="btn" id="btnResumeRun">继续游戏</button>
-          <button class="btn" id="btnRecords">记录</button>
-          <button class="btn" id="btnAch">成就</button>
-          <button class="btn" id="btnSave">存档</button>
-          <button class="btn" id="btnSettings">设置</button>
-        </div>
+      <div class="cover-entry">
+        <button class="btn-gate" id="btnExplore">
+          <span class="gate-rune"></span>
+          <span class="gate-disc"></span>
+          <span class="gate-eye"></span>
+          <span class="gate-label">探索深渊</span>
+        </button>
+      </div>
+
+      <div class="cover-menu">
+        <button class="btn" id="btnResumeRun">继续游戏</button>
+        <button class="btn" id="btnRecords">记录</button>
+        <button class="btn" id="btnAch">成就</button>
+        <button class="btn" id="btnSave">存档</button>
+        <button class="btn" id="btnSettings">设置</button>
       </div>
 
       <div class="title-tip">物品几乎都带负面属性——让优点叠成体系，把缺点藏进构筑里。</div>

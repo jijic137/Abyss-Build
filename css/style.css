@@ -488,167 +488,141 @@ canvas#game{
   z-index:0; pointer-events:none; display:block;
 }
 
-/* ---------------- 封面（深渊猎手档案） ----------------
-   与游戏内 UI 统一：棋盘格地板 / panel 渐变 / 金蓝点缀 / HUD 角标按钮 */
-.screen-cover{ overflow:hidden; background:#0a0c12; }
-/* 战斗地板同款棋盘格（64px tile，与局内竞技场呼应） */
-.cover-floor{
-  position:absolute; inset:0; z-index:1; pointer-events:none;
-  background:
-    linear-gradient(45deg, rgba(122,152,230,.05) 25%, transparent 25%, transparent 75%, rgba(122,152,230,.05) 75%),
-    linear-gradient(45deg, rgba(122,152,230,.05) 25%, transparent 25%, transparent 75%, rgba(122,152,230,.05) 75%);
-  background-size:128px 128px;
-  background-position:0 0, 64px 64px;
-  -webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 50%, #000 30%, transparent 78%);
-          mask-image:radial-gradient(ellipse 90% 80% at 50% 50%, #000 30%, transparent 78%);
+/* ---------------- 封面（深渊猎手 · 深渊之门） ----------------
+   极简 + 质感：深色 canvas 背景渲染（裂隙光+噪点+渐变），主体=猎手立绘与背光 */
+.screen-cover{ overflow:hidden; background:#06080f; }
+/* 封面背景全屏 canvas（封面渲染器绘制渐变/噪点/裂隙光/暗角） */
+.cover-bg{
+  position:absolute; inset:0; width:100%; height:100%;
+  z-index:0; display:block; pointer-events:none;
 }
-/* 边缘暗角：增强纵深，盖在漩涡画布之上、内容之下 */
-.screen-cover::before{
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background:radial-gradient(ellipse 80% 76% at 50% 52%, transparent 34%, rgba(4,5,10,.55) 78%, rgba(3,4,8,.94) 100%);
-}
+
 .cover-inner{
-  position:absolute; top:3.5%; left:50%; transform:translateX(-50%);
-  z-index:3; width:min(880px,94vw);
+  position:absolute; top:8%; left:50%; transform:translateX(-50%);
+  z-index:3; width:min(880px,90vw);
   display:flex; flex-direction:column; align-items:center; text-align:center;
-  padding:0 20px; pointer-events:none;
+  padding:0 16px; pointer-events:none;
 }
 .cover-tag{
   font-size:11px; letter-spacing:9px; color:var(--gold);
-  margin-bottom:16px; text-transform:uppercase;
-  text-shadow:0 0 18px rgba(255,210,74,.35);
+  margin-bottom:14px; text-transform:uppercase;
+  text-shadow:0 0 18px rgba(255,210,74,.32);
   animation:tagFloat 5s ease-in-out infinite;
 }
 @keyframes tagFloat{ 0%,100%{opacity:.55; transform:translateY(0);} 50%{opacity:1; transform:translateY(-4px);} }
 
+/* 标题：紧凑、清晰、有质感阴影（字距从 20 收紧到 12，解决挤压断行） */
 .screen-cover .game-title{
-  font-size:84px; letter-spacing:20px; margin:0; line-height:1.05; font-weight:900;
-  background:linear-gradient(100deg,#ffffff 0%,#cfdfff 30%,#9ab6ff 50%,#d8c4ff 66%,#ffffff 92%);
-  background-size:240% 100%;
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-  filter:drop-shadow(0 2px 0 rgba(8,12,24,.9)) drop-shadow(0 0 26px rgba(110,150,255,.35));
-  animation:titleShine 9s linear infinite;
+  font-size:78px; letter-spacing:12px; margin:0; line-height:1.08; font-weight:900;
+  color:#eef2ff;
+  text-shadow:0 0 24px rgba(120,160,255,.45), 0 2px 0 rgba(4,6,12,.9);
 }
-@keyframes titleShine{ 0%{background-position:0% 50%;} 100%{background-position:240% 50%;} }
+/* 副标题：去掉破折号，缩短至一行 */
 .screen-cover .game-sub{
-  margin:12px 0 0; letter-spacing:6px; font-size:11.5px; color:#8a94b8;
-  text-shadow:0 0 12px rgba(110,150,255,.3);
+  margin:10px 0 0; letter-spacing:5px; font-size:11.5px; color:#8a94b8;
+  white-space:nowrap; text-shadow:0 0 10px rgba(110,150,255,.28);
 }
-/* 猎手立绘（canvas 渲染 char_shadow，CSS 做呼吸浮动） */
+
+/* 猎手立绘主体：canvas 渲染（PJ 绘立绘 + 背光），CSS 呼吸浮动 */
+.cover-hero-wrap{
+  position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
+  z-index:2; display:flex; align-items:center; justify-content:center;
+  pointer-events:none;
+}
 .cover-hero{
-  width:260px; height:220px; margin-top:10px; image-rendering:pixelated;
+  width:280px; height:260px; image-rendering:pixelated;
   animation:heroFloat 4.6s ease-in-out infinite;
+  filter:drop-shadow(0 6px 22px rgba(0,0,0,.55));
 }
 @keyframes heroFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
 
-.cover-hook{ margin:8px 0 0; color:#9aa2c0; font-size:14px; letter-spacing:2px; max-width:520px; line-height:1.7; }
-
-/* 深渊入口：裂隙徽章（实体徽记，非悬浮文字） */
-.abyss-core{
-  position:absolute; left:50%; top:57%; transform:translate(-50%,-50%);
-  z-index:3; --portal:172px;
-  display:flex; flex-direction:column; align-items:center;
+/* 主入口：探索深渊——圆徽章，眼(深渊之眼)在上、字在其下，充实内部 */
+.cover-entry{
+  position:absolute; left:50%; top:68%; transform:translate(-50%,0);
+  z-index:3; display:flex; align-items:center; justify-content:center;
 }
-.btn-portal{
+.btn-gate{
   position:relative;
-  width:var(--portal); height:var(--portal); border-radius:50%;
+  width:178px; height:178px; border-radius:50%;
   border:none; background:transparent; cursor:pointer; padding:0;
   display:flex; align-items:center; justify-content:center;
   transition:transform .25s cubic-bezier(.2,.7,.3,1);
 }
-/* 徽章底盘：panel 渐变 + 内发光 + 细金边（游戏内卡片语言） */
-.portal-disc{
-  position:absolute; inset:10px; border-radius:50%; z-index:1;
-  background:radial-gradient(circle at 50% 36%, #232838 0%, #161a28 52%, #0d1018 100%);
-  border:1px solid rgba(255,210,74,.28);
+/* 实底：径向深色 + 细金边 + 内发光（游戏内面板语言） */
+.gate-disc{
+  position:absolute; inset:6px; border-radius:50%; z-index:1;
+  background:radial-gradient(circle at 50% 34%, #232838 0%, #161a28 54%, #0a0d16 100%);
+  border:1px solid rgba(255,210,74,.30);
   box-shadow:
-    inset 0 0 34px rgba(70,130,255,.22),
-    inset 0 2px 0 rgba(255,255,255,.05),
-    0 0 34px rgba(60,120,255,.20),
-    0 10px 40px rgba(0,0,0,.55);
+    inset 0 0 28px rgba(70,130,255,.22),
+    inset 0 2px 0 rgba(255,255,255,.06),
+    0 0 24px rgba(60,120,255,.25),
+    0 10px 36px rgba(0,0,0,.55);
 }
-/* 符文刻纹环：细弧缓转，如徽章錾刻 */
-.portal-rune{
-  position:absolute; inset:2px; border-radius:50%; z-index:0; pointer-events:none;
+/* 外圈符文（细密錾刻，缓转） */
+.gate-rune{
+  position:absolute; inset:0; border-radius:50%; z-index:0; pointer-events:none;
   background:conic-gradient(from 0deg,
-    transparent 0 12%, rgba(255,210,74,.5) 17%, transparent 22%,
-    transparent 38%, rgba(120,170,255,.55) 43%, transparent 48%,
-    transparent 66%, rgba(255,210,74,.35) 71%, transparent 76%,
-    transparent 90%, rgba(140,190,255,.5) 95%, transparent 100%);
-  -webkit-mask:radial-gradient(circle, transparent 58%, #000 59%, #000 61%, transparent 62%);
-          mask:radial-gradient(circle, transparent 58%, #000 59%, #000 61%, transparent 62%);
-  animation:portalRune 26s linear infinite;
-  opacity:.85;
+    transparent 0 14%, rgba(255,210,74,.55) 18%, transparent 22%,
+    transparent 38%, rgba(120,170,255,.6) 42%, transparent 46%,
+    transparent 62%, rgba(255,210,74,.4) 66%, transparent 70%,
+    transparent 86%, rgba(140,190,255,.55) 90%, transparent 100%);
+  -webkit-mask:radial-gradient(circle, transparent 56%, #000 57%, #000 60%, transparent 61%);
+          mask:radial-gradient(circle, transparent 56%, #000 57%, #000 60%, transparent 61%);
+  animation:gateSpin 28s linear infinite;
+  opacity:.9;
 }
-@keyframes portalRune{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
-/* 中心裂隙：两道交叉的深色裂缝，边缘渗光 */
-.portal-fissure{
-  position:absolute; left:50%; top:50%; z-index:2; pointer-events:none;
-  width:56%; height:56%;
-  transform:translate(-50%,-50%);
-  background:
-    conic-gradient(from 0deg at 50% 50%,
-      transparent 0 6deg, #0a0d16 6deg 44deg, transparent 44deg 46deg,
-      transparent 46deg 50deg, #0a0d16 50deg 90deg, transparent 90deg);
+@keyframes gateSpin{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
+/* 深渊之眼：居中偏上 */
+.gate-eye{
+  position:absolute; left:50%; top:42%; z-index:2; pointer-events:none;
+  width:48px; height:48px; transform:translate(-50%,-50%);
   border-radius:50%;
-  box-shadow:0 0 18px rgba(120,160,255,.35);
-  animation:fissurePulse 4.4s ease-in-out infinite;
+  background:radial-gradient(circle at 50% 50%, #ffffff 0%, #cfe0ff 14%, #7fa8ff 32%, #2b4d8f 58%, #0a0d16 100%);
+  box-shadow:0 0 16px rgba(170,210,255,.7);
+  animation:eyePulse 3.2s ease-in-out infinite;
 }
-@keyframes fissurePulse{
-  0%,100%{ opacity:.9; filter:drop-shadow(0 0 6px rgba(120,160,255,.5)); transform:translate(-50%,-50%) scale(1); }
-  50%{ opacity:1; filter:drop-shadow(0 0 16px rgba(160,200,255,.85)); transform:translate(-50%,-50%) scale(1.045); }
+.gate-eye::before{
+  content:''; position:absolute; left:50%; top:50%; width:8px; height:8px;
+  transform:translate(-50%,-50%); border-radius:50%;
+  background:#0a0d16; opacity:.85;
 }
-/* 探索深渊：逐字晃动 / 扭曲，如自裂隙中浮现 */
-.portal-core{
-  position:relative; z-index:3;
-  display:flex; align-items:center; justify-content:center;
+@keyframes eyePulse{
+  0%,100%{ opacity:.85; transform:translate(-50%,-50%) scale(1); }
+  50%{ opacity:1; transform:translate(-50%,-50%) scale(1.08); }
 }
-.portal-label{
-  display:inline-flex; gap:7px;
-  font-size:25px; font-weight:900; letter-spacing:2px; color:#eaf1ff;
-  text-shadow:0 0 22px rgba(120,165,255,.95), 0 0 8px rgba(220,235,255,.7), 0 0 2px rgba(0,0,0,.6);
+/* 「探索深渊」：在徽章内、眼睛下方 */
+.gate-label{
+  position:absolute; left:50%; top:62%; z-index:3;
+  transform:translate(-50%,0);
+  font-size:14px; font-weight:700; letter-spacing:5px; color:#eaf1ff;
+  text-shadow:0 0 10px rgba(120,165,255,.7), 0 0 2px rgba(0,0,0,.6);
+  white-space:nowrap;
 }
-.portal-label .pc{
-  display:inline-block;
-  transform-origin:50% 62%;
-  animation:charWobble 4.2s ease-in-out infinite;
-  will-change:transform;
-}
-.portal-label .pc:nth-child(1){ animation-delay:0s; }
-.portal-label .pc:nth-child(2){ animation-delay:.5s; }
-.portal-label .pc:nth-child(3){ animation-delay:1s; }
-.portal-label .pc:nth-child(4){ animation-delay:1.5s; }
-@keyframes charWobble{
-  0%,100%{ transform:translateY(0) rotate(0deg) skewX(0deg) scaleY(1); text-shadow:0 0 22px rgba(120,165,255,.95),0 0 8px rgba(220,235,255,.7); }
-  25%{ transform:translateY(-4px) rotate(-3deg) skewX(6deg) scaleY(1.08); text-shadow:0 0 30px rgba(150,190,255,1),0 0 12px rgba(220,235,255,.9); }
-  50%{ transform:translateY(0) rotate(0deg) skewX(0deg) scaleY(1); }
-  75%{ transform:translateY(3px) rotate(3deg) skewX(-6deg) scaleY(.94); text-shadow:0 0 18px rgba(120,165,255,.8),0 0 6px rgba(220,235,255,.6); }
-}
-/* 悬停：裂隙「张开」——盘面提亮、裂隙扩大 */
-.btn-portal:hover{ transform:scale(1.05); }
-.btn-portal:hover .portal-disc{
+/* 悬停：裂隙张开——更深邃 */
+.btn-gate:hover{ transform:scale(1.05); }
+.btn-gate:hover .gate-disc{
   border-color:rgba(255,210,74,.55);
-  box-shadow:inset 0 0 46px rgba(95,160,255,.4), 0 0 52px rgba(85,150,255,.5), 0 12px 44px rgba(0,0,0,.5);
+  box-shadow:inset 0 0 40px rgba(95,160,255,.35), 0 0 40px rgba(85,150,255,.45), 0 12px 40px rgba(0,0,0,.55);
 }
-.btn-portal:hover .portal-fissure{
-  box-shadow:0 0 30px rgba(180,215,255,.8);
-}
-.btn-portal:hover .portal-label{ color:#ffffff; }
-.btn-portal:active{ transform:scale(1.02); }
+.btn-gate:hover .gate-eye{ box-shadow:0 0 28px rgba(200,225,255,.9); }
+.btn-gate:active{ transform:scale(1.02); }
 
-/* 功能入口：游戏内同款 HUD 角标按钮行（与暂停/子页完全一致） */
+/* 功能入口：HUD 角标按钮行（与游戏内一致），收紧 */
 .cover-menu{
-  margin-top:34px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;
+  position:absolute; left:50%; top:90%; transform:translate(-50%,0);
+  z-index:3; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
 }
-.cover-menu .btn{ font-size:13px; padding:8px 18px; letter-spacing:2px; }
+.cover-menu .btn{ font-size:12.5px; padding:7px 16px; letter-spacing:2px; }
 .cover-menu .btn.hidden{ display:none !important; }
 
 .title-tip{
-  position:absolute; bottom:4%; left:50%; transform:translateX(-50%);
+  position:absolute; bottom:3%; left:50%; transform:translateX(-50%);
   width:min(560px,90vw); text-align:center; z-index:3;
-  color:#6b728f; font-size:11.5px; letter-spacing:.5px;
+  color:#5e6783; font-size:11px; letter-spacing:.5px;
   pointer-events:none;
 }
+@keyframes titleShine{ 0%{background-position:0% 50%;} 100%{background-position:240% 50%;} }
 
 /* ---------------- 子页（记录 / 成就 / 存档） ---------------- */
 .sub-screen{
@@ -733,26 +707,33 @@ canvas#game{
 
 /* 窄屏适配 */
 @media (max-width:980px){
-  .abyss-core{ --portal:146px; }
-  .portal-label{ font-size:20px; letter-spacing:3px; }
-  .cover-menu .btn{ font-size:12.5px; padding:7px 14px; }
+  .screen-cover .game-title{ font-size:64px; letter-spacing:10px; }
+  .screen-cover .game-sub{ letter-spacing:4px; }
+  .cover-hero{ width:240px; height:220px; }
+  .btn-gate{ width:136px; height:136px; }
+  .gate-eye{ width:46px; height:46px; }
+  .gate-label{ font-size:13px; letter-spacing:5px; }
+  .cover-menu .btn{ font-size:12px; padding:6px 14px; }
 }
 @media (max-width:680px){
-  .screen-cover .game-title{ font-size:52px; letter-spacing:10px; }
-  .screen-cover .game-sub{ letter-spacing:3px; }
-  .abyss-core{ top:58%; --portal:126px; }
-  .cover-hero{ width:200px; height:170px; }
-  .cover-inner{ top:3%; }
-  .cover-menu{ gap:8px; margin-top:26px; }
-  .cover-menu .btn{ font-size:12px; padding:6px 12px; letter-spacing:1px; }
+  .screen-cover .game-title{ font-size:48px; letter-spacing:8px; }
+  .screen-cover .game-sub{ letter-spacing:3px; font-size:11px; }
+  .cover-hero{ width:200px; height:184px; }
+  .btn-gate{ width:114px; height:114px; }
+  .gate-eye{ width:38px; height:38px; }
+  .gate-label{ font-size:12px; letter-spacing:4px; }
+  .cover-menu{ gap:8px; }
+  .cover-menu .btn{ font-size:11.5px; padding:5px 10px; letter-spacing:1px; }
+  .cover-inner{ top:5%; }
 }
 @media (max-height:640px){
-  .abyss-core{ --portal:122px; top:58%; }
-  .cover-hero{ width:176px; height:150px; }
-  .cover-menu{ margin-top:22px; }
-  .screen-cover .game-title{ font-size:60px; letter-spacing:14px; }
-  .cover-tag{ margin-bottom:10px; }
-  .cover-hook{ display:none; }
+  .cover-hero{ width:184px; height:170px; }
+  .btn-gate{ width:108px; height:108px; }
+  .gate-eye{ width:36px; height:36px; }
+  .cover-inner{ top:4%; }
+  .screen-cover .game-title{ font-size:56px; letter-spacing:10px; }
+  .cover-tag{ margin-bottom:8px; }
+  .title-tip{ display:none; }
 }
 @media (max-width:880px){
   .sub-body{ max-height:70vh; }

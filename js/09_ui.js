@@ -56,10 +56,20 @@
       if (rb) rb.classList.toggle('hidden', !G.Save.getRun());
     }
     // 菜单漩涡背景：封面 / 轮盘随界面启停
-    if (id === 'scrTitle') { UI._vortex('cover').start(); UI.renderCoverHero(); }
-    else UI._vortex('cover').stop();
-    if (id === 'scrCharSelect') UI._vortex('wheel').start();
-    else { UI._vortex('wheel').stop(); UI.stopWheel(); }
+    if (id === 'scrTitle') {
+      UI.renderCoverBg();
+      UI.renderCoverHero();
+      // 封面不再启动 Vortex（背景由 coverBg 渲染）
+    } else if (id === 'scrCharSelect') {
+      UI._vortex('wheel').start();
+    } else {
+      UI._vortex('wheel').stop();
+    }
+    // 旧的封面 vortex 引用（已移除 coverBg canvas，启动空操作）
+    if (UI._vortex && UI._vortex('cover')) {
+      // 停掉可能存在的老 daemon
+      var v = UI._vortices && UI._vortices['cover']; if (v) v.stop();
+    }
   };
 
   /* ------------------------------------------------------------
@@ -73,50 +83,116 @@
   };
 
   /* ------------------------------------------------------------
-     封面猎手立绘：绘制深渊猎手（影刺精灵）站于深渊边缘
+     封面背景渲染：渐变 + 噪点 + 底部裂隙光柱 + 暗角（质感核心）
+     ------------------------------------------------------------ */
+  UI.renderCoverBg = function () {
+    var cv = $('coverBg');
+    if (!cv) return;
+    try {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var vw = window.innerWidth || 1600;
+      var vh = window.innerHeight || 900;
+      cv.width = vw * dpr; cv.height = vh * dpr;
+      var c = cv.getContext('2d');
+      if (!c || !c.createRadialGradient) return;
+      c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      c.clearRect(0, 0, vw, vh);
+      c.imageSmoothingEnabled = false;
+
+      // 背景深色径向渐变（中心微亮 → 边缘近黑）
+      var bg = c.createRadialGradient(vw / 2, vh * 0.52, 0, vw / 2, vh * 0.52, Math.max(vw, vh) * 0.7);
+      bg.addColorStop(0, '#1a2034');
+      bg.addColorStop(0.5, '#0e121c');
+      bg.addColorStop(1, '#06080f');
+      c.fillStyle = bg;
+      c.fillRect(0, 0, vw, vh);
+
+      // 底部裂隙光柱（中央竖直光带，从下方 vh*0.62 向上收窄，外扩柔和椭圆）
+      var cx = vw / 2;
+      var beamTop = vh * 0.66;
+      var beamBot = vh + 30;
+      var beamW = Math.min(vw * 0.35, 460);   // 收窄光柱，让立绘不被淹没
+      var beam = c.createLinearGradient(cx, beamTop, cx, beamBot);
+      beam.addColorStop(0, 'rgba(130,170,255,0)');
+      beam.addColorStop(0.55, 'rgba(130,170,255,.26)');
+      beam.addColorStop(1, 'rgba(190,220,255,.38)');
+      c.fillStyle = beam;
+      c.beginPath();
+      c.moveTo(cx - beamW / 2, beamBot);
+      c.lineTo(cx + beamW / 2, beamBot);
+      c.lineTo(cx + beamW * 0.14, beamTop);
+      c.lineTo(cx - beamW * 0.14, beamTop);
+      c.closePath();
+      c.fill();
+
+      // 裂隙光顶部扩散（柔和椭圆光晕）
+      var halo = c.createRadialGradient(cx, beamTop, 0, cx, beamTop, beamW * 0.7);
+      halo.addColorStop(0, 'rgba(170,210,255,.28)');
+      halo.addColorStop(1, 'rgba(170,210,255,0)');
+      c.fillStyle = halo;
+      c.fillRect(0, 0, vw, vh);
+
+      // 顶部一丝暖光（呼应金色 tag）
+      var warm = c.createRadialGradient(vw / 2, vh * 0.12, 0, vw / 2, vh * 0.12, vw * 0.4);
+      warm.addColorStop(0, 'rgba(255,210,74,.06)');
+      warm.addColorStop(1, 'rgba(255,210,74,0)');
+      c.fillStyle = warm;
+      c.fillRect(0, 0, vw, vh);
+
+      // 噪点纹理（程序化随机点，质感关键）
+      c.save();
+      c.globalAlpha = 0.07;
+      for (var i = 0; i < 900; i++) {
+        var nx = Math.random() * vw;
+        var ny = Math.random() * vh;
+        c.fillStyle = Math.random() > 0.5 ? '#3a4566' : '#1a2034';
+        c.fillRect(nx, ny, 1, 1);
+      }
+      c.restore();
+
+      // 边缘暗角（加深纵深）
+      var side = c.createRadialGradient(vw / 2, vh / 2, 0, vw / 2, vh / 2, Math.max(vw, vh) * 0.78);
+      side.addColorStop(0.6, 'rgba(0,0,0,0)');
+      side.addColorStop(1, 'rgba(0,0,0,.6)');
+      c.fillStyle = side;
+      c.fillRect(0, 0, vw, vh);
+    } catch (e) { /* 无头环境跳过 */ }
+  };
+
+  /* ------------------------------------------------------------
+     封面猎手立绘：深渊猎手（影刺精灵）立于深渊裂隙前
      ------------------------------------------------------------ */
   UI.renderCoverHero = function () {
     var cv = $('coverHero');
     if (!cv || !G.PX.get) return;
     try {
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var W = 260, H = 220;
-    cv.width = W * dpr; cv.height = H * dpr;
-    var c = cv.getContext('2d');
-    if (!c || !c.createRadialGradient) return;   // 无头桩容错
-    c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    c.clearRect(0, 0, W, H);
-    c.imageSmoothingEnabled = false;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var W = 280, H = 260;
+      cv.width = W * dpr; cv.height = H * dpr;
+      var c = cv.getContext('2d');
+      if (!c) return;
+      c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      c.clearRect(0, 0, W, H);
+      c.imageSmoothingEnabled = false;
 
-    // 脚下深渊辉光
-    var glow = c.createRadialGradient(W / 2, H - 26, 6, W / 2, H - 26, 82);
-    glow.addColorStop(0, 'rgba(110,155,255,.30)');
-    glow.addColorStop(0.55, 'rgba(70,110,220,.12)');
-    glow.addColorStop(1, 'rgba(70,110,220,0)');
-    c.fillStyle = glow;
-    c.fillRect(0, 0, W, H);
+      // 脚下光晕（呼应背景裂隙光，像踩在光上）
+      var glow = c.createRadialGradient(W / 2, H - 38, 4, W / 2, H - 38, 88);
+      if (glow) {
+        glow.addColorStop(0, 'rgba(180,220,255,.42)');
+        glow.addColorStop(0.55, 'rgba(160,200,255,.18)');
+        glow.addColorStop(1, 'rgba(160,200,255,0)');
+        c.fillStyle = glow;
+        c.fillRect(0, 0, W, H);
+      }
 
-    // 影子
-    c.globalAlpha = 0.32; c.fillStyle = '#000';
-    c.beginPath(); c.ellipse(W / 2, H - 14, 30, 8, 0, 0, Math.PI * 2); c.fill();
-    c.globalAlpha = 1;
+      // 影子
+      c.globalAlpha = 0.30; c.fillStyle = '#000';
+      c.beginPath(); c.ellipse(W / 2, H - 16, 34, 8, 0, 0, Math.PI * 2); c.fill();
+      c.globalAlpha = 1;
 
-    // 角色立绘（scale 6 → 72×72，居中偏下）
-    var spr = G.PX.get('char_shadow', 6);
-    if (spr) G.PX.draw(c, spr, W / 2, H - 34, {});
-
-    // 两侧深渊气息（细光丝）
-    c.save();
-    c.globalAlpha = 0.5;
-    for (var side = -1; side <= 1; side += 2) {
-      var gx = W / 2 + side * 46;
-      var g = c.createLinearGradient(gx, H - 20, gx, H - 70);
-      g.addColorStop(0, 'rgba(150,190,255,.0)');
-      g.addColorStop(1, 'rgba(150,190,255,.28)');
-      c.strokeStyle = g; c.lineWidth = 2;
-      c.beginPath(); c.moveTo(gx, H - 18); c.quadraticCurveTo(gx + side * 8, H - 46, gx + side * 2, H - 72); c.stroke();
-    }
-    c.restore();
+      // 角色立绘（scale 7 → 84×84，居中偏下）
+      var spr = G.PX.get('char_shadow', 7);
+      if (spr) G.PX.draw(c, spr, W / 2, H - 60, { alpha: 0.92 });
     } catch (e) { /* 无头环境跳过 */ }
   };
 

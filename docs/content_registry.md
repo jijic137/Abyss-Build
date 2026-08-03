@@ -6,8 +6,8 @@
 ## 1. 数值总览
 
 - 敌人总数：**30**（普通 22 / 精英 6 / BOSS 2）
-- 武器总数：**32**（按标签：melee×10，ranged×12，elemental×9，engineering×1）
-- 物品总数：**115**（白 27 / 绿 29 / 蓝 28 / 紫 16 / 红 15）
+- 武器总数：**37**（按标签：melee×10，ranged×16，elemental×10，engineering×1）
+- 物品总数：**123**（白 29 / 绿 31 / 蓝 30 / 紫 17 / 红 16）
 - 角色（职业）：**8**
 - 总波数：**20**（BOSS 波：10、20）
 
@@ -62,28 +62,28 @@
 
 | 波 | 时长 | 投放率 | 精英 | BOSS | 标签 |
 |---|---|---|---|---|---|
-| 1 | 20 | 1.55 |  |  | 试探 |
-| 2 | 22 | 2 |  |  | 骚动 |
-| 3 | 24 | 2.4 |  |  | 增殖 |
-| 4 | 26 | 2.85 |  |  | 骸骨 |
-| 5 | 30 | 3 | el_butcher@0.42 |  | 精英出现 |
-| 6 | 30 | 3.4 |  |  | 甲壳 |
-| 7 | 32 | 3.85 |  |  | 游魂 |
-| 8 | 34 | 4.3 |  |  | 引爆 |
-| 9 | 36 | 4.7 | el_hexer@0.35, el_ironclad@0.7 |  | 双精英 |
-| 10 | 62 | 1.6 |  | boss_behemoth | BOSS · 腐化巨兽 |
-| 11 | 38 | 5.1 |  |  | 硬化 |
-| 12 | 40 | 5.5 |  |  | 冲锋 |
-| 13 | 42 | 5.95 |  |  | 压迫 |
-| 14 | 44 | 6.4 | el_brood@0.4, el_warden@0.58, el_reaper@0.72 |  | 孵化 |
-| 15 | 45 | 6.1 | el_ironclad@0.3, el_warden@0.46, el_butcher@0.62 |  | 围剿 |
-| 16 | 46 | 6.55 |  |  | 洪流 |
-| 17 | 48 | 6.9 | el_hexer@0.34, el_brood@0.66, el_warden@0.74, el_reaper@0.8 |  | 术法围城 |
-| 18 | 50 | 7.4 |  |  | 崩坏 |
-| 19 | 52 | 7.95 | el_ironclad@0.25, el_butcher@0.5, el_warden@0.62, el_hexer@0.75, el_reaper@0.88 |  | 最后一夜 |
-| 20 | 95 | 2.3 |  | boss_abyss | BOSS · 深渊之主 |
+| 1 | 40 | 2.17 |  |  | 试探 |
+| 2 | 42 | 2.8 |  |  | 骚动 |
+| 3 | 44 | 3.36 |  |  | 增殖 |
+| 4 | 46 | 3.99 |  |  | 骸骨 |
+| 5 | 50 | 4.2 | el_butcher@0.4 |  | 精英出现 |
+| 6 | 50 | 4.76 |  |  | 甲壳 |
+| 7 | 52 | 5.39 |  |  | 游魂 |
+| 8 | 54 | 6.02 |  |  | 引爆 |
+| 9 | 56 | 6.58 | el_warden@0.35, el_hexer@0.7 |  | 双精英 |
+| 10 | 74 | 2.24 |  | boss_behemoth | BOSS · 腐化巨兽 |
+| 11 | 58 | 7.14 |  |  | 硬化 |
+| 12 | 60 | 7.7 |  |  | 冲锋 |
+| 13 | 62 | 8.33 |  |  | 压迫 |
+| 14 | 64 | 8.96 | el_brood@0.3, el_ironclad@0.5, el_reaper@0.7 |  | 孵化 |
+| 15 | 65 | 8.54 | el_butcher@0.3, el_warden@0.48, el_hexer@0.64 |  | 围剿 |
+| 16 | 66 | 9.17 |  |  | 洪流 |
+| 17 | 68 | 9.66 | el_ironclad@0.3, el_brood@0.5, el_reaper@0.66, el_warden@0.8 |  | 术法围城 |
+| 18 | 70 | 10.36 |  |  | 崩坏 |
+| 19 | 72 | 11.13 | el_butcher@0.28, el_hexer@0.46, el_ironclad@0.62, el_reaper@0.76, el_warden@0.88 |  | 最后一夜 |
+| 20 | 107 | 3.22 |  | boss_abyss | BOSS · 深渊之主 |
 
-## 3. 武器（32）
+## 3. 武器（37）
 
 | id | 名称 | 类型 | 标签 | 基础伤害 | 冷却 | 特性 | 描述 |
 |---|---|---|---|---|---|---|---|
@@ -119,12 +119,17 @@
 | blunderbuss | 喇叭枪 | spread | ranged | 6 | 1.2 | 射程205, 弹b_small, 弹数6 | 近距一轰一大片，离远了就散了。 |
 | throwing_axe | 飞斧 | returner | ranged | 13 | 1 | 射程280 | 去回程各砍一次，穿透整条线。 |
 | spark_rod | 电杖 | chain | elemental | 11 | 1 | 射程280, 连锁3 | 瞬发连锁，在敌群里跳三下。 |
+| gravity_cannon | 重力炮 | shot | ranged | 34 | 1.7 | 射程360 | 沉重的一击，落地炸开并把敌人轰飞。 |
+| storm_staff | 风暴法杖 | homing | elemental | 8 | 0.92 | 射程350, 弹b_orb, 弹数3 | 同时放出三枚追踪法球，各自寻找目标。 |
+| spike_shotgun | 钉刺霰弹 | spread | ranged | 6 | 1.25 | 射程210, 弹b_small, 弹数4, 穿透2 | 四发散射且贯穿两个目标，贴脸火力凶猛。 |
+| pulse_core | 脉冲星 | pulse | ranged | 16 | 1.35 | 射程150 | 以自身为中心周期性爆发冲击波，清场兼控场。 |
+| orbit_blade | 环绕刃 | orbit | ranged | 11 | 1.1 | 射程150, 弹w_shuriken, 弹数2 | 两把卫星刃绕身旋转，持续削切靠近的一切。 |
 
 > 武器在商店出现时，其「品质档位」= 抽到的稀有度（0白~4红），档位只改数值（TIER_DMG / TIER_CD）不改机制。
 
 ## 4. 物品（按品质）
 
-### 4.1 白 · 稀有度 0（27）
+### 4.1 白 · 稀有度 0（29）
 
 | id | 名称 | 主要属性 | 特效 | 风味 |
 |---|---|---|---|---|
@@ -155,8 +160,10 @@
 | cheap_ring | 铜戒 | luck +3, maxHp -2 |  | 便宜的好运也是好运。 |
 | rope_belt | 麻绳腰带 | armor +1, speed -2 |  | 勒紧肚子，也勒紧胆子。 |
 | dry_berry | 干果 | hpRegen +0.3, maxHp +4 |  | 甜，能顶一会儿。 |
+| tin_can | 铁皮罐头 | maxHp +10, damage -2 |  | 装进去就出不来了，包括你。 |
+| greased_gear | 油滑齿轮 | speed +6, armor -2 |  | 滑，但好用。 |
 
-### 4.2 绿 · 稀有度 1（29）
+### 4.2 绿 · 稀有度 1（31）
 
 | id | 名称 | 主要属性 | 特效 | 风味 |
 |---|---|---|---|---|
@@ -189,8 +196,10 @@
 | war_paint | 战纹 | damage +6, maxHp +8, armor -2 |  | 画上去就不好惹了。 |
 | spring_coil | 弹簧芯 | attackSpeed +9, speed +4, maxHp -4 |  | 绷着的劲。 |
 | blood_charm | 血玉 | lifesteal +3, damage +4, maxHp -5 |  | 温的，一直温着。 |
+| razor_edge | 利刃环 | critChance +6, armor -3 |  | 转起来才锋利。 |
+| vampiric_charm | 吸血符 | lifesteal +4, maxHp -5 |  | 戴久了手会暖。 |
 
-### 4.3 蓝 · 稀有度 2（28）
+### 4.3 蓝 · 稀有度 2（30）
 
 | id | 名称 | 主要属性 | 特效 | 风味 |
 |---|---|---|---|---|
@@ -222,8 +231,10 @@
 | storm_brand | 风暴烙印 | attackSpeed +8, elementalDamage +3 | chainOnHit | 皮肤下有人在打雷。 |
 | frost_sigil | 冰霜印记 | elementalDamage +5, armor +3, speed -5 | frostAura | 贴身一股寒意。 |
 | iron_will | 钢铁意志 | armor +10, maxHp +15, speed -8 |  | 不躲，就不怕。 |
+| soul_reaver | 噬魂符 | damage +6, maxHp -6 | leechOnKill | 它们最后的呼声是你的补给。 |
+| frost_mail | 寒霜链甲 | armor +8, speed -10 |  | 冷，但踏实。 |
 
-### 4.4 紫 · 稀有度 3（16）
+### 4.4 紫 · 稀有度 3（17）
 
 | id | 名称 | 主要属性 | 特效 | 风味 |
 |---|---|---|---|---|
@@ -243,8 +254,9 @@
 | void_prism | 虚空棱镜 | critChance +14, critDamage +25, maxHp -12 | critSlow | 折射的不只是光。 |
 | plague_lord | 瘟疫之主 | elementalDamage +6, damage +14, maxHp -16 | poisonAura | 你走过的地方草都枯了。 |
 | storm_caller | 风暴召唤者 | attackSpeed +18, elementalDamage +6, maxHp -12 | thunderAura | 雷声是她的鼓点。 |
+| abyssal_blade | 深渊刃 | meleeDamage +12, critChance +10, maxHp -12 |  | 刃上挂着一小片夜。 |
 
-### 4.5 红 · 稀有度 4（15）
+### 4.5 红 · 稀有度 4（16）
 
 | id | 名称 | 主要属性 | 特效 | 风味 |
 |---|---|---|---|---|
@@ -263,6 +275,7 @@
 | world_ender | 灭世者 | damage +45, critChance +20, maxHp -30, armor -10 |  | 握住的瞬间世界安静了。 |
 | toxic_throne | 剧毒王座 | elementalDamage +25, maxHp -20 | poisonOnHit | 坐上去就别想下来。 |
 | tempest_core | 风暴核心 | attackSpeed +30, speed +15, maxHp -25 | thunderAura | 雷暴在你手心成形。 |
+| glutton_core | 暴食核心 | damage +20, maxHp -16, armor -4 | leechOnKill | 它永远在饿。 |
 
 ## 5. 品质分布
 
@@ -319,6 +332,7 @@ mat = 1 + 0.13*(wave-1)
 - **改完后**：node --check 各文件 → 重跑 _gen_registry.js 刷新本表 → 追加变更日志。
 
 <!--CHANGELOG_START-->
+
 
 
 

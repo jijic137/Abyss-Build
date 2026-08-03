@@ -27,7 +27,9 @@
 
     shakeAmt: 0, shakeT: 0, hurtFlash: 0, shakeScale: 0.4,
     keys: {}, grid: null,
-    lastT: 0, acc: 0, running: false
+    lastT: 0, acc: 0, running: false,
+    // 渲染缓存：离屏地板 / 敌人排序复用数组 / 暗角渐变
+    _arena: null, _renderBuf: [], _vigGrd: null
   };
   G.game = game;
 
@@ -70,6 +72,14 @@
     this.canvas.width = Math.floor(this.vw * dpr);
     this.canvas.height = Math.floor(this.vh * dpr);
     this.ctx.imageSmoothingEnabled = false;
+    // 重建暗角渐变缓存（随视口尺寸变化）
+    try {
+      var grd = this.ctx.createRadialGradient(this.vw / 2, this.vh / 2, Math.min(this.vw, this.vh) * 0.35,
+        this.vw / 2, this.vh / 2, Math.max(this.vw, this.vh) * 0.72);
+      grd.addColorStop(0, 'rgba(0,0,0,0)');
+      grd.addColorStop(1, 'rgba(0,0,0,.55)');
+      this._vigGrd = grd;
+    } catch (e) { this._vigGrd = null; }
   };
 
   /* ============================================================
@@ -694,8 +704,11 @@
     for (i = 0; i < this.pickups.length; i++) this.pickups[i].draw(c);
     for (i = 0; i < this.turrets.length; i++) this.turrets[i].draw(c);
 
-    // 敌人按 y 排序，避免穿插错乱
-    var es = this.enemies.slice().sort(function (a, b) { return a.y - b.y; });
+    // 敌人按 y 排序，避免穿插错乱（复用数组，避免每帧 slice 分配）
+    var es = this._renderBuf;
+    es.length = 0;
+    for (i = 0; i < this.enemies.length; i++) es.push(this.enemies[i]);
+    es.sort(function (a, b) { return a.y - b.y; });
     for (i = 0; i < es.length; i++) es[i].draw(c);
 
     this.player.draw(c);
@@ -722,16 +735,44 @@
       c.fillStyle = 'rgba(180,20,30,' + (0.05 + (0.3 - hr) * 0.5 * pulse) + ')';
       c.fillRect(0, 0, this.vw, this.vh);
     }
-    // 暗角
-    var grd = c.createRadialGradient(this.vw / 2, this.vh / 2, Math.min(this.vw, this.vh) * 0.35,
-      this.vw / 2, this.vh / 2, Math.max(this.vw, this.vh) * 0.72);
-    grd.addColorStop(0, 'rgba(0,0,0,0)');
-    grd.addColorStop(1, 'rgba(0,0,0,.55)');
-    c.fillStyle = grd;
-    c.fillRect(0, 0, this.vw, this.vh);
+    // 暗角（渐变缓存于 resize，避免每帧创建）
+    if (this._vigGrd) {
+      c.fillStyle = this._vigGrd;
+      c.fillRect(0, 0, this.vw, this.vh);
+    } else {
+      var grd = c.createRadialGradient(this.vw / 2, this.vh / 2, Math.min(this.vw, this.vh) * 0.35,
+        this.vw / 2, this.vh / 2, Math.max(this.vw, this.vh) * 0.72);
+      grd.addColorStop(0, 'rgba(0,0,0,0)');
+      grd.addColorStop(1, 'rgba(0,0,0,.55)');
+      c.fillStyle = grd;
+      c.fillRect(0, 0, this.vw, this.vh);
+    }
+  };
+
+  /** 预渲染地板为离屏 canvas（ARENA 恒定，只画一次） */
+  game.buildArena = function () {
+    try {
+      var cv = document.createElement('canvas');
+      cv.width = ARENA; cv.height = ARENA;
+      var c = cv.getContext('2d');
+      if (!c) return null;
+      this._paintArena(c);
+      return cv;
+    } catch (e) { return null; }
   };
 
   game.drawArena = function (c) {
+    if (this._arena) { c.drawImage(this._arena, 0, 0); return; }
+    if (this._arena === null) { // 尚未尝试构建（浏览器环境首次调用即缓存成功）
+      var cv = this.buildArena();
+      if (cv) { this._arena = cv; c.drawImage(cv, 0, 0); return; }
+      this._arena = false; // 构建失败（无头等），标记后走逐帧回退
+    }
+    // 回退：无离屏环境（无头测试等）逐帧绘制
+    this._paintArena(c);
+  };
+
+  game._paintArena = function (c) {
     // 地板
     c.fillStyle = '#12141d';
     c.fillRect(0, 0, ARENA, ARENA);

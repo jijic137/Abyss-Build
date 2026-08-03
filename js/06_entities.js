@@ -464,16 +464,28 @@
     if (this.timer <= 0) {
       this.timer = def.tcd * G.F.cdMul(this.st.attackSpeed);
       var d = G.F.weaponDamage(this.st, { base: G.wDamage(this.w), tags: def.tags });
-      g.bullets.push(new Bullet({
-        x: this.x + Math.cos(this.angle) * 12,
-        y: this.y + Math.sin(this.angle) * 12,
-        vx: Math.cos(this.angle) * def.bspd,
-        vy: Math.sin(this.angle) * def.bspd,
-        dmg: d.dmg, crit: d.crit, r: 5, sprite: 'b_bullet',
-        col: '#ffc45a', life: rng / def.bspd + 0.15, srcW: this.w
-      }));
+      if (def.laser) {
+        // 激光塔：高速穿透光束
+        g.bullets.push(new Bullet({
+          x: this.x + Math.cos(this.angle) * 12,
+          y: this.y + Math.sin(this.angle) * 12,
+          vx: Math.cos(this.angle) * def.bspd,
+          vy: Math.sin(this.angle) * def.bspd,
+          dmg: d.dmg, crit: d.crit, r: 4, sprite: 'b_bullet',
+          col: '#aee8ff', pierce: def.pierce || 3, life: rng / def.bspd + 0.2, srcW: this.w
+        }));
+      } else {
+        g.bullets.push(new Bullet({
+          x: this.x + Math.cos(this.angle) * 12,
+          y: this.y + Math.sin(this.angle) * 12,
+          vx: Math.cos(this.angle) * def.bspd,
+          vy: Math.sin(this.angle) * def.bspd,
+          dmg: d.dmg, crit: d.crit, r: 5, sprite: 'b_bullet',
+          col: '#ffc45a', life: rng / def.bspd + 0.15, srcW: this.w
+        }));
+      }
       this.flash = 1;
-      G.burst(this.x + Math.cos(this.angle) * 14, this.y + Math.sin(this.angle) * 14, 3, '#ffd98a', 120, { size: 2 });
+      G.burst(this.x + Math.cos(this.angle) * 14, this.y + Math.sin(this.angle) * 14, 3, def.laser ? '#aef4ff' : '#ffd98a', 120, { size: 2 });
     }
   };
   Turret.prototype.draw = function (c) {
@@ -488,5 +500,106 @@
     c.stroke(); c.restore();
   };
   G.Turret = Turret;
+
+  /* ============================================================
+     无人机：跟随玩家、自动索敌射击（工程）
+     ============================================================ */
+  function Drone(x, y, w, st) {
+    this.x = x; this.y = y;
+    this.w = w; this.st = st;
+    this.life = w.def.tlife || 20;
+    this.max = this.life;
+    this.timer = 0;
+    this.angle = -Math.PI / 2;
+    this.r = 10;
+    this.dead = false;
+    this.flash = 0;
+    this.bob = G.rand(0, Math.PI * 2);
+  }
+  Drone.prototype.update = function (dt) {
+    var g = G.game, p = g.player;
+    this.life -= dt;
+    if (this.life <= 0 || p.dead) {
+      this.dead = true;
+      G.burst(this.x, this.y, 8, '#4fd0e8', 150);
+      return;
+    }
+    this.flash = Math.max(0, this.flash - dt * 4);
+    // 环绕玩家悬浮（可被拉扯，不是死钉在轨道上）
+    this.bob += dt * 1.9;
+    var tx = p.x + Math.cos(this.bob) * 58;
+    var ty = p.y + Math.sin(this.bob * 0.9) * 42 - 18;
+    this.x = G.lerp(this.x, tx, G.clamp(dt * 3.2, 0, 1));
+    this.y = G.lerp(this.y, ty, G.clamp(dt * 3.2, 0, 1));
+    // 索敌射击
+    var def = this.w.def;
+    var rng = def.range * G.F.rangeMul(this.st.range);
+    var t = g.nearestEnemy(this.x, this.y, rng);
+    if (!t) return;
+    this.angle = Math.atan2(t.y - this.y, t.x - this.x);
+    this.timer -= dt;
+    if (this.timer <= 0) {
+      this.timer = def.tcd * G.F.cdMul(this.st.attackSpeed);
+      var d = G.F.weaponDamage(this.st, { base: G.wDamage(this.w), tags: def.tags });
+      g.bullets.push(new Bullet({
+        x: this.x + Math.cos(this.angle) * 10,
+        y: this.y + Math.sin(this.angle) * 10,
+        vx: Math.cos(this.angle) * def.bspd,
+        vy: Math.sin(this.angle) * def.bspd,
+        dmg: d.dmg, crit: d.crit, r: 4, sprite: 'b_bullet',
+        col: '#8fe8ff', life: rng / def.bspd + 0.15, srcW: this.w
+      }));
+      this.flash = 1;
+      G.burst(this.x + Math.cos(this.angle) * 12, this.y + Math.sin(this.angle) * 12, 2, '#aef4ff', 110, { size: 2 });
+    }
+  };
+  Drone.prototype.draw = function (c) {
+    var a = this.life < 3 ? (Math.sin(this.life * 18) > 0 ? 0.45 : 1) : 1;
+    var cv = G.PX.getTint('w_drone', '#4fd0e8', 2.6);
+    G.PX.draw(c, cv, this.x, this.y, { alpha: a, flash: this.flash * 0.6, rot: this.angle + Math.PI / 2 });
+    // 旋翼（旋转的圆弧）
+    c.save(); c.globalAlpha = a * 0.85;
+    c.strokeStyle = '#9ff0ff'; c.lineWidth = 2;
+    c.beginPath(); c.arc(this.x, this.y - 11, 6 + Math.sin(this.bob * 6) * 2, 0, Math.PI * 2); c.stroke();
+    c.restore();
+  };
+  G.Drone = Drone;
+
+  /* ============================================================
+     震荡地雷：部署后敌人靠近即引爆（工程）
+     ============================================================ */
+  function Mine(x, y, w, st) {
+    this.x = x; this.y = y;
+    this.w = w; this.st = st;
+    this.arm = (w.def.armT || 0.45);
+    this.r = 9;
+    this.dead = false;
+    this.blink = G.rand(0, Math.PI * 2);
+  }
+  Mine.prototype.update = function (dt) {
+    var g = G.game;
+    if (this.arm > 0) { this.arm -= dt; return; }
+    this.blink += dt * 5;
+    var def = this.w.def;
+    var t = g.nearestEnemy(this.x, this.y, 34);
+    if (t) {
+      this.dead = true;
+      var d = G.F.weaponDamage(this.st, { base: G.wDamage(this.w), tags: def.tags });
+      G.explode(this.x, this.y, def.rad, d.dmg, { col: '#ff9a3a', crit: d.crit, srcW: this.w });
+      G.Audio.sfx('hit');
+    }
+  };
+  Mine.prototype.draw = function (c) {
+    var blink = this.arm > 0 ? 0.35 : (Math.sin(this.blink) > 0 ? 0.55 : 1);
+    var cv = G.PX.getTint('w_mine', '#e0902a', 2);
+    G.PX.draw(c, cv, this.x, this.y, { alpha: blink, flash: 0 });
+    // 警示圈
+    if (this.arm <= 0) {
+      c.save(); c.globalAlpha = 0.22; c.strokeStyle = '#ff9a3a'; c.lineWidth = 2;
+      c.beginPath(); c.arc(this.x, this.y, this.w.def.rad * 0.35, 0, Math.PI * 2); c.stroke();
+      c.restore();
+    }
+  };
+  G.Mine = Mine;
 
 })();

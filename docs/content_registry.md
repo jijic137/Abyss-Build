@@ -6,7 +6,7 @@
 ## 1. 数值总览
 
 - 敌人总数：**30**（普通 22 / 精英 6 / BOSS 2）
-- 武器总数：**37**（按标签：melee×10，ranged×16，elemental×10，engineering×1）
+- 武器总数：**42**（按标签：melee×10，ranged×16，elemental×10，engineering×6）
 - 物品总数：**123**（白 29 / 绿 31 / 蓝 30 / 紫 17 / 红 16）
 - 角色（职业）：**8**
 - 总波数：**20**（BOSS 波：10、20）
@@ -83,7 +83,7 @@
 | 19 | 72 | 11.13 | el_butcher@0.28, el_hexer@0.46, el_ironclad@0.62, el_reaper@0.76, el_warden@0.88 |  | 最后一夜 |
 | 20 | 107 | 3.22 |  | boss_abyss | BOSS · 深渊之主 |
 
-## 3. 武器（37）
+## 3. 武器（42）
 
 | id | 名称 | 类型 | 标签 | 基础伤害 | 冷却 | 特性 | 描述 |
 |---|---|---|---|---|---|---|---|
@@ -107,6 +107,11 @@
 | ice | 冰锥 | shot | elemental | 12 | 0.86 | 射程360, 弹b_shard, 穿透2, 减速0.42 | 穿透并减速。控场比伤害更值钱。 |
 | dart | 毒镖 | shot | elemental | 6 | 0.62 | 射程330, 弹b_shard, 毒4.5 | 直伤很低，但毒会一直走下去。 |
 | turret | 哨戒炮 | turret | engineering | 7 | 6 | 射程300, 弹b_bullet | 在脚下部署一座自动炮台，伤害吃工程学。 |
+| drone | 无人机 | drone | engineering | 5 | 7 | 射程300, 弹b_bullet, 弹数1 | 部署一架跟随你的自动无人机，边飞边射，工程学越高越凶。 |
+| mine | 震荡地雷 | mine | engineering | 20 | 2.2 |  | 在脚下埋雷，敌人踩上去被炸上天；爆完就没了，记得补。 |
+| laser_turret | 激光塔 | turret | engineering | 8 | 7.5 | 射程340, 弹b_bullet, 穿透7 | 部署激光炮塔，光束贯穿一整排敌人。 |
+| nanite_swarm | 纳米虫群 | orbit | engineering | 4 | 3 | 弹数8 | 一圈纳米虫环绕飞行，碰到什么啃什么。 |
+| shock_field | 震荡力场 | pulse | engineering | 15 | 3.4 | 射程150, 减速0.5 | 周期性脉冲震开周围敌人，并让他们脚步迟缓。 |
 | katana | 武士刀 | swing | melee | 9 | 0.44 | 射程86, 弧度1.6 | 快刀。出手快、暴击天生高，但单发偏轻。 |
 | halberd | 长戟 | thrust | melee | 16 | 0.82 | 射程140 | 长柄直线穿刺，距离就是安全。 |
 | railgun | 磁轨炮 | shot | ranged | 60 | 2.4 | 射程720, 弹b_bullet, 穿透6 | 蓄力一击，贯穿整条战线。装填慢得让人不安。 |
@@ -332,6 +337,7 @@ mat = 1 + 0.13*(wave-1)
 - **改完后**：node --check 各文件 → 重跑 _gen_registry.js 刷新本表 → 追加变更日志。
 
 <!--CHANGELOG_START-->
+
 
 
 

@@ -230,7 +230,8 @@
 
     var rng = def.range * G.F.rangeMul(st.range);
     var target = g.nearestEnemy(this.x, this.y, rng);
-    if (!target && def.kind !== 'turret' && def.kind !== 'pulse' && def.kind !== 'orbit') return;
+    if (!target && def.kind !== 'turret' && def.kind !== 'drone' && def.kind !== 'mine' &&
+        def.kind !== 'pulse' && def.kind !== 'orbit') return;
 
     var cd = G.wCooldown(w) * G.F.cdMul(st.attackSpeed);
     w.timer = cd;
@@ -424,9 +425,32 @@
         break;
       }
 
+      case 'drone': {
+        if (g.drones.length >= (def.count || 1)) { w.timer = 1.0; break; }
+        g.drones.push(new G.Drone(this.x, this.y, w, st));
+        G.fx('ring', { x: this.x, y: this.y, r0: 4, r1: 34, col: def.col, w: 3, life: 0.3 });
+        break;
+      }
+
+      case 'mine': {
+        if (g.mines.length >= (def.cap || 6)) { w.timer = 0.8; break; }
+        g.mines.push(new G.Mine(this.x, this.y, w, st));
+        G.fx('ring', { x: this.x, y: this.y, r0: 4, r1: 20, col: '#ff9a3a', w: 3, life: 0.25 });
+        break;
+      }
+
       case 'pulse': {
         d = G.F.weaponDamage(st, { base: G.wDamage(w), tags: def.tags });
         G.explode(this.x, this.y, rng, d.dmg, { crit: d.crit, col: def.col, srcW: w });
+        if (def.slow) {
+          var plist = g.queryEnemies(this.x, this.y, rng + 40);
+          for (i = 0; i < plist.length; i++) {
+            var se = plist[i];
+            if (se.dead) continue;
+            se.slowT = Math.max(se.slowT, def.slowTime || 1.2);
+            se.slowMul = Math.min(se.slowMul, 1 - def.slow);
+          }
+        }
         break;
       }
 
@@ -473,7 +497,7 @@
     var n = this.weapons.length;
     for (var i = 0; i < n; i++) {
       var w = this.weapons[i];
-      if (w.def.kind === 'turret') continue;
+      if (w.def.kind === 'turret' || w.def.kind === 'drone' || w.def.kind === 'mine') continue;
       var def = w.def;
       var a = w.angle;
       var reach = 13 + (i % 3) * 3;

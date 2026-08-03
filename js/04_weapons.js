@@ -151,6 +151,38 @@
       mods: { engineering: 2 },
       desc: '在脚下部署一座自动炮台，伤害吃工程学。'
     },
+    {
+      id: 'drone', name: '无人机', icon: 'w_drone', col: '#4fd0e8', kind: 'drone',
+      tags: ['engineering'], base: 5, cd: 7.0, count: 1, tcd: 0.42, range: 300, bspd: 640, tlife: 24,
+      bullet: 'b_bullet',
+      mods: { engineering: 3 },
+      desc: '部署一架跟随你的自动无人机，边飞边射，工程学越高越凶。'
+    },
+    {
+      id: 'mine', name: '震荡地雷', icon: 'w_mine', col: '#ff9a3a', kind: 'mine',
+      tags: ['engineering'], base: 20, cd: 2.2, cap: 8, rad: 110, armT: 0.5,
+      mods: { engineering: 2, harvesting: 1 },
+      desc: '在脚下埋雷，敌人踩上去被炸上天；爆完就没了，记得补。'
+    },
+    {
+      id: 'laser_turret', name: '激光塔', icon: 'w_turret', col: '#5ad1ff', kind: 'turret',
+      tags: ['engineering'], base: 8, cd: 7.5, range: 340, tcd: 0.95, tlife: 12, bspd: 1500, pierce: 7,
+      bullet: 'b_bullet', laser: true,
+      mods: { engineering: 3, range: 4 },
+      desc: '部署激光炮塔，光束贯穿一整排敌人。'
+    },
+    {
+      id: 'nanite_swarm', name: '纳米虫群', icon: 'w_shuriken', col: '#7fe8a0', kind: 'orbit',
+      tags: ['engineering'], base: 4, cd: 3.0, count: 8, orbR: 0.56, orbSpd: 3.4,
+      mods: { engineering: 2, speed: -2 },
+      desc: '一圈纳米虫环绕飞行，碰到什么啃什么。'
+    },
+    {
+      id: 'shock_field', name: '震荡力场', icon: 'w_tesla', col: '#7fd8ff', kind: 'pulse',
+      tags: ['engineering'], base: 15, cd: 3.4, range: 150, slow: 0.5, slowTime: 1.8,
+      mods: { engineering: 3 },
+      desc: '周期性脉冲震开周围敌人，并让他们脚步迟缓。'
+    },
 
     /* ---------------- 新增武器 ---------------- */
     {

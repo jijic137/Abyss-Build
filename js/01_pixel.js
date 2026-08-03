@@ -1320,6 +1320,34 @@
     'ooooooooooo.',
     '............'
   ]);
+  T('w_drone', [
+    '....oo......',
+    '...oCAo.....',
+    '..oCADCo....',
+    '.oCAADACo...',
+    'ooCAADDACo..',
+    'oBCADDACBo..',
+    'ooBABABCo...',
+    '.oCACABo....',
+    '..oBBBo.....',
+    '..oooo......',
+    '............',
+    '............'
+  ]);
+  T('w_mine', [
+    '....oooo....',
+    '...oCAACo...',
+    '..oCADDACo..',
+    '.oCAADDDACo.',
+    '.oCAADDAACo.',
+    '.oBADDDAACo.',
+    '.oBAAAAACo..',
+    '..oBAAAAo...',
+    '...oBBBBo...',
+    '....oooo....',
+    '............',
+    '............'
+  ]);
   T('w_boomerang', [
     '..oooo......',
     '.oCAABo.....',

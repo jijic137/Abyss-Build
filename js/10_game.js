@@ -19,6 +19,7 @@
     player: null,
     enemies: [], bullets: [], ebullets: [], pickups: [],
     particles: [], texts: [], effects: [], turrets: [],
+    drones: [], mines: [],
 
     wave: 1, waveTime: 0, waveDur: 0,
     budget: 0, spawnAcc: 0,
@@ -187,6 +188,8 @@
     this.bullets.length = 0;
     this.ebullets.length = 0;
     this.turrets.length = 0;
+    this.drones.length = 0;
+    this.mines.length = 0;
 
     // 自动收取地面材料
     var got = 0;
@@ -276,7 +279,7 @@
     // 重置战斗现场
     this.enemies = []; this.bullets = []; this.ebullets = [];
     this.pickups = []; this.particles = []; this.texts = [];
-    this.effects = []; this.turrets = [];
+    this.effects = []; this.turrets = []; this.drones = []; this.mines = [];
     this.hurtFlash = 0; this.shakeAmt = 0;
     this.combo = 0; this.comboTimer = 0; this.runTime = data.runTime || 0;
 
@@ -631,6 +634,8 @@
     stepList(this.ebullets, dt);
     stepList(this.pickups, dt);
     stepList(this.turrets, dt);
+    stepList(this.drones, dt);
+    stepList(this.mines, dt);
     stepList(this.particles, dt);
     stepList(this.texts, dt);
     stepList(this.effects, dt);
@@ -703,6 +708,8 @@
 
     for (i = 0; i < this.pickups.length; i++) this.pickups[i].draw(c);
     for (i = 0; i < this.turrets.length; i++) this.turrets[i].draw(c);
+    for (i = 0; i < this.drones.length; i++) this.drones[i].draw(c);
+    for (i = 0; i < this.mines.length; i++) this.mines[i].draw(c);
 
     // 敌人按 y 排序，避免穿插错乱（复用数组，避免每帧 slice 分配）
     var es = this._renderBuf;

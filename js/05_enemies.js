@@ -198,6 +198,42 @@
      精英/BOSS 为里程碑奖励，不缩放（保持原设计）。 */
   G.MAT_MUL = 0.494;
 
+  /* ------------------------------------------------------------
+     精英词缀变异（affixes）—— 中后期让精英/部分普通怪产生变体
+       frenzy  狂暴：更脆、更快、更痛
+       split   分裂：死亡时一分为二
+       vamp    吸血：近战命中回复生命
+       shield  护盾：吸收一部分伤害
+     ------------------------------------------------------------ */
+  G.AFFIXES = [
+    { id: 'frenzy', name: '狂暴', color: '#ff5a4a', mark: '▲', desc: '血量-30%，更快更痛' },
+    { id: 'split',  name: '分裂', color: '#b98aff', mark: '✧', desc: '死亡时分裂成两只虫群' },
+    { id: 'vamp',   name: '吸血', color: '#ff4a7a', mark: '♥', desc: '近战命中回复生命' },
+    { id: 'shield', name: '护盾', color: '#7fd8ff', mark: '◈', desc: '吸收一部分伤害' }
+  ];
+  G.AFFIX_MAP = {};
+  G.AFFIXES.forEach(function (a) { G.AFFIX_MAP[a.id] = a; });
+
+  /** 抽取词缀：精英 w9+ 必带 1 个、w14+ 概率 2 个；普通怪 w7+ 小概率 1 个；BOSS 不加 */
+  G.rollAffixes = function (isElite, wave) {
+    var arr = [];
+    var n = G.AFFIXES.length;
+    if (isElite) {
+      if (wave >= 9) arr.push(G.AFFIXES[G.randInt(0, n - 1)]);
+      if (wave >= 14 && arr.length && Math.random() < 0.5) {
+        var b = G.AFFIXES[G.randInt(0, n - 1)];
+        var guard = 0;
+        while (b.id === arr[0].id && guard++ < 8) b = G.AFFIXES[G.randInt(0, n - 1)];
+        arr.push(b);
+      }
+    } else {
+      if (wave >= 7 && Math.random() < 0.10 + Math.min(0.08, wave * 0.004)) {
+        arr.push(G.AFFIXES[G.randInt(0, n - 1)]);
+      }
+    }
+    return arr;
+  };
+
   /** 从波次池里按权重抽一个敌人 id */
   G.rollEnemy = function (wave) {
     var cfg = W[wave - 1];

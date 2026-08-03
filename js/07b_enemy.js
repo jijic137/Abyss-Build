@@ -117,6 +117,17 @@
           this.contactCd = 0.55;
           this.kx += (this.x - p.x) * 2.2;
           this.ky += (this.y - p.y) * 2.2;
+          // 词缀·吸血：近战命中回复生命
+          if (this.affixes && this.hp < this.maxHp) {
+            for (var vi = 0; vi < this.affixes.length; vi++) {
+              if (this.affixes[vi].id === 'vamp') {
+                var vh = Math.max(1, Math.round(this.dmg * 0.35));
+                this.hp = Math.min(this.maxHp, this.hp + vh);
+                G.popText(this.x, this.y - this.r - 12, '+' + vh, { col: '#ff6a92', size: 11, life: 0.5 });
+                break;
+              }
+            }
+          }
         }
       }
     }
@@ -488,6 +499,26 @@
       c.strokeStyle = def.boss ? 'rgba(255,70,110,.55)' : 'rgba(255,190,80,.5)';
       c.lineWidth = 2;
       c.beginPath(); c.arc(this.x, this.y, pr, 0, Math.PI * 2); c.stroke();
+      c.restore();
+    }
+    // 词缀视觉：彩色外环 + 头顶符号
+    if (this.affixes && this.affixes.length) {
+      c.save();
+      for (var qi = 0; qi < this.affixes.length; qi++) {
+        var afq = this.affixes[qi];
+        var ar = this.r + 11 + Math.sin(this.t * 3 + qi * 2.1) * 3 + qi * 6;
+        c.strokeStyle = afq.color;
+        c.lineWidth = 2;
+        c.beginPath(); c.arc(this.x, this.y, ar, 0, Math.PI * 2); c.stroke();
+      }
+      c.restore();
+      c.save();
+      c.font = 'bold 11px monospace'; c.textAlign = 'center';
+      var sy2 = this.y - this.r - 22;
+      for (var si2 = 0; si2 < this.affixes.length; si2++) {
+        c.fillStyle = this.affixes[si2].color;
+        c.fillText(this.affixes[si2].mark, this.x + (si2 - (this.affixes.length - 1) / 2) * 13, sy2);
+      }
       c.restore();
     }
 

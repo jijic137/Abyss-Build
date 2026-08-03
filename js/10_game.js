@@ -365,6 +365,25 @@
     x = G.clamp(x, def.r + 4, ARENA - def.r - 4);
     y = G.clamp(y, def.r + 4, ARENA - def.r - 4);
     var e = new G.Enemy(def, x, y, this.wave);
+    // 精英词缀变异（BOSS 不加）
+    if (!def.boss) {
+      var aff = G.rollAffixes(def.elite, this.wave);
+      if (aff.length) {
+        e.affixes = aff;
+        for (var ai = 0; ai < aff.length; ai++) {
+          var af = aff[ai];
+          if (af.id === 'frenzy') {
+            e.maxHp = Math.max(1, Math.round(e.maxHp * 0.7));
+            e.hp = e.maxHp;
+            e.spd *= 1.35;
+            e.dmg *= 1.25;
+          } else if (af.id === 'shield') {
+            e.shieldHp = Math.round(e.maxHp * (def.elite ? 0.22 : 0.35));
+          }
+        }
+        if (def.elite) G.fx('ring', { x: e.x, y: e.y, r0: 6, r1: 48, col: aff[0].color, w: 4, life: 0.5 });
+      }
+    }
     this.enemies.push(e);
     if (def.elite || def.boss) G.burst(x, y, 14, def.boss ? '#ff4a6b' : '#ffd24a', 200, { size: 4 });
     return e;
@@ -440,6 +459,21 @@
     if (e.armor > 0 && !o.dot) dmg *= 1 - Math.min(e.armor / (e.armor + 30), 0.7);
 
     dmg = Math.max(1, dmg);
+
+    // 词缀·护盾：先吸收伤害
+    if (e.shieldHp > 0 && !o.dot) {
+      var absorbed = Math.min(e.shieldHp, dmg);
+      e.shieldHp -= absorbed;
+      dmg -= absorbed;
+      if (dmg > 0) {
+        G.popText(e.x, e.y - e.r * 0.6 - 8, '-' + Math.round(absorbed), { col: '#7fd8ff', size: 11, life: 0.4 });
+      } else {
+        G.popText(e.x, e.y - e.r - 14, '护盾击碎', { col: '#7fd8ff', size: 12, life: 0.6 });
+        G.burst(e.x, e.y, 10, '#7fd8ff', 180, { size: 3 });
+        return;
+      }
+    }
+
     e.hp -= dmg;
     e.hurt();
     if (!o.dot) G.Audio.sfx('hit', Math.max(-1, Math.min(1, (e.x - p.x) / 350)));
@@ -548,6 +582,18 @@
       for (var i = 0; i < e.def.splitCount; i++) {
         var a = Math.PI * 2 * i / e.def.splitCount + G.rand(0, 1);
         this.spawnEnemy(e.def.splitInto, e.x + Math.cos(a) * 18, e.y + Math.sin(a) * 18);
+      }
+    }
+    // 词缀·分裂：死亡时一分为二
+    if (e.affixes && e.affixes.length) {
+      for (var afi = 0; afi < e.affixes.length; afi++) {
+        if (e.affixes[afi].id === 'split') {
+          for (var si = 0; si < 2; si++) {
+            var sa = Math.PI * si + G.rand(-0.45, 0.45);
+            this.spawnEnemy('swarmling', e.x + Math.cos(sa) * 20, e.y + Math.sin(sa) * 20);
+          }
+          break;
+        }
       }
     }
     // 爆弹虫死亡也炸

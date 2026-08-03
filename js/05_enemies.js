@@ -117,11 +117,11 @@
     /* ---------------- BOSS ---------------- */
     { id: 'boss_behemoth', name: '腐化巨兽', sprite: 'boss_behemoth', sc: 5, r: 46,
       boss: true, noScale: true,
-      hp: 18000, spd: 46, dmg: 30, armor: 16, mat: 130, danger: 0, ai: 'boss1' },
+      hp: 21000, spd: 46, dmg: 30, armor: 16, mat: 130, danger: 0, ai: 'boss1' },
 
     { id: 'boss_abyss', name: '深渊之主', sprite: 'boss_abyss', sc: 5, r: 48,
       boss: true, noScale: true,
-      hp: 55000, spd: 52, dmg: 38, armor: 24, mat: 300, danger: 0, ai: 'boss2' }
+      hp: 72000, spd: 52, dmg: 38, armor: 24, mat: 300, danger: 0, ai: 'boss2' }
   ];
 
   G.ENEMIES = E;
@@ -134,7 +134,8 @@
   G.waveScale = function (wave) {
     var w = wave - 1;
     return {
-      hp:  1 + 0.26 * w + 0.013 * w * w,
+      // 二次项 0.013→0.0145：前期几乎不变，w12+ 后期血线略陡（缓解「成型后碾压」）
+      hp:  1 + 0.26 * w + 0.0145 * w * w,
       dmg: 1 + 0.105 * w,
       spd: 1 + 0.011 * w,
       mat: 1 + 0.13 * w
@@ -185,7 +186,7 @@
     { dur: 70, rate: 10.36, pool: [['beetle', 6], ['wraith', 6], ['bomber', 7], ['warlock', 7], ['stone', 7], ['charger', 7], ['ogre', 4], ['crystal', 4], ['glutton', 4]], label: '崩坏' },
     { dur: 72, rate: 11.13, pool: [['wraith', 7], ['bomber', 7], ['warlock', 7], ['stone', 7], ['charger', 8], ['spider', 6], ['ogre', 5], ['crystal', 5], ['glutton', 5]],
       elites: [['el_butcher', 0.28], ['el_hexer', 0.46], ['el_ironclad', 0.62], ['el_reaper', 0.76], ['el_warden', 0.88]], label: '最后一夜' },
-    { dur: 107, rate: 3.22, pool: [['wraith', 6], ['bomber', 5], ['skeleton', 5], ['spider', 5]],
+    { dur: 107, rate: 3.40, pool: [['wraith', 6], ['bomber', 5], ['skeleton', 5], ['spider', 5]],
       boss: 'boss_abyss', label: 'BOSS · 深渊之主' }
   ];
 
@@ -196,7 +197,7 @@
      使每波总材料≈旧配置（由 _calib_econ.js 无头模拟测得）。
      应用方式见 10_game.js dropLoot：普通怪走期望= e.mat*MAT_MUL 的概率化掉落；
      精英/BOSS 为里程碑奖励，不缩放（保持原设计）。 */
-  G.MAT_MUL = 0.494;
+  G.MAT_MUL = 0.511;
 
   /* ------------------------------------------------------------
      精英词缀变异（affixes）—— 中后期让精英/部分普通怪产生变体

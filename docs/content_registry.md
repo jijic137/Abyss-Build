@@ -55,8 +55,8 @@
 
 | id | 名称 | sprite | 缩放 | 半径 | HP | 速度 | 伤害 | 护甲 | 材料 | 危险 | AI | 备注 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| boss_behemoth | 腐化巨兽 | boss_behemoth | 5 | 46 | 18000 | 46 | 30 | 16 | 130 | 0 | boss1 | 固定(不随波次); BOSS |
-| boss_abyss | 深渊之主 | boss_abyss | 5 | 48 | 55000 | 52 | 38 | 24 | 300 | 0 | boss2 | 固定(不随波次); BOSS |
+| boss_behemoth | 腐化巨兽 | boss_behemoth | 5 | 46 | 21000 | 46 | 30 | 16 | 130 | 0 | boss1 | 固定(不随波次); BOSS |
+| boss_abyss | 深渊之主 | boss_abyss | 5 | 48 | 72000 | 52 | 38 | 24 | 300 | 0 | boss2 | 固定(不随波次); BOSS |
 
 ### 2.4 二十波配置
 
@@ -81,7 +81,7 @@
 | 17 | 68 | 9.66 | el_ironclad@0.3, el_brood@0.5, el_reaper@0.66, el_warden@0.8 |  | 术法围城 |
 | 18 | 70 | 10.36 |  |  | 崩坏 |
 | 19 | 72 | 11.13 | el_butcher@0.28, el_hexer@0.46, el_ironclad@0.62, el_reaper@0.76, el_warden@0.88 |  | 最后一夜 |
-| 20 | 107 | 3.22 |  | boss_abyss | BOSS · 深渊之主 |
+| 20 | 107 | 3.4 |  | boss_abyss | BOSS · 深渊之主 |
 
 ## 3. 武器（42）
 
@@ -337,6 +337,7 @@ mat = 1 + 0.13*(wave-1)
 - **改完后**：node --check 各文件 → 重跑 _gen_registry.js 刷新本表 → 追加变更日志。
 
 <!--CHANGELOG_START-->
+
 
 
 

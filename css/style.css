@@ -489,12 +489,22 @@ canvas#game{
 }
 
 /* ---------------- 封面（深渊猎手 · 裂隙之章） ----------------
-   极简 + 质感：巨大标题为主体，底部深渊裂隙向上裂开，入口悬于裂隙顶端 */
+   极简 + 质感：AI 生成的克苏鲁深渊像素封面 + 巨大标题 + 裂隙式入口 */
 .screen-cover{ overflow:hidden; background:#06080f; }
-/* 封面背景全屏 canvas（封面渲染器绘制渐变/噪点/裂隙/暗角） */
+/* 封面背景：AI 生成的像素插画（克苏鲁深渊，centred 居中缩放） */
 .cover-bg{
   position:absolute; inset:0; width:100%; height:100%;
-  z-index:0; display:block; pointer-events:none;
+  z-index:0; pointer-events:none; display:block;
+  object-fit:cover; object-position:center 55%;
+  image-rendering:pixelated;
+}
+/* 上下暗角（中部 30-70% 透明，让眼睛中心可见；顶部/底部护字） */
+.screen-cover::before{
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(180deg,
+    rgba(4,5,10,.62) 0%, rgba(4,5,10,.52) 20%,
+    rgba(4,5,10,0) 30%, rgba(4,5,10,0) 70%,
+    rgba(4,5,10,.4) 86%, rgba(4,5,10,.72) 100%);
 }
 
 .cover-inner{

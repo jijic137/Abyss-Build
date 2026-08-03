@@ -389,6 +389,43 @@ canvas#game{
 .set-row input[type=range]{ flex:1; accent-color:#ffd24a; cursor:pointer; }
 .set-val{ width:48px; text-align:left; color:var(--dim); font-variant-numeric:tabular-nums; }
 
+/* 设置页 · 操作说明 */
+.set-help{
+  width:420px; max-width:90vw; margin:26px auto 4px;
+  padding:14px 18px; border-radius:12px;
+  background:linear-gradient(180deg, rgba(43,58,94,.35), rgba(20,28,48,.35));
+  border:1px solid rgba(110,150,230,.18);
+}
+.set-help-title{
+  font-size:12px; letter-spacing:4px; color:#8fa3d8;
+  margin-bottom:10px; text-align:center;
+}
+.set-keys{ display:flex; flex-direction:column; gap:8px; }
+.set-key{
+  display:flex; align-items:center; gap:8px; font-size:13px; color:#c8d0e8;
+}
+.set-key i{ color:#5a6a90; font-style:normal; }
+.set-key b{
+  margin-left:auto; font-weight:600; color:#9fb2dd;
+  letter-spacing:1px;
+}
+.kbd{
+  display:inline-block; padding:2px 9px; border-radius:6px;
+  font-family:ui-monospace, Consolas, monospace; font-size:12px;
+  background:#0e1626; border:1px solid #3c5390; border-bottom-width:2px;
+  color:#dce6ff; letter-spacing:1px;
+}
+.kbd.auto{
+  padding:2px 7px; font-family:inherit; letter-spacing:2px;
+  background:linear-gradient(180deg,#1f3a66,#14233f);
+  color:#9ec2ff; border-color:#3f7dff;
+}
+.set-help-tip{
+  margin-top:10px; padding-top:10px; border-top:1px dashed rgba(110,150,230,.16);
+  font-size:11.5px; color:#6b7fa8; text-align:center; line-height:1.6;
+}
+.set-help-tip .kbd{ font-size:10.5px; padding:1px 6px; }
+
 /* 开关切换（背景音乐） */
 .switch{ position:relative; display:inline-block; width:46px; height:24px; }
 .set-row label.switch{ width:auto; text-align:left; flex:none; cursor:pointer; }
@@ -639,8 +676,41 @@ canvas#game{
   border:1px solid #34508f;
   box-shadow:0 0 22px #2b6cff22;
 }
+.save-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .save-ch{ font-size:18px; font-weight:900; color:#eaf1ff; letter-spacing:1px; }
 .save-wave{ font-size:12px; color:var(--dim); margin-top:6px; letter-spacing:1px; }
+.save-head .save-wave{ margin-top:0; }
+/* 波次进度条 */
+.save-prog{
+  height:6px; border-radius:3px; margin:12px 0 14px;
+  background:#0d1424; border:1px solid #243a66; overflow:hidden;
+}
+.save-prog-bar{
+  height:100%; border-radius:3px;
+  background:linear-gradient(90deg,#3f7dff,#7fa8ff);
+  box-shadow:0 0 8px #3f7dff88;
+  transition:width .5s ease;
+}
+/* 战局摘要网格 */
+.save-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+  margin-bottom:12px;
+}
+.save-stat{
+  padding:8px 6px; text-align:center; border-radius:8px;
+  background:rgba(16,24,42,.55); border:1px solid rgba(80,110,180,.16);
+}
+.save-stat-v{ font-size:16px; font-weight:800; color:#eaf1ff; font-variant-numeric:tabular-nums; }
+.save-stat-k{ font-size:10.5px; letter-spacing:1px; color:#6f83b0; margin-top:2px; }
+/* 构筑摘要 */
+.save-build{ margin-bottom:14px; }
+.save-build-t{ font-size:11px; letter-spacing:3px; color:#6f83b0; margin-bottom:6px; }
+.save-build-row{ display:flex; gap:6px; flex-wrap:wrap; }
+.save-wtag{
+  padding:3px 9px; border-radius:6px; font-size:12px;
+  background:rgba(12,18,32,.6); border:1px solid; border-bottom-width:2px;
+}
+.save-wtag.more{ color:#8fa3d8; border-color:#2c3f6b; }
 .save-btns{ display:flex; gap:12px; margin-top:16px; }
 .save-btns .btn{ flex:1; text-align:center; }
 
@@ -760,4 +830,15 @@ canvas#game{
   .screen-cover .game-title{ font-size:56px; letter-spacing:12px; }
   .wheel-token{ width:84px; height:84px; }
   .wheel-token canvas{ width:60px !important; height:60px !important; }
+}
+
+/* 商店重掷洗牌动画：新卡依次「派发」入场 */
+#shopCards.reroll .card{ animation:cardDeal .42s cubic-bezier(.2,.7,.3,1.15) both; }
+#shopCards.reroll .card:nth-child(1){ animation-delay:.02s; }
+#shopCards.reroll .card:nth-child(2){ animation-delay:.07s; }
+#shopCards.reroll .card:nth-child(3){ animation-delay:.12s; }
+#shopCards.reroll .card:nth-child(4){ animation-delay:.17s; }
+@keyframes cardDeal{
+  from{ opacity:0; transform:translateY(-16px) scale(.94) rotateX(6deg); filter:brightness(1.7); }
+  to{ opacity:1; transform:translateY(0) scale(1) rotateX(0); filter:brightness(1); }
 }

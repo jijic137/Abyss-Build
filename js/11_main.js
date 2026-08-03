@@ -147,6 +147,13 @@
     byId('btnReroll').addEventListener('click', function () {
       var ok = G.Shop.reroll(G.game.player);
       if (!ok) return;
+      // 洗牌反馈：卡片依次「派发」入场 + 按钮粒子
+      var box = byId('shopCards');
+      box.classList.remove('reroll');
+      void box.offsetWidth;
+      box.classList.add('reroll');
+      var br = byId('btnReroll').getBoundingClientRect();
+      G.UI.burstDom(br.left + br.width / 2, br.top + br.height / 2, '#7fa8ff', 8);
       G.UI.renderShop(G.game);
     });
 

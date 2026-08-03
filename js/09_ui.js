@@ -119,13 +119,62 @@
     var host = $('saveBody'); host.innerHTML = '';
     var run = G.Save.getRun();
     if (!run) {
-      host.appendChild(el('div', 'save-empty', '暂无进行中的存档。<br>每通过一波会自动保存，可在此继续或抹除。'));
+      var empty = el('div', 'save-empty', '暂无进行中的存档。<br>每通过一波会自动保存，可在此继续或抹除。');
+      empty.style.padding = '40px 8px';
+      host.appendChild(empty);
       return;
     }
     var ch = G.CHAR_BY_ID[run.charId];
+    var chCol = ch ? (ch.color || '#7d8aa8') : '#7d8aa8';
+    var st = run.stats || {};
     var slot = el('div', 'save-slot');
-    slot.appendChild(el('div', 'save-ch', ch ? ch.name : run.charId));
-    slot.appendChild(el('div', 'save-wave', '第 ' + run.wave + ' 波 · ' + fmtTime(run.runTime || 0)));
+    slot.style.borderLeft = '3px solid ' + chCol;
+
+    // 头部：职业 + 波次/时间
+    var head = el('div', 'save-head');
+    head.appendChild(el('div', 'save-ch', ch ? ch.name : run.charId));
+    head.appendChild(el('div', 'save-wave',
+      '第 ' + run.wave + ' / ' + G.MAX_WAVE + ' 波 · ' + fmtTime(run.runTime || 0) +
+      (run.pendingLevels ? ' · 待升级 ×' + run.pendingLevels : '')));
+    slot.appendChild(head);
+
+    // 波次进度条
+    var prog = el('div', 'save-prog');
+    var bar = el('div', 'save-prog-bar');
+    bar.style.width = Math.round(G.clamp(run.wave / G.MAX_WAVE, 0, 1) * 100) + '%';
+    prog.appendChild(bar);
+    slot.appendChild(prog);
+
+    // 战局摘要
+    var grid = el('div', 'save-grid');
+    grid.appendChild(saveStat('击杀', st.kills || 0));
+    grid.appendChild(saveStat('等级', run.level || 1));
+    grid.appendChild(saveStat('材料', run.materials || 0));
+    grid.appendChild(saveStat('精英', st.eliteKills || 0));
+    grid.appendChild(saveStat('构筑', (run.weapons || []).length + ' 武 · ' + (run.items || []).length + ' 物'));
+    grid.appendChild(saveStat('最高连击', st.comboMax || 0));
+    slot.appendChild(grid);
+
+    // 构筑摘要（首 3 把武器）
+    var ws = (run.weapons || []).slice(0, 3);
+    if (ws.length) {
+      var build = el('div', 'save-build');
+      build.appendChild(el('div', 'save-build-t', '武器'));
+      var wrow = el('div', 'save-build-row');
+      ws.forEach(function (w) {
+        var d = G.WEAPON_MAP[w.defId] || G.WEAPONS.find(function (x) { return x.id === w.defId; });
+        if (!d) return;
+        var tag = el('span', 'save-wtag');
+        tag.style.borderColor = w.tier === 0 ? '#3a4158' : G.rarityColor(w.tier);
+        tag.style.color = w.tier === 0 ? '#c6cde0' : G.rarityColor(w.tier);
+        tag.textContent = d.name;
+        wrow.appendChild(tag);
+      });
+      if (ws.length > 3) wrow.appendChild(el('span', 'save-wtag more', '+' + (ws.length - 3)));
+      build.appendChild(wrow);
+      slot.appendChild(build);
+    }
+
     var btnRow = el('div', 'save-btns');
     var bContinue = el('button', 'btn btn-primary', '继续');
     bContinue.addEventListener('click', function () {
@@ -146,6 +195,13 @@
     slot.appendChild(btnRow);
     host.appendChild(slot);
   };
+
+  function saveStat(k, v) {
+    var c = el('div', 'save-stat');
+    c.appendChild(el('div', 'save-stat-v', String(v)));
+    c.appendChild(el('div', 'save-stat-k', k));
+    return c;
+  }
 
   // 判断某屏是否处于显示态（用于 ESC 等键盘逻辑判断）
   UI.isScreenOn = function (id) { return $(id).classList.contains('on'); };

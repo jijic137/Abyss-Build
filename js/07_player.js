@@ -244,6 +244,13 @@
     w.angle = ang;
     this.face = Math.cos(ang) >= 0 ? 1 : -1;
 
+    // 枪口闪光：发射型武器开火瞬间的短促光点
+    if (['shot', 'spread', 'lob', 'bouncer', 'returner', 'cone', 'chain', 'homing'].indexOf(def.kind) >= 0) {
+      var mx = this.x + Math.cos(ang) * 24, my = this.y + Math.sin(ang) * 24;
+      G.fx('flash', { x: mx, y: my, r: 9, col: def.col || '#ffd98a', life: 0.07 });
+      G.burst(mx, my, 2, def.col || '#ffd98a', 90, { size: 1.6, lifeMul: 0.4, drag: 0.86 });
+    }
+
     var d, i;
     switch (def.kind) {
 

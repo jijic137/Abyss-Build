@@ -6,7 +6,7 @@
 (function () {
 
   /* ============================================================
-     粒子
+     粒子（支持形态：dot 方块 / spark 火星长条 / debris 碎片 / glow 辉光）
      ============================================================ */
   function Particle(x, y, o) {
     o = o || {};
@@ -17,38 +17,121 @@
     this.col = o.col || '#fff';
     this.drag = o.drag === undefined ? 0.90 : o.drag;
     this.shrink = o.shrink === undefined ? true : o.shrink;
+    this.shape = o.shape || 'dot';
+    this.grav = o.grav || 0;
+    this.rot = o.rot !== undefined ? o.rot : G.rand(0, Math.PI * 2);
+    this.rotSpd = o.rotSpd || 0;
+    this.trail = o.trail || 0;
     this.dead = false;
   }
   Particle.prototype.update = function (dt) {
+    this.vy += this.grav * dt;
     this.x += this.vx * dt; this.y += this.vy * dt;
     var d = Math.pow(this.drag, dt * 60);
     this.vx *= d; this.vy *= d;
+    this.rot += this.rotSpd * dt;
     this.life -= dt;
     if (this.life <= 0) this.dead = true;
   };
   Particle.prototype.draw = function (c) {
     var t = this.life / this.max;
     var s = this.shrink ? this.size * t : this.size;
-    if (s < 0.6) return;
+    if (s < 0.5) return;
+    var x = this.x, y = this.y;
     c.globalAlpha = G.clamp(t * 1.4, 0, 1);
-    c.fillStyle = this.col;
-    c.fillRect(Math.round(this.x - s / 2), Math.round(this.y - s / 2), Math.ceil(s), Math.ceil(s));
+    if (this.shape === 'spark') {
+      // 火星：沿速度方向的长条（拖尾感）
+      var ang = Math.atan2(this.vy, this.vx) + (this.rotSpd ? this.rot : 0);
+      var len = (this.trail || this.size * 2.6) * t + 1.5;
+      c.save();
+      c.translate(x, y);
+      c.rotate(ang);
+      c.fillStyle = this.col;
+      c.fillRect(0, -s * 0.28, len, s * 0.56);
+      c.restore();
+    } else if (this.shape === 'glow') {
+      // 辉光：外层大而淡 + 内核小而亮
+      var gs = s * (1.6 + t * 0.8);
+      c.globalAlpha = G.clamp(t * 0.30, 0, 0.3);
+      c.fillStyle = this.col;
+      c.fillRect(x - gs, y - gs, gs * 2, gs * 2);
+      c.globalAlpha = G.clamp(t * 1.1, 0, 1);
+      c.fillRect(x - s * 0.35, y - s * 0.35, s * 0.7, s * 0.7);
+    } else if (this.shape === 'debris') {
+      // 碎片：旋转方块（受重力，见 update）
+      c.save();
+      c.translate(x, y);
+      c.rotate(this.rot);
+      c.fillStyle = this.col;
+      c.fillRect(-s / 2, -s / 2, s, s * 0.62);
+      c.restore();
+    } else {
+      c.fillStyle = this.col;
+      c.fillRect(Math.round(x - s / 2), Math.round(y - s / 2), Math.ceil(s), Math.ceil(s));
+    }
     c.globalAlpha = 1;
   };
   G.Particle = Particle;
 
-  /** 快捷爆点 */
+  /** 快捷爆点（支持 o.shape/grav/trail） */
   G.burst = function (x, y, n, col, spd, o) {
     o = o || {};
     var g = G.game;
+    if (g.particles.length > 600) return;        // 性能护栏
     for (var i = 0; i < n; i++) {
       var a = G.rand(0, Math.PI * 2), s = G.rand(spd * 0.35, spd);
       g.particles.push(new Particle(x, y, {
         vx: Math.cos(a) * s, vy: Math.sin(a) * s,
         life: G.rand(0.22, 0.55) * (o.lifeMul || 1),
         size: o.size || G.rand(2, 4.5),
-        col: col, drag: o.drag
+        col: col, drag: o.drag,
+        shape: o.shape, grav: o.grav, rotSpd: o.rotSpd, trail: o.trail
       }));
+    }
+  };
+
+  /** 混合爆点：火花 + 碎片 + 辉光（命中 / 击杀 / 爆炸用，更有冲击力） */
+  G.burstMix = function (x, y, n, col, spd, o) {
+    o = o || {};
+    var g = G.game;
+    if (g.particles.length > 600) return;
+    var i, a, s;
+    // 火花（约 55%）：快、带拖尾、微重力
+    var sn = Math.max(2, Math.round(n * 0.55));
+    for (i = 0; i < sn; i++) {
+      a = G.rand(0, Math.PI * 2); s = G.rand(spd * 0.4, spd);
+      g.particles.push(new Particle(x, y, {
+        vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+        life: G.rand(0.16, 0.38) * (o.lifeMul || 1),
+        size: G.rand(1.5, 3.2),
+        col: col, drag: 0.88, shape: 'spark', grav: 140,
+        rotSpd: G.rand(-6, 6), trail: 9
+      }));
+    }
+    // 碎片（约 30%）：旋转方块、重一些
+    var dn = Math.max(1, Math.round(n * 0.3));
+    for (i = 0; i < dn; i++) {
+      a = G.rand(0, Math.PI * 2); s = G.rand(spd * 0.2, spd * 0.55);
+      g.particles.push(new Particle(x, y, {
+        vx: Math.cos(a) * s, vy: Math.sin(a) * s - 40,
+        life: G.rand(0.3, 0.6) * (o.lifeMul || 1),
+        size: G.rand(2.5, 5),
+        col: o.debCol || '#9aa7c8', drag: 0.9, shape: 'debris', grav: 380,
+        rotSpd: G.rand(-10, 10)
+      }));
+    }
+    // 辉光（少量）：慢速扩散、寿命长
+    if (o.glow !== false) {
+      var gn = Math.max(1, Math.round(n * 0.16));
+      for (i = 0; i < gn; i++) {
+        a = G.rand(0, Math.PI * 2); s = G.rand(6, 26);
+        g.particles.push(new Particle(x, y, {
+          vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+          life: G.rand(0.4, 0.7) * (o.lifeMul || 1),
+          size: G.rand(4, 7),
+          col: o.glowCol || col, drag: 0.94, shape: 'glow'
+        }));
+      }
     }
   };
 
@@ -351,9 +434,11 @@
   G.explode = function (x, y, radius, dmg, o) {
     o = o || {};
     var g = G.game, i;
+    // 双环：内白外色（更强的爆发层次）
     G.fx('ring', { x: x, y: y, r0: 6, r1: radius, col: o.col || '#ffb347', w: 5, life: 0.36 });
+    G.fx('ring', { x: x, y: y, r0: 4, r1: radius * 0.55, col: '#ffffff', w: 3, life: 0.22 });
     G.fx('flash', { x: x, y: y, r: radius * 0.62, col: o.col || '#ffd98a', life: 0.16 });
-    G.burst(x, y, 16, o.col || '#ff9a3a', 260, { size: 4 });
+    G.burstMix(x, y, 18, o.col || '#ff9a3a', 300, { glow: true, debCol: o.debCol });
     g.shake(6, 0.18);
 
     if (o.hostile) {

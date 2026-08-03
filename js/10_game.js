@@ -485,7 +485,7 @@
         size: o.crit ? 17 : 13
       });
     }
-    // 命中粒子：按武器元素/颜色上色，像素+辉光混合风格
+    // 命中粒子：按武器元素/颜色上色，火花+碎片混合，暴击更强
     if (!o.dot && o.srcW && !o.noHitFx) {
       var wd = o.srcW.def, hc = wd.col;
       if (wd.burn) hc = '#ff7a2a';
@@ -493,7 +493,12 @@
       else if (wd.poison) hc = '#9ad84a';
       else if (wd.chain) hc = '#9fe8ff';
       var hx = o.x != null ? o.x : e.x, hy = o.y != null ? o.y : e.y;
-      G.burst(hx, hy, o.crit ? 5 : 3, hc, o.crit ? 180 : 120, { size: 2, lifeMul: 0.5, drag: 0.9 });
+      G.burstMix(hx, hy, o.crit ? 9 : 5, hc, o.crit ? 230 : 140, {
+        glow: false, debCol: '#8a93b5', lifeMul: 0.8
+      });
+      if (o.crit) {
+        G.fx('ring', { x: hx, y: hy, r0: 3, r1: 26, col: '#ffd24a', w: 2.5, life: 0.24 });
+      }
     }
     if (o.crit) {
       this.shake(3, 0.08);
@@ -564,16 +569,19 @@
     G.Audio.sfx(e.def.boss ? 'bossdie' : 'kill',
       e.def.boss ? 0 : Math.max(-1, Math.min(1, (e.x - p.x) / 350)));
 
-    G.burst(e.x, e.y, e.def.boss ? 60 : (e.def.elite ? 26 : 8), '#ff8a8a', e.def.boss ? 420 : 200,
-      { size: e.def.boss ? 6 : 3 });
+    G.burstMix(e.x, e.y, e.def.boss ? 70 : (e.def.elite ? 34 : 12), '#ff8a8a', e.def.boss ? 460 : 240, {
+      glow: true, debCol: e.def.boss ? '#5a3a4a' : '#6a6f88', lifeMul: 1.1
+    });
 
     if (e.def.boss) {
       G.fx('ring', { x: e.x, y: e.y, r0: 20, r1: 460, col: '#ffd24a', w: 10, life: 1.0 });
+      G.fx('ring', { x: e.x, y: e.y, r0: 10, r1: 300, col: '#ffffff', w: 5, life: 0.6 });
       G.fx('flash', { x: e.x, y: e.y, r: 260, col: '#fff', life: 0.4 });
       this.shake(30, 0.9);
       G.UI.banner(e.def.name + ' 已被击败', '#ffd24a');
     } else if (e.def.elite) {
       G.fx('ring', { x: e.x, y: e.y, r0: 10, r1: 180, col: '#ffd24a', w: 5, life: 0.5 });
+      G.fx('ring', { x: e.x, y: e.y, r0: 6, r1: 110, col: '#ffffff', w: 3, life: 0.32 });
       this.shake(10, 0.3);
     }
 

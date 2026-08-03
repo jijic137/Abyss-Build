@@ -41,7 +41,7 @@
     this.wave = wave;
   }
 
-  Enemy.prototype.hurt = function () { this.flash = 1; };
+  Enemy.prototype.hurt = function () { this.flash = 1; this.hurtT = 0.11; };
 
   /* ------------------------------------------------------------
      更新
@@ -50,6 +50,7 @@
     var g = G.game, p = g.player;
     this.t += dt;
     this.flash = Math.max(0, this.flash - dt * 5);
+    this.hurtT = Math.max(0, this.hurtT - dt);
     this.contactCd = Math.max(0, this.contactCd - dt);
 
     /* 持续伤害 */
@@ -532,6 +533,14 @@
     var cv = G.PX.get(def.sprite, def.sc);
     var bob = Math.sin(this.t * 6) * (def.boss ? 2.5 : 1.4);
     var alpha = def.ghost ? 0.62 + Math.sin(this.t * 3) * 0.14 : 1;
+    // 受击抖动：短促随机位移（像素级，克制的冲击感）
+    var jx = 0, jy = 0;
+    if (this.hurtT > 0) {
+      var k = Math.floor(this.hurtT * 60) % 2 ? 1.6 : -1.6;
+      jx = k * (this.hurtT > 0.06 ? 1 : 0.6);
+      jy = k * 0.8;
+    }
+    var dx = this.x + jx, dy = this.y + jy;
 
     // 影子
     c.globalAlpha = 0.3 * alpha; c.fillStyle = '#000';
@@ -570,26 +579,26 @@
 
     var tint = 0;
     if (this.slowT > 0) tint = 1;
-    G.PX.draw(c, cv, this.x, this.y + bob, {
+    G.PX.draw(c, cv, dx, dy + bob, {
       flip: this.face < 0, flash: this.flash, alpha: alpha
     });
 
     if (tint) {
       c.save(); c.globalAlpha = 0.28; c.fillStyle = '#7fd8ff';
-      c.beginPath(); c.arc(this.x, this.y, this.r, 0, Math.PI * 2); c.fill(); c.restore();
+      c.beginPath(); c.arc(dx, dy, this.r, 0, Math.PI * 2); c.fill(); c.restore();
     }
     if (this.burnT > 0) {
       c.save(); c.globalAlpha = 0.16; c.fillStyle = '#ff8a3a';
-      c.beginPath(); c.arc(this.x, this.y, this.r + 2, 0, Math.PI * 2); c.fill(); c.restore();
+      c.beginPath(); c.arc(dx, dy, this.r + 2, 0, Math.PI * 2); c.fill(); c.restore();
     }
 
     // 血条（精英 / BOSS / 受伤的大怪）
     if ((def.elite || this.maxHp > 60) && !def.boss && this.hp < this.maxHp) {
       var w = this.r * 2.2, h = 4;
-      var x = this.x - w / 2, y = this.y - this.r - 11;
-      c.fillStyle = '#000a'; c.fillRect(x - 1, y - 1, w + 2, h + 2);
+      var hx = dx - w / 2, hy = dy - this.r - 11;
+      c.fillStyle = '#000a'; c.fillRect(hx - 1, hy - 1, w + 2, h + 2);
       c.fillStyle = def.elite ? '#ffb347' : '#e5484d';
-      c.fillRect(x, y, w * (this.hp / this.maxHp), h);
+      c.fillRect(hx, hy, w * (this.hp / this.maxHp), h);
     }
 
     // BOSS 裂地预警（深渊之主的延迟爆炸点）

@@ -311,9 +311,23 @@
         this.vx *= 0.82; this.vy *= 0.82;
         this.flash = Math.max(this.flash, 0.4 + Math.sin(this.t * 26) * 0.35);
         if (this.sTimer <= 0) {
-          G.explode(this.x, this.y, 215, this.dmg * 0.9, { hostile: true, col: '#d97fb0' });
-          g.shake(20, 0.45);
-          this.state = 'idle'; this.sTimer = 1.6 / ps;
+          // 蓄力完成 → 进入践踏（phase2 三连）
+          this.state = 'slam';
+          this.sTimer = 0;
+          this.slamN = this.phase === 2 ? 3 : 1;
+        }
+        break;
+
+      case 'slam':
+        this.vx *= 0.8; this.vy *= 0.8;
+        if (this.sTimer <= 0) {
+          this.slamN--;
+          var rr = 200 + (this.slamN * 8);
+          G.explode(this.x, this.y, rr, this.dmg * 0.9, { hostile: true, col: '#d97fb0' });
+          G.fx('ring', { x: this.x, y: this.y, r0: 16, r1: rr, col: '#ff7f9a', w: 6, life: 0.45 });
+          g.shake(this.slamN >= 0 ? 18 : 20, 0.4);
+          if (this.slamN > 0) { this.sTimer = 0.32; }
+          else { this.state = 'idle'; this.sTimer = 1.6 / ps; }
         }
         break;
 
@@ -372,11 +386,24 @@
     var ps = 1 + (this.phase - 1) * 0.28;
     this.sTimer -= dt;
 
+    // 裂地：phase3 的延迟爆炸点倒计时
+    if (this.rifts && this.rifts.length) {
+      for (var ri = this.rifts.length - 1; ri >= 0; ri--) {
+        var rf = this.rifts[ri];
+        rf.fuse -= dt;
+        if (rf.fuse <= 0) {
+          G.explode(rf.x, rf.y, rf.rad, this.dmg * 0.55, { hostile: true, col: '#8f4aff' });
+          this.rifts.splice(ri, 1);
+        }
+      }
+    }
+
     switch (this.state) {
       case 'idle':
         this.moveTo(a, this.spd * mul * ps, dt);
         if (this.sTimer <= 0) {
           var opts = ['radial', 'dash', 'summon', 'spiral'];
+          if (this.phase >= 3) opts.push('rift');
           this.state = G.pick(opts) + 'Wind';
           this.sTimer = 0.7;
           this.volley = 0;
@@ -467,6 +494,25 @@
           this.state = 'idle'; this.sTimer = 1.4 / ps;
         }
         break;
+
+      case 'riftWind':
+        this.vx *= 0.85; this.vy *= 0.85;
+        this.flash = Math.max(this.flash, 0.4 + Math.sin(this.t * 22) * 0.3);
+        if (this.sTimer <= 0) {
+          // 在玩家周围撕开 4 道深渊裂口（1.1s 后喷发）
+          this.rifts = this.rifts || [];
+          for (var rk = 0; rk < 4; rk++) {
+            var ra = Math.PI * 2 * rk / 4 + G.rand(-0.25, 0.25);
+            var rd = G.rand(90, 150);
+            var rx = G.clamp(p.x + Math.cos(ra) * rd, 60, g.arena - 60);
+            var ry = G.clamp(p.y + Math.sin(ra) * rd, 60, g.arena - 60);
+            this.rifts.push({ x: rx, y: ry, fuse: 1.1 + rk * 0.15, rad: 95 });
+            G.fx('ring', { x: rx, y: ry, r0: 8, r1: 70, col: '#b98aff', w: 4, life: 0.5 });
+          }
+          G.popText(p.x, p.y - 40, '深渊裂地！', { col: '#c07fff', size: 20, life: 1.2 });
+          this.state = 'idle'; this.sTimer = 1.3 / ps;
+        }
+        break;
     }
   };
 
@@ -544,6 +590,23 @@
       c.fillStyle = '#000a'; c.fillRect(x - 1, y - 1, w + 2, h + 2);
       c.fillStyle = def.elite ? '#ffb347' : '#e5484d';
       c.fillRect(x, y, w * (this.hp / this.maxHp), h);
+    }
+
+    // BOSS 裂地预警（深渊之主的延迟爆炸点）
+    if (this.rifts && this.rifts.length) {
+      c.save();
+      for (var rki = 0; rki < this.rifts.length; rki++) {
+        var rfp = this.rifts[rki];
+        var blink = (Math.sin(rfp.fuse * 14) > 0) ? 0.55 : 1;
+        c.globalAlpha = blink;
+        c.strokeStyle = '#c07fff';
+        c.lineWidth = 3;
+        c.beginPath(); c.arc(rfp.x, rfp.y, 55, 0, Math.PI * 2); c.stroke();
+        c.globalAlpha = blink * 0.25;
+        c.fillStyle = '#8f4aff';
+        c.beginPath(); c.arc(rfp.x, rfp.y, 45, 0, Math.PI * 2); c.fill();
+      }
+      c.restore();
     }
   };
 

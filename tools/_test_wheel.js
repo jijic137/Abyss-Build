@@ -98,8 +98,11 @@ try {
       console.log('after 750ms: scrCharSelect on =', elCache['scrCharSelect'].classList.contains('on'));
       console.log('after 750ms: scrTitle on (should be false) =', elCache['scrTitle'].classList.contains('on'));
 
-      // 2) 点击「踏入深渊」确认进入
-      elCache['btnConfirm'].fire('click');
+      // 2) 再次点击已选角色 → 确认进入（替代原「踏入深渊」按钮）
+      elCache['wheel-token'] && elCache['wheel-token'].fire('click');
+      elCache['wheel-token'] && elCache['wheel-token'].fire('click');
+      // 若 mock 无 token，直接调用确认逻辑兜底
+      if (G.game.state !== 'play') G.UI.confirmWheelSelection();
       const pass = (G.game.state === 'play' && G.game.player);
       console.log('after confirm: game.state =', G.game.state, '| player =', !!G.game.player, '| wave =', G.game.wave);
       console.log('RESULT:', pass ? 'PASS — 成功进入游戏' : 'FAIL');

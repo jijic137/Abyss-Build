@@ -448,7 +448,7 @@
 
   function wheelLayout(w) {
     var n = w.chars.length, stage = w.stage;
-    var R = Math.max(170, Math.min(300, Math.min(stage.clientWidth, stage.clientHeight) * 0.37));
+    var R = Math.max(200, Math.min(360, Math.min(stage.clientWidth, stage.clientHeight) * 0.40));
     for (var i = 0; i < n; i++) {
       var it = w.items[i];
       var va = (((it.base + w.rot) % 360) + 360) % 360;
@@ -568,6 +568,11 @@
 
   function selectWheelIndex(idx) {
     var w = UI._wheel; if (!w.items) return;
+    // 再次点击已选中的角色 → 确认进入深渊
+    if (!w.spinning && w.selected === idx && w.items[idx]) {
+      confirmWheelSelection();
+      return;
+    }
     w.spinning = false;
     var step = 360 / w.chars.length;
     var desired = 180 - w.items[idx].base;
@@ -576,6 +581,32 @@
     w.targetRot = desired;
   }
   UI.selectWheelIndex = selectWheelIndex;
+
+  /* 确认：进入深渊（替代原「踏入深渊」按钮） */
+  function confirmWheelSelection() {
+    var w = UI._wheel;
+    if (!w || w.selected < 0 || !w.chars[w.selected]) return;
+    var ch = w.chars[w.selected];
+    G._exploring = false;                // 允许下次从封面再进轮盘
+    G.Audio.sfx('confirm');
+    G.Save.clearRun();                       // 新开一局：放弃旧的续局存档
+    G.Audio.unlock();
+    G.Audio.setBgm(G.Save.getSettings().bgm);
+    UI.stopWheel();
+    UI.showScreen(null);
+    G.game.newRun(ch);
+  }
+  UI.confirmWheelSelection = confirmWheelSelection;
+
+  /* 返回：ESC 回到封面（替代原「返回」按钮） */
+  UI.exitCharSelect = function () {
+    var w = UI._wheel;
+    w.active = false;
+    if (w._raf && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(w._raf);
+    G._exploring = false;                // 允许下次从封面再进轮盘
+    G.Audio.sfx('back');
+    UI.showScreen('scrTitle');
+  };
 
   function snapWheel() {
     var w = UI._wheel; if (!w.items) return;
@@ -608,7 +639,8 @@
       UI._wheel.spinning = false;
       if (e.key === 'ArrowRight' || e.key === 'KeyD') { UI._wheel.targetRot -= step; e.preventDefault(); }
       else if (e.key === 'ArrowLeft' || e.key === 'KeyA') { UI._wheel.targetRot += step; e.preventDefault(); }
-      else if (e.key === 'Enter' || e.key === 'Space') { var b = $('btnConfirm'); if (b) b.click(); e.preventDefault(); }
+      else if (e.key === 'Escape') { UI.exitCharSelect(); e.preventDefault(); }
+      else if (e.key === 'Enter' || e.key === 'Space') { confirmWheelSelection(); e.preventDefault(); }
     });
   }
 

@@ -17,23 +17,13 @@
 
     /* 默认选中第一个角色（进入轮盘后可改） */
     var selectedChar = G.CHARACTERS[0];
-    var exploring = false;        // 防止探索深渊过渡被重复触发
 
     function byId(id) { return document.getElementById(id); }
 
-    /* 全部按钮悬停音效 */
-    ['btnExplore','btnResumeRun','btnSettings','btnBack','btnConfirm',
-     'btnNextWave','btnReroll','btnResume','btnQuit','btnRestart','btnSettingsBack',
-     'btnRecords','btnAch','btnSave','btnRecordsBack','btnAchBack','btnSaveBack']
-      .forEach(function (id) {
-        var b = byId(id);
-        if (b) b.addEventListener('mouseenter', function () { G.Audio.sfx('hover'); });
-      });
-
     /* 探索深渊：漩涡脉冲 + 过渡动画 → 进入轮盘角色选择 */
     byId('btnExplore').addEventListener('click', function () {
-      if (exploring || G.UI.isScreenOn('scrCharSelect')) return;
-      exploring = true;
+      if (G._exploring || G.UI.isScreenOn('scrCharSelect')) return;
+      G._exploring = true;              // 防止探索深渊过渡被重复触发（确认/ESC 返回时复位）
       G.Audio.unlock();                 // 首次用户手势：解锁音频
       G.Audio.sfx('abyss');             // 漩涡吸入音效
       G.UI._vortex('cover').pulseUp();  // 漩涡加速
@@ -46,26 +36,14 @@
       }, 620);
     });
 
-    /* 确认进入深渊（轮盘内点击） */
-    byId('btnConfirm').addEventListener('click', function () {
-      if (!selectedChar) return;
-      exploring = false;
-      G.Audio.sfx('confirm');
-      G.Save.clearRun();        // 新开一局：放弃旧的续局存档
-      G.Audio.unlock();
-      G.Audio.setBgm(G.Save.getSettings().bgm);   // 按设置启停 BGM
-      G.UI.stopWheel();
-      G.UI.showScreen(null);
-      G.game.newRun(selectedChar);
-    });
-
-    /* 返回封面 */
-    byId('btnBack').addEventListener('click', function () {
-      exploring = false;
-      G.Audio.sfx('back');
-      G.UI.stopWheel();
-      G.UI.showScreen('scrTitle');
-    });
+    /* 全部按钮悬停音效 */
+    ['btnExplore','btnResumeRun','btnSettings',
+     'btnNextWave','btnReroll','btnResume','btnQuit','btnRestart','btnSettingsBack',
+     'btnRecords','btnAch','btnSave','btnRecordsBack','btnAchBack','btnSaveBack']
+      .forEach(function (id) {
+        var b = byId(id);
+        if (b) b.addEventListener('mouseenter', function () { G.Audio.sfx('hover'); });
+      });
 
     /* 继续游戏（读取续局存档） */
     byId('btnResumeRun').addEventListener('click', function () {

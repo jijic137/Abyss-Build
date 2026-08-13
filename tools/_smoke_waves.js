@@ -223,12 +223,24 @@ async function runExtractSuccess() {
   if (g.state !== 'result') throw new Error('未进入结算');
   if (G.Meta.stats().extracts !== 1) throw new Error('撤离统计未记录');
   if (G.Meta.stash().length === 0) throw new Error('仓库未收到物品');
-  if (!G.Meta.tierUnlocked(2)) throw new Error('第 2 层未解锁');
+  if (G.Meta.tierUnlocked(2)) throw new Error('未通关区域末关不应解锁第 2 区域');
+  if ((G.Meta.stats().bestSublevel || 0) !== 1) throw new Error('最佳小关记录错误');
 
   guard('renderBase', () => G.UI.renderBase());
   guard('renderMarket', () => G.UI.renderMarket());
   guard('renderMapSelect', () => G.UI.renderMapSelect());
   log('  [界面] 整备/市场/选图渲染 ✓');
+
+  /* 区域解锁：通关该区域最后一小关（第 3 小关）才解锁下一区域 */
+  resetMeta();
+  G.game.init();
+  G.game.newRun(G.CHAR_BY_ID['alchemist'], 1);
+  G.game.sublevel = 3;
+  G.game.map.objDone = true;
+  guard('unlockZone', () => G.game.onExtractSuccess());
+  if (!G.Meta.tierUnlocked(2)) throw new Error('通关第 3 小关应解锁第 2 区域');
+  if ((G.Meta.stats().bestSublevel || 0) !== 3) throw new Error('最佳小关未记录为 3');
+  log('  [解锁] 区域末关解锁下一区域 ✓');
 }
 
 /* ---------- 2. 死亡全丢路径 ---------- */
@@ -441,15 +453,15 @@ function runNewSystems() {
   g.player.x = g.map.extract.x; g.player.y = g.map.extract.y;
   guard('flowJ', () => g.tryInteract());
   if (!G.UI._flowOpen) throw new Error('抉择面板未打开');
-  const tierBefore = g.map.tierId;
+  const subBefore = g.sublevel;
   guard('descend', () => g.descend());
-  if (g.map.tierId !== tierBefore + 1) throw new Error('未深入下一层');
+  if (g.sublevel !== subBefore + 1) throw new Error('未深入下一小关');
   if ((g.depth || 0) !== 1) throw new Error('深度未记录');
   if (!g._pendingDescend || g.state !== 'pause') throw new Error('层间整备未开启');
   guard('beginNextFloor', () => g.beginNextFloor());
   if (g.state !== 'play') throw new Error('深入后未进入战斗');
   guard('closeFlow', () => G.UI.closeFlow());
-  log('  [深入] T' + tierBefore + '→T' + g.map.tierId + ' ✓');
+  log('  [深入] 第 ' + subBefore + '→' + g.sublevel + ' 小关 ✓');
 }
 /* ---------- 11. 背包拖拽/整理 ---------- */
 function runInvDrag() {
@@ -564,6 +576,47 @@ function runBalance() {
   G.UI.toggleBag();
   log('  [平衡] 小怪↑ 精英↓ BOSS不变 ✓ 整备栏显隐 ✓');
 }
+/* ---------- 15. 16 小关贯通 ---------- */
+function runCampaign16() {
+  log('\n===== 档案O：16 小关贯通 =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['knight'], 1));
+  const g = G.game, p = g.player;
+  p.maxHp = p.hp = 1e9;
+  if (g.sublevel !== 1) throw new Error('开局小关错误 sublevel=' + g.sublevel);
+  if (g.map.zoneId !== 1 || !g.map.obj || g.map.obj.type !== 'survive') throw new Error('区域1起始目标错误');
+  const seen = [];
+  for (let s = 1; s <= 16; s++) {
+    if (s > 1) {
+      guard('descend@' + s, () => g.descend());
+      if (g.sublevel !== s) throw new Error('深入失败 s=' + s + ' sub=' + g.sublevel);
+      if (g.state !== 'pause' || !g._pendingDescend) throw new Error('深入未进整备 s=' + s);
+      guard('beginNextFloor@' + s, () => g.beginNextFloor());
+      if (g.state !== 'play') throw new Error('深入后未开战 s=' + s);
+    }
+    const S = G.SUBLEVELS[s - 1];
+    if (g.map.zoneId !== S.zone) throw new Error('区域错 s=' + s);
+    if (!g.map.obj || g.map.obj.type !== S.objType) throw new Error('目标错 s=' + s);
+    seen.push('S' + s + ':Z' + S.zone + ':' + S.objType);
+    if (S.objType === 'boss') {
+      const bossRoom = g.map.rooms.find(rm => rm.bossId);
+      if (!bossRoom || bossRoom.bossId !== S.boss) throw new Error('BOSS 房缺失 s=' + s);
+    }
+  }
+  /* 打通第 16 关 → 全部区域解锁 + 存档小关 */
+  g.map.objDone = true;
+  guard('finish16', () => g.onExtractSuccess());
+  if (!G.Meta.tierUnlocked(5)) throw new Error('通关16关应解锁全部区域');
+  if ((G.Meta.stats().bestSublevel || 0) !== 16) throw new Error('bestSublevel 未达16');
+  G.game.sublevel = 9;
+  G.game.saveRun();
+  const snap = G.Save.getRun();
+  if (!snap || snap.sublevel !== 9) throw new Error('存档未记小关');
+  guard('resume16', () => G.game.resumeRun(snap));
+  if (G.game.sublevel !== 9 || G.game.map.zoneId !== 3) throw new Error('读档小关/区域未恢复');
+  log('  [16关] ' + seen.join(' ') + ' 全解锁 ✓ 存档小关 ✓');
+}
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {
   log('\n===== 档案I：物品占格 (ranger / t1) =====');
@@ -633,8 +686,9 @@ function runModsPortal() {
     runTierDensity();
     runChat();
     runBalance();
+    runCampaign16();
     runInvDrag();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 平衡✓ 错误数=${ERR}`);
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 平衡✓ 16关✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

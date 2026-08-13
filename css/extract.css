@@ -47,6 +47,9 @@
 .map-meta{ font-size:10.5px; letter-spacing:1px; }
 .map-lock{ margin-top:8px; font-size:10px; color:#ff8a7a; }
 .map-btns{ margin-top:18px; }
+.campaign-line{ font-size:13px; color:#bfffd8; letter-spacing:2px; margin:2px 0 12px; text-align:center; text-shadow:0 0 12px #6ee78755; }
+.map-zone-range{ margin-top:8px; font-size:10px; color:#8fa3c0; background:rgba(255,255,255,.05); border:1px solid #2a3048; border-radius:4px; padding:2px 7px; display:inline-block; letter-spacing:1px; }
+.map-zone-range.hot{ color:#ffd24a; border-color:#ffd24a55; background:rgba(255,210,74,.07); }
 
 /* ---------- 小地图 ---------- */
 #minimap{ width:150px; height:110px; image-rendering:pixelated; border:1px solid #2a3048; border-radius:6px; background:#0a0c12; margin-top:6px; }
@@ -177,6 +180,7 @@
 .inv2-tile.draggable{ cursor:grab; }
 .inv2-tile.drag-source{ opacity:.35; }
 .inv2-tile.shake{ animation:invShake .24s; }
+.inv2-type{ position:absolute; left:2px; top:2px; z-index:2; font-size:9px; font-weight:900; line-height:1; padding:2px 4px; border-radius:3px; color:#0b0e18; letter-spacing:0; box-shadow:0 1px 3px rgba(0,0,0,.55); pointer-events:none; }
 @keyframes invShake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
 .inv2-ghost{ position:fixed; pointer-events:none; z-index:999; opacity:.85; display:flex; align-items:center; justify-content:center; border-radius:6px; border:1px dashed var(--rc,#ffd24a); background:rgba(20,24,40,.9); box-shadow:0 8px 24px rgba(0,0,0,.6), 0 0 18px color-mix(in srgb, var(--rc,#ffd24a) 45%, transparent); }
 .inv2-equip{ display:grid; grid-template-columns:repeat(6,1fr); gap:5px; margin-bottom:10px; }

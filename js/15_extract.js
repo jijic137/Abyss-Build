@@ -659,7 +659,7 @@
     var newAch = G.UI.evaluateEnd(g, p, win);
 
     var rows = [
-      ['区域', g.map ? (g.map.tier.name + '（第 ' + g.map.tierId + ' 层）') : '—'],
+      ['区域', g.map ? (g.map.tier.name + ' · 第 ' + (g.sublevel || 1) + ' / 16 小关') : '—'],
       ['存活时间', fmtTime(t)],
       ['击杀 / 精英 / BOSS', p.stats.kills + ' / ' + p.stats.eliteKills + ' / ' + p.stats.bossKills],
       ['最高连击', p.stats.comboMax + ' 连'],
@@ -788,7 +788,7 @@
     var head = el('div', 'save-head');
     head.appendChild(el('div', 'save-ch', ch ? ch.name : run.charId));
     head.appendChild(el('div', 'save-wave',
-      (tier ? tier.name : '第 ' + run.tierId + ' 层') + ' · ' + fmtTime(run.runTime || 0) +
+      (tier ? tier.name : '第 ' + run.tierId + ' 层') + ' · 第 ' + (run.sublevel || 1) + ' / 16 小关 · ' + fmtTime(run.runTime || 0) +
       (run.pendingLevels ? ' · 待升级 ×' + run.pendingLevels : '')));
     slot.appendChild(head);
     var grid = el('div', 'save-grid');

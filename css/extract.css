@@ -346,3 +346,5 @@
 /* ===== 出货卡定位修复（恢复居中） ===== */
 .loot-toast{ position:absolute; left:50%; bottom:150px; transform:translateX(-50%); }
 
+.pause-context{ font-size:12px; color:#bfffd8; letter-spacing:1px; margin:2px 0 14px; text-align:center; text-shadow:0 0 10px #6ee78744; }
+

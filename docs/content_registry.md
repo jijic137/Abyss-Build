@@ -1,15 +1,16 @@
 # 深渊猎手 · 内容登记表 (Content Registry)
 
 > 本文件由 _gen_registry.js 从源码生成主体表格（保证与代码一致）；底部「变更日志」为手工维护，重新生成时保留。
-> 每次新增/修改敌人、武器、物品、品质比例或平衡数值后，都应重新生成本表并追加一条变更记录。
+> 每次新增/修改敌人、武器、物品、地图档位、品质比例或平衡数值后，都应重新生成本表并追加一条变更记录。
 
 ## 1. 数值总览
 
 - 敌人总数：**30**（普通 22 / 精英 6 / BOSS 2）
 - 武器总数：**42**（按标签：melee×10，ranged×16，elemental×10，engineering×6）
-- 物品总数：**123**（白 29 / 绿 31 / 蓝 30 / 紫 17 / 红 16）
+- 物品总数：**123**（白 29 / 绿 31 / 蓝 30 / 紫 17 / 红 16；防具 25 / 饰品 77 / 遗物 21）
 - 角色（职业）：**8**
-- 总波数：**20**（BOSS 波：10、20）
+- 深渊区域（地图档位）：**5**
+- 波次配置：**20**（作为地图刷怪难度曲线复用；BOSS 波：10、20）
 
 ## 2. 敌人
 
@@ -130,157 +131,157 @@
 | pulse_core | 脉冲星 | pulse | ranged | 16 | 1.35 | 射程150 | 以自身为中心周期性爆发冲击波，清场兼控场。 |
 | orbit_blade | 环绕刃 | orbit | ranged | 11 | 1.1 | 射程150, 弹w_shuriken, 弹数2 | 两把卫星刃绕身旋转，持续削切靠近的一切。 |
 
-> 武器在商店出现时，其「品质档位」= 抽到的稀有度（0白~4红），档位只改数值（TIER_DMG / TIER_CD）不改机制。
+> 武器在掉落/商店出现时，其「品质档位」= 抽到的稀有度（0白~4红），档位只改数值（TIER_DMG / TIER_CD）不改机制。
 
 ## 4. 物品（按品质）
 
 ### 4.1 白 · 稀有度 0（29）
 
-| id | 名称 | 主要属性 | 特效 | 风味 |
-|---|---|---|---|---|
-| rag_armor | 破布护甲 | armor +2, speed -3 |  | 总比什么都不穿强。 |
-| rusty_dagger | 生锈匕首 | damage +8, armor -1 |  | 锈是它唯一的附魔。 |
-| old_shoes | 旧跑鞋 | speed +8 |  | 鞋底快磨穿了，但还能跑。 |
-| hard_bread | 硬面包 | maxHp +8 |  | 能吃，也能当钝器。 |
-| iron_plate | 铁片 | armor +3, attackSpeed -5 |  | 沉，但挡得住。 |
-| whetstone | 磨刀石 | meleeDamage +2 |  | 刃口的耐心。 |
-| ammo_pouch | 弹药袋 | rangedDamage +2 |  | 装得比看起来多。 |
-| matchbox | 火柴盒 | elementalDamage +2 |  | 一切大火都是从这里开始的。 |
-| clover | 四叶草 | luck +6 |  | 第四片是自己掰上去的。 |
-| sickle | 镰刀 | harvesting +2 |  | 收割不分对象。 |
-| leather_glove | 皮手套 | attackSpeed +7, damage -2 |  | 手快了，力道就散了。 |
-| glasses | 眼镜 | range +5, critChance +2 |  | 看得清才打得中。 |
-| magnet_frag | 磁铁碎片 | pickupRange +20 |  | 会吸走地上的东西，也会吸走口袋里的。 |
-| bandage | 绷带 | hpRegen +0.5 |  | 缠紧点就没事了。 |
-| lucky_coin | 幸运硬币 | luck +4, harvesting +1 |  | 正反面都是正面。 |
-| wood_shield | 木盾 | maxHp +6, armor +1, speed -2 |  | 会碎，但不是现在。 |
-| crow_feather | 乌鸦羽毛 | dodge +3, maxHp -3 |  | 轻得像不存在。 |
-| dried_herb | 干草药 | hpRegen +0.35, xpGain +5 |  | 苦，但清醒。 |
-| tin_helm | 铁皮盔 | maxHp +6, attackSpeed -2 |  | 敲起来当当响，比没有强。 |
-| sharpened_rock | 磨尖石 | meleeDamage +1, rangedDamage +1 |  | 一把能用的石头。 |
-| pocket_watch | 怀表 | attackSpeed +4, speed -2 |  | 时间走得比腿快。 |
-| cloth_wrap | 布甲缠带 | maxHp +6, armor +1, speed -1 |  | 缠紧了，心就定了。 |
-| pebble | 投石袋 | rangedDamage +1, meleeDamage +1 |  | 随手一把，远近都够。 |
-| wood_stick | 木棍 | meleeDamage +1, attackSpeed +3 |  | 比拳头远一点。 |
-| cheap_ring | 铜戒 | luck +3, maxHp -2 |  | 便宜的好运也是好运。 |
-| rope_belt | 麻绳腰带 | armor +1, speed -2 |  | 勒紧肚子，也勒紧胆子。 |
-| dry_berry | 干果 | hpRegen +0.3, maxHp +4 |  | 甜，能顶一会儿。 |
-| tin_can | 铁皮罐头 | maxHp +10, damage -2 |  | 装进去就出不来了，包括你。 |
-| greased_gear | 油滑齿轮 | speed +6, armor -2 |  | 滑，但好用。 |
+| id | 名称 | 类型 | 主要属性 | 特效 | 风味 |
+|---|---|---|---|---|---|
+| rag_armor | 破布护甲 | 饰品 | armor +2, speed -3 |  | 总比什么都不穿强。 |
+| rusty_dagger | 生锈匕首 | 饰品 | damage +8, armor -1 |  | 锈是它唯一的附魔。 |
+| old_shoes | 旧跑鞋 | 饰品 | speed +8 |  | 鞋底快磨穿了，但还能跑。 |
+| hard_bread | 硬面包 | 防具 | maxHp +8 |  | 能吃，也能当钝器。 |
+| iron_plate | 铁片 | 饰品 | armor +3, attackSpeed -5 |  | 沉，但挡得住。 |
+| whetstone | 磨刀石 | 饰品 | meleeDamage +2 |  | 刃口的耐心。 |
+| ammo_pouch | 弹药袋 | 饰品 | rangedDamage +2 |  | 装得比看起来多。 |
+| matchbox | 火柴盒 | 饰品 | elementalDamage +2 |  | 一切大火都是从这里开始的。 |
+| clover | 四叶草 | 饰品 | luck +6 |  | 第四片是自己掰上去的。 |
+| sickle | 镰刀 | 饰品 | harvesting +2 |  | 收割不分对象。 |
+| leather_glove | 皮手套 | 饰品 | attackSpeed +7, damage -2 |  | 手快了，力道就散了。 |
+| glasses | 眼镜 | 饰品 | range +5, critChance +2 |  | 看得清才打得中。 |
+| magnet_frag | 磁铁碎片 | 饰品 | pickupRange +20 |  | 会吸走地上的东西，也会吸走口袋里的。 |
+| bandage | 绷带 | 防具 | hpRegen +0.5 |  | 缠紧点就没事了。 |
+| lucky_coin | 幸运硬币 | 饰品 | luck +4, harvesting +1 |  | 正反面都是正面。 |
+| wood_shield | 木盾 | 防具 | maxHp +6, armor +1, speed -2 |  | 会碎，但不是现在。 |
+| crow_feather | 乌鸦羽毛 | 防具 | dodge +3, maxHp -3 |  | 轻得像不存在。 |
+| dried_herb | 干草药 | 饰品 | hpRegen +0.35, xpGain +5 |  | 苦，但清醒。 |
+| tin_helm | 铁皮盔 | 防具 | maxHp +6, attackSpeed -2 |  | 敲起来当当响，比没有强。 |
+| sharpened_rock | 磨尖石 | 饰品 | meleeDamage +1, rangedDamage +1 |  | 一把能用的石头。 |
+| pocket_watch | 怀表 | 饰品 | attackSpeed +4, speed -2 |  | 时间走得比腿快。 |
+| cloth_wrap | 布甲缠带 | 防具 | maxHp +6, armor +1, speed -1 |  | 缠紧了，心就定了。 |
+| pebble | 投石袋 | 饰品 | rangedDamage +1, meleeDamage +1 |  | 随手一把，远近都够。 |
+| wood_stick | 木棍 | 饰品 | meleeDamage +1, attackSpeed +3 |  | 比拳头远一点。 |
+| cheap_ring | 铜戒 | 饰品 | luck +3, maxHp -2 |  | 便宜的好运也是好运。 |
+| rope_belt | 麻绳腰带 | 饰品 | armor +1, speed -2 |  | 勒紧肚子，也勒紧胆子。 |
+| dry_berry | 干果 | 防具 | hpRegen +0.3, maxHp +4 |  | 甜，能顶一会儿。 |
+| tin_can | 铁皮罐头 | 防具 | maxHp +10, damage -2 |  | 装进去就出不来了，包括你。 |
+| greased_gear | 油滑齿轮 | 饰品 | speed +6, armor -2 |  | 滑，但好用。 |
 
 ### 4.2 绿 · 稀有度 1（31）
 
-| id | 名称 | 主要属性 | 特效 | 风味 |
-|---|---|---|---|---|
-| spike_bracer | 尖刺护腕 | damage +12, thorns +4, maxHp -5 |  | 别人抓你，先流血的是他。 |
-| tac_vest | 战术背心 | armor +6, speed -7 |  | 安全感是有重量的。 |
-| hunter_eye | 猎人之眼 | critChance +7, attackSpeed -4 |  | 等，然后一击。 |
-| feather_boot | 轻羽靴 | speed +15, armor -3 |  | 跑得快就不需要护甲——理论上。 |
-| battery | 蓄电池 | attackSpeed +13, elementalDamage -2 |  | 电流催得太急，火候就没了。 |
-| toolbox | 工具箱 | engineering +7, speed -3 |  | 拎着它的人不用亲自动手。 |
-| bat_wing | 吸血蝠翼 | lifesteal +4, maxHp -6 |  | 你从别人身上拿回来的，永远少一点。 |
-| prayer_bead | 苦修念珠 | hpRegen +1.1, damage -8 |  | 恢复的代价是钝。 |
-| spyglass | 望远镜 | range +14, speed -6 |  | 看得远，走得慢。 |
-| shadow_cloak | 影子斗篷 | dodge +8, maxHp -5 |  | 打不中的人不需要血。 |
-| miner_pick | 矿工镐 | harvesting +5, attackSpeed -5 |  | 一下一下，总会挖出点什么。 |
-| double_blade | 双刃剑 | meleeDamage +6, maxHp -6 |  | 两边都开刃，包括对着你的那边。 |
-| hollow_point | 精制弹头 | rangedDamage +6, attackSpeed -6 |  | 打得深，装得慢。 |
-| sulfur | 硫磺粉 | elementalDamage +6, armor -2 |  | 闻起来像地狱的厨房。 |
-| gambler_dice | 赌徒骰子 | luck +14, damage -8 |  | 运气好的人不需要实力。 |
-| scholar_note | 学者手札 | xpGain +18, maxHp -5 |  | 知识让人成长，也让人熬夜。 |
-| thorn_vest | 荆棘外衣 | thorns +9, speed -5 |  | 拥抱它的人会后悔。 |
-| greed_hand | 贪婪之手 | dropRate +22, maxHp -6 |  | 手伸得越长，护得住的越少。 |
-| ember_ring | 余烬指环 | elementalDamage +4, damage +5, hpRegen -0.3 |  | 一直在烧，包括你。 |
-| venom_vial | 毒液瓶 | elementalDamage +2 | poisonOnHit | 小心瓶塞。 |
-| static_gauntlet | 静电拳套 | attackSpeed +6, armor -2 | thunderAura | 每次出拳都带火花。 |
-| iron_jaw | 铁颌 | thorns +5, meleeDamage +2, maxHp -4 |  | 咬合力也是武器。 |
-| swift_charm | 疾风符 | speed +10, dodge +3, maxHp -4 |  | 快，但不经打。 |
-| spiked_boot | 尖刺靴 | damage +8, speed +6, armor -2 |  | 踢人也很疼。 |
-| quiver | 箭袋 | rangedDamage +4, attackSpeed +4, maxHp -3 |  | 手快，眼更快。 |
-| focus_lens | 聚能镜 | critChance +5, rangedDamage +3, speed -4 |  | 聚焦的地方会碎。 |
-| war_paint | 战纹 | damage +6, maxHp +8, armor -2 |  | 画上去就不好惹了。 |
-| spring_coil | 弹簧芯 | attackSpeed +9, speed +4, maxHp -4 |  | 绷着的劲。 |
-| blood_charm | 血玉 | lifesteal +3, damage +4, maxHp -5 |  | 温的，一直温着。 |
-| razor_edge | 利刃环 | critChance +6, armor -3 |  | 转起来才锋利。 |
-| vampiric_charm | 吸血符 | lifesteal +4, maxHp -5 |  | 戴久了手会暖。 |
+| id | 名称 | 类型 | 主要属性 | 特效 | 风味 |
+|---|---|---|---|---|---|
+| spike_bracer | 尖刺护腕 | 饰品 | damage +12, thorns +4, maxHp -5 |  | 别人抓你，先流血的是他。 |
+| tac_vest | 战术背心 | 饰品 | armor +6, speed -7 |  | 安全感是有重量的。 |
+| hunter_eye | 猎人之眼 | 饰品 | critChance +7, attackSpeed -4 |  | 等，然后一击。 |
+| feather_boot | 轻羽靴 | 饰品 | speed +15, armor -3 |  | 跑得快就不需要护甲——理论上。 |
+| battery | 蓄电池 | 饰品 | attackSpeed +13, elementalDamage -2 |  | 电流催得太急，火候就没了。 |
+| toolbox | 工具箱 | 饰品 | engineering +7, speed -3 |  | 拎着它的人不用亲自动手。 |
+| bat_wing | 吸血蝠翼 | 防具 | lifesteal +4, maxHp -6 |  | 你从别人身上拿回来的，永远少一点。 |
+| prayer_bead | 苦修念珠 | 饰品 | hpRegen +1.1, damage -8 |  | 恢复的代价是钝。 |
+| spyglass | 望远镜 | 饰品 | range +14, speed -6 |  | 看得远，走得慢。 |
+| shadow_cloak | 影子斗篷 | 防具 | dodge +8, maxHp -5 |  | 打不中的人不需要血。 |
+| miner_pick | 矿工镐 | 饰品 | harvesting +5, attackSpeed -5 |  | 一下一下，总会挖出点什么。 |
+| double_blade | 双刃剑 | 防具 | meleeDamage +6, maxHp -6 |  | 两边都开刃，包括对着你的那边。 |
+| hollow_point | 精制弹头 | 饰品 | rangedDamage +6, attackSpeed -6 |  | 打得深，装得慢。 |
+| sulfur | 硫磺粉 | 饰品 | elementalDamage +6, armor -2 |  | 闻起来像地狱的厨房。 |
+| gambler_dice | 赌徒骰子 | 饰品 | luck +14, damage -8 |  | 运气好的人不需要实力。 |
+| scholar_note | 学者手札 | 饰品 | xpGain +18, maxHp -5 |  | 知识让人成长，也让人熬夜。 |
+| thorn_vest | 荆棘外衣 | 防具 | thorns +9, speed -5 |  | 拥抱它的人会后悔。 |
+| greed_hand | 贪婪之手 | 饰品 | dropRate +22, maxHp -6 |  | 手伸得越长，护得住的越少。 |
+| ember_ring | 余烬指环 | 饰品 | elementalDamage +4, damage +5, hpRegen -0.3 |  | 一直在烧，包括你。 |
+| venom_vial | 毒液瓶 | 饰品 | elementalDamage +2 | poisonOnHit | 小心瓶塞。 |
+| static_gauntlet | 静电拳套 | 饰品 | attackSpeed +6, armor -2 | thunderAura | 每次出拳都带火花。 |
+| iron_jaw | 铁颌 | 防具 | thorns +5, meleeDamage +2, maxHp -4 |  | 咬合力也是武器。 |
+| swift_charm | 疾风符 | 饰品 | speed +10, dodge +3, maxHp -4 |  | 快，但不经打。 |
+| spiked_boot | 尖刺靴 | 饰品 | damage +8, speed +6, armor -2 |  | 踢人也很疼。 |
+| quiver | 箭袋 | 饰品 | rangedDamage +4, attackSpeed +4, maxHp -3 |  | 手快，眼更快。 |
+| focus_lens | 聚能镜 | 饰品 | critChance +5, rangedDamage +3, speed -4 |  | 聚焦的地方会碎。 |
+| war_paint | 战纹 | 防具 | damage +6, maxHp +8, armor -2 |  | 画上去就不好惹了。 |
+| spring_coil | 弹簧芯 | 饰品 | attackSpeed +9, speed +4, maxHp -4 |  | 绷着的劲。 |
+| blood_charm | 血玉 | 饰品 | lifesteal +3, damage +4, maxHp -5 |  | 温的，一直温着。 |
+| razor_edge | 利刃环 | 饰品 | critChance +6, armor -3 |  | 转起来才锋利。 |
+| vampiric_charm | 吸血符 | 防具 | lifesteal +4, maxHp -5 |  | 戴久了手会暖。 |
 
 ### 4.3 蓝 · 稀有度 2（30）
 
-| id | 名称 | 主要属性 | 特效 | 风味 |
-|---|---|---|---|---|
-| berserk_blood | 狂战之血 | damage +24, maxHp -12, armor -3 |  | 疼痛只是延迟到达的信息。 |
-| dragon_scale | 龙鳞甲 | armor +11, speed -11, attackSpeed -6 |  | 据说来自龙。也可能是大蜥蜴。 |
-| assassin_glove | 刺客手套 | critChance +12, attackSpeed +9, maxHp -8 |  | 第一刀要么致命，要么白来。 |
-| pacemaker | 心脏起搏器 | maxHp +30, hpRegen +0.6, speed -10 |  | 它替你决定什么时候跳。 |
-| thunder_core | 雷霆核心 | attackSpeed +22, maxHp -8, critChance -4 |  | 快到来不及瞄准。 |
-| blueprint | 军械图纸 | engineering +16, speed -8 |  | 看得懂的人不用亲自上前线。 |
-| vampire_fang | 吸血鬼獠牙 | lifesteal +9, attackSpeed -12 |  | 慢慢咬，才吸得干净。 |
-| gale_rune | 疾风符 | speed +24, damage -7, armor -2 |  | 风不需要盔甲。 |
-| far_scope | 千里镜 | range +26, rangedDamage +5, speed -10 |  | 战场变小了，你也是。 |
-| phantom_cape | 幻影披风 | dodge +15, maxHp -11 |  | 你在，但不完全在。 |
-| horn_plenty | 丰饶号角 | harvesting +10, luck +7, damage -9 |  | 装得下一整个秋天。 |
-| regen_cell | 再生细胞 | hpRegen +2.4, damage -12 |  | 长回来的肉，总比原来的软。 |
-| lava_heart | 熔岩之心 | elementalDamage +11, maxHp -9 |  | 它在胸腔里还没冷却。 |
-| heavy_rune | 重锤符文 | meleeDamage +11, attackSpeed -13 |  | 一次就够了。 |
-| sniper_proto | 狙击协议 | rangedDamage +11, range +12, speed -14 |  | 站定，呼气，扣扳机。 |
-| soul_lantern | 灵魂提灯 | xpGain +34, harvesting +4, maxHp -10 |  | 照亮别人走过的路。 |
-| iron_maiden | 铁处女 | thorns +18, armor +4, speed -12 |  | 一个只会拥抱的刑具。 |
-| burn_brand | 烙印之种 | elementalDamage +3, maxHp -8 | burnOnHit | 火不会问你是谁。 |
-| static_charm | 静电吊坠 | attackSpeed +6, armor -2 | chainOnHit | 空气里总有一点火药味。 |
-| frost_aura | 霜寒核心 | elementalDamage +4, speed -6 | frostAura | 靠近你就要付出代价。 |
-| frost_lens | 霜冻透镜 | rangedDamage +4, range +14, attackSpeed -4 |  | 看见的远方都结了霜。 |
-| venom_blade | 淬毒刃 | meleeDamage +6, speed -4 | poisonOnHit | 刃上永远有绿光。 |
-| thunder_totem | 雷霆图腾 | attackSpeed +14, maxHp -6 | thunderAura | 云层在你头顶打转。 |
-| berserk_totem | 狂怒图腾 | damage +18, speed +8, maxHp -10, armor -4 |  | 越打越上头。 |
-| warding_rune | 守护符文 | armor +9, hpRegen +0.4, speed -6 |  | 把伤害挡在外面。 |
-| storm_brand | 风暴烙印 | attackSpeed +8, elementalDamage +3 | chainOnHit | 皮肤下有人在打雷。 |
-| frost_sigil | 冰霜印记 | elementalDamage +5, armor +3, speed -5 | frostAura | 贴身一股寒意。 |
-| iron_will | 钢铁意志 | armor +10, maxHp +15, speed -8 |  | 不躲，就不怕。 |
-| soul_reaver | 噬魂符 | damage +6, maxHp -6 | leechOnKill | 它们最后的呼声是你的补给。 |
-| frost_mail | 寒霜链甲 | armor +8, speed -10 |  | 冷，但踏实。 |
+| id | 名称 | 类型 | 主要属性 | 特效 | 风味 |
+|---|---|---|---|---|---|
+| berserk_blood | 狂战之血 | 饰品 | damage +24, maxHp -12, armor -3 |  | 疼痛只是延迟到达的信息。 |
+| dragon_scale | 龙鳞甲 | 饰品 | armor +11, speed -11, attackSpeed -6 |  | 据说来自龙。也可能是大蜥蜴。 |
+| assassin_glove | 刺客手套 | 饰品 | critChance +12, attackSpeed +9, maxHp -8 |  | 第一刀要么致命，要么白来。 |
+| pacemaker | 心脏起搏器 | 防具 | maxHp +30, hpRegen +0.6, speed -10 |  | 它替你决定什么时候跳。 |
+| thunder_core | 雷霆核心 | 饰品 | attackSpeed +22, maxHp -8, critChance -4 |  | 快到来不及瞄准。 |
+| blueprint | 军械图纸 | 饰品 | engineering +16, speed -8 |  | 看得懂的人不用亲自上前线。 |
+| vampire_fang | 吸血鬼獠牙 | 饰品 | lifesteal +9, attackSpeed -12 |  | 慢慢咬，才吸得干净。 |
+| gale_rune | 疾风符 | 饰品 | speed +24, damage -7, armor -2 |  | 风不需要盔甲。 |
+| far_scope | 千里镜 | 饰品 | range +26, rangedDamage +5, speed -10 |  | 战场变小了，你也是。 |
+| phantom_cape | 幻影披风 | 防具 | dodge +15, maxHp -11 |  | 你在，但不完全在。 |
+| horn_plenty | 丰饶号角 | 饰品 | harvesting +10, luck +7, damage -9 |  | 装得下一整个秋天。 |
+| regen_cell | 再生细胞 | 饰品 | hpRegen +2.4, damage -12 |  | 长回来的肉，总比原来的软。 |
+| lava_heart | 熔岩之心 | 饰品 | elementalDamage +11, maxHp -9 |  | 它在胸腔里还没冷却。 |
+| heavy_rune | 重锤符文 | 饰品 | meleeDamage +11, attackSpeed -13 |  | 一次就够了。 |
+| sniper_proto | 狙击协议 | 饰品 | rangedDamage +11, range +12, speed -14 |  | 站定，呼气，扣扳机。 |
+| soul_lantern | 灵魂提灯 | 饰品 | xpGain +34, harvesting +4, maxHp -10 |  | 照亮别人走过的路。 |
+| iron_maiden | 铁处女 | 防具 | thorns +18, armor +4, speed -12 |  | 一个只会拥抱的刑具。 |
+| burn_brand | 烙印之种 | 防具 | elementalDamage +3, maxHp -8 | burnOnHit | 火不会问你是谁。 |
+| static_charm | 静电吊坠 | 饰品 | attackSpeed +6, armor -2 | chainOnHit | 空气里总有一点火药味。 |
+| frost_aura | 霜寒核心 | 饰品 | elementalDamage +4, speed -6 | frostAura | 靠近你就要付出代价。 |
+| frost_lens | 霜冻透镜 | 饰品 | rangedDamage +4, range +14, attackSpeed -4 |  | 看见的远方都结了霜。 |
+| venom_blade | 淬毒刃 | 饰品 | meleeDamage +6, speed -4 | poisonOnHit | 刃上永远有绿光。 |
+| thunder_totem | 雷霆图腾 | 饰品 | attackSpeed +14, maxHp -6 | thunderAura | 云层在你头顶打转。 |
+| berserk_totem | 狂怒图腾 | 饰品 | damage +18, speed +8, maxHp -10, armor -4 |  | 越打越上头。 |
+| warding_rune | 守护符文 | 防具 | armor +9, hpRegen +0.4, speed -6 |  | 把伤害挡在外面。 |
+| storm_brand | 风暴烙印 | 饰品 | attackSpeed +8, elementalDamage +3 | chainOnHit | 皮肤下有人在打雷。 |
+| frost_sigil | 冰霜印记 | 饰品 | elementalDamage +5, armor +3, speed -5 | frostAura | 贴身一股寒意。 |
+| iron_will | 钢铁意志 | 防具 | armor +10, maxHp +15, speed -8 |  | 不躲，就不怕。 |
+| soul_reaver | 噬魂符 | 防具 | damage +6, maxHp -6 | leechOnKill | 它们最后的呼声是你的补给。 |
+| frost_mail | 寒霜链甲 | 饰品 | armor +8, speed -10 |  | 冷，但踏实。 |
 
 ### 4.4 紫 · 稀有度 3（17）
 
-| id | 名称 | 主要属性 | 特效 | 风味 |
-|---|---|---|---|---|
-| blood_totem | 血祭图腾 | damage +36, lifesteal +5, maxHp -22, armor -6 |  | 用你的血换他们的。 |
-| titan_bulwark | 泰坦壁垒 | armor +19, maxHp +35, speed -18, attackSpeed -12 |  | 你不再移动，你成为地形。 |
-| invisible_edge | 无形之刃 | critChance +20, meleeDamage +13, maxHp -14 |  | 看不见的东西没法格挡。 |
-| hourglass | 时间沙漏 | attackSpeed +32, speed +11, damage -11 |  | 你偷来的每一秒都在别处漏掉。 |
-| perp_core | 永动核心 | engineering +24, elementalDamage +9, maxHp -12 |  | 工程师说它不可能。它还在转。 |
-| abyss_pact | 深渊契约 | damage +42, maxHp -28, dodge -10 |  | 签的时候没人念条款。 |
-| tree_life | 生命之树 | hpRegen +4, maxHp +34, attackSpeed -16 |  | 长得慢的东西活得久。 |
-| void_eye | 虚空之眼 | range +42, rangedDamage +15, speed -20 |  | 你看它，它也在看你。 |
-| fate_spindle | 命运纺锤 | luck +32, harvesting +13, damage -13 |  | 线在谁手里，谁说了算。 |
-| afterimage | 疾影残像 | dodge +26, speed +19, maxHp -17 |  | 他们打中的一直是三秒前的你。 |
-| gore_crown | 血冠 | lifesteal +12, meleeDamage +10, hpRegen -1, armor -4 |  | 王冠是用伤口镶的。 |
-| plague_orb | 瘟疫之球 | elementalDamage +8, maxHp -14 | poisonAura | 不需要动手。 |
-| demolition | 爆破协议 | elementalDamage +5, armor -3 | explodeOnKill | 死亡应该是连锁的。 |
-| void_prism | 虚空棱镜 | critChance +14, critDamage +25, maxHp -12 | critSlow | 折射的不只是光。 |
-| plague_lord | 瘟疫之主 | elementalDamage +6, damage +14, maxHp -16 | poisonAura | 你走过的地方草都枯了。 |
-| storm_caller | 风暴召唤者 | attackSpeed +18, elementalDamage +6, maxHp -12 | thunderAura | 雷声是她的鼓点。 |
-| abyssal_blade | 深渊刃 | meleeDamage +12, critChance +10, maxHp -12 |  | 刃上挂着一小片夜。 |
+| id | 名称 | 类型 | 主要属性 | 特效 | 风味 |
+|---|---|---|---|---|---|
+| blood_totem | 血祭图腾 | 饰品 | damage +36, lifesteal +5, maxHp -22, armor -6 |  | 用你的血换他们的。 |
+| titan_bulwark | 泰坦壁垒 | 防具 | armor +19, maxHp +35, speed -18, attackSpeed -12 |  | 你不再移动，你成为地形。 |
+| invisible_edge | 无形之刃 | 饰品 | critChance +20, meleeDamage +13, maxHp -14 |  | 看不见的东西没法格挡。 |
+| hourglass | 时间沙漏 | 饰品 | attackSpeed +32, speed +11, damage -11 |  | 你偷来的每一秒都在别处漏掉。 |
+| perp_core | 永动核心 | 饰品 | engineering +24, elementalDamage +9, maxHp -12 |  | 工程师说它不可能。它还在转。 |
+| abyss_pact | 深渊契约 | 饰品 | damage +42, maxHp -28, dodge -10 |  | 签的时候没人念条款。 |
+| tree_life | 生命之树 | 防具 | hpRegen +4, maxHp +34, attackSpeed -16 |  | 长得慢的东西活得久。 |
+| void_eye | 虚空之眼 | 饰品 | range +42, rangedDamage +15, speed -20 |  | 你看它，它也在看你。 |
+| fate_spindle | 命运纺锤 | 饰品 | luck +32, harvesting +13, damage -13 |  | 线在谁手里，谁说了算。 |
+| afterimage | 疾影残像 | 防具 | dodge +26, speed +19, maxHp -17 |  | 他们打中的一直是三秒前的你。 |
+| gore_crown | 血冠 | 饰品 | lifesteal +12, meleeDamage +10, hpRegen -1, armor -4 |  | 王冠是用伤口镶的。 |
+| plague_orb | 瘟疫之球 | 遗物 | elementalDamage +8, maxHp -14 | poisonAura | 不需要动手。 |
+| demolition | 爆破协议 | 遗物 | elementalDamage +5, armor -3 | explodeOnKill | 死亡应该是连锁的。 |
+| void_prism | 虚空棱镜 | 遗物 | critChance +14, critDamage +25, maxHp -12 | critSlow | 折射的不只是光。 |
+| plague_lord | 瘟疫之主 | 遗物 | elementalDamage +6, damage +14, maxHp -16 | poisonAura | 你走过的地方草都枯了。 |
+| storm_caller | 风暴召唤者 | 遗物 | attackSpeed +18, elementalDamage +6, maxHp -12 | thunderAura | 雷声是她的鼓点。 |
+| abyssal_blade | 深渊刃 | 饰品 | meleeDamage +12, critChance +10, maxHp -12 |  | 刃上挂着一小片夜。 |
 
 ### 4.5 红 · 稀有度 4（16）
 
-| id | 名称 | 主要属性 | 特效 | 风味 |
-|---|---|---|---|---|
-| divine_engine | 神性引擎 | damage +52, attackSpeed +26, maxHp -38, armor -12 |  | 神也需要保养。 |
-| immortal_heart | 不朽之心 | maxHp +95, hpRegen +6, damage -26, speed -15 |  | 它不会停，你也别想停。 |
-| reaper_scythe | 死神镰刀 | critChance +34, critDamage +55, meleeDamage +22, lifesteal +8, maxHp -34 |  | 收割者从不为自己留后路。 |
-| omni_forge | 万物熔炉 | elementalDamage +30, engineering +26, attackSpeed -20, maxHp -22 |  | 什么都能炼，包括炼它的人。 |
-| chaos_wheel | 混沌骰盘 | luck +62, harvesting +26, damage +22, maxHp -22, attackSpeed -20 |  | 概率是唯一的信仰。 |
-| absolute_zero | 绝对零度 | armor +22, dodge +24, maxHp +45, damage -32 | frostAura | 停下来的世界不会伤害你。 |
-| lightspeed | 光速协议 | speed +48, attackSpeed +42, maxHp -30, armor -9 |  | 快到时间跟不上。 |
-| phoenix_ash | 不死鸟之烬 | elementalDamage +12, maxHp -18 | revive | 灰烬也算一种存在方式。 |
-| executioner | 处决程式 | damage +18, critChance +12, maxHp -20, armor -5 | execute | 不值得补第二刀。 |
-| thorn_king | 荆棘之王 | thorns +62, armor +14, maxHp +40, damage -34, speed -14 |  | 他从不出手，也从没输过。 |
-| singularity | 奇点吸引器 | pickupRange +190, harvesting +18, luck +22, dropRate +42, maxHp -16, damage -12 |  | 所有东西都朝你去。包括麻烦。 |
-| crit_nova | 暴击新星 | critChance +16, critDamage +40, maxHp -20, attackSpeed -10 | critExplode | 每一次好运都该被听见。 |
-| world_ender | 灭世者 | damage +45, critChance +20, maxHp -30, armor -10 |  | 握住的瞬间世界安静了。 |
-| toxic_throne | 剧毒王座 | elementalDamage +25, maxHp -20 | poisonOnHit | 坐上去就别想下来。 |
-| tempest_core | 风暴核心 | attackSpeed +30, speed +15, maxHp -25 | thunderAura | 雷暴在你手心成形。 |
-| glutton_core | 暴食核心 | damage +20, maxHp -16, armor -4 | leechOnKill | 它永远在饿。 |
+| id | 名称 | 类型 | 主要属性 | 特效 | 风味 |
+|---|---|---|---|---|---|
+| divine_engine | 神性引擎 | 遗物 | damage +52, attackSpeed +26, maxHp -38, armor -12 |  | 神也需要保养。 |
+| immortal_heart | 不朽之心 | 遗物 | maxHp +95, hpRegen +6, damage -26, speed -15 |  | 它不会停，你也别想停。 |
+| reaper_scythe | 死神镰刀 | 遗物 | critChance +34, critDamage +55, meleeDamage +22, lifesteal +8, maxHp -34 |  | 收割者从不为自己留后路。 |
+| omni_forge | 万物熔炉 | 遗物 | elementalDamage +30, engineering +26, attackSpeed -20, maxHp -22 |  | 什么都能炼，包括炼它的人。 |
+| chaos_wheel | 混沌骰盘 | 遗物 | luck +62, harvesting +26, damage +22, maxHp -22, attackSpeed -20 |  | 概率是唯一的信仰。 |
+| absolute_zero | 绝对零度 | 遗物 | armor +22, dodge +24, maxHp +45, damage -32 | frostAura | 停下来的世界不会伤害你。 |
+| lightspeed | 光速协议 | 遗物 | speed +48, attackSpeed +42, maxHp -30, armor -9 |  | 快到时间跟不上。 |
+| phoenix_ash | 不死鸟之烬 | 遗物 | elementalDamage +12, maxHp -18 | revive | 灰烬也算一种存在方式。 |
+| executioner | 处决程式 | 遗物 | damage +18, critChance +12, maxHp -20, armor -5 | execute | 不值得补第二刀。 |
+| thorn_king | 荆棘之王 | 遗物 | thorns +62, armor +14, maxHp +40, damage -34, speed -14 |  | 他从不出手，也从没输过。 |
+| singularity | 奇点吸引器 | 遗物 | pickupRange +190, harvesting +18, luck +22, dropRate +42, maxHp -16, damage -12 |  | 所有东西都朝你去。包括麻烦。 |
+| crit_nova | 暴击新星 | 遗物 | critChance +16, critDamage +40, maxHp -20, attackSpeed -10 | critExplode | 每一次好运都该被听见。 |
+| world_ender | 灭世者 | 遗物 | damage +45, critChance +20, maxHp -30, armor -10 |  | 握住的瞬间世界安静了。 |
+| toxic_throne | 剧毒王座 | 遗物 | elementalDamage +25, maxHp -20 | poisonOnHit | 坐上去就别想下来。 |
+| tempest_core | 风暴核心 | 遗物 | attackSpeed +30, speed +15, maxHp -25 | thunderAura | 雷暴在你手心成形。 |
+| glutton_core | 暴食核心 | 遗物 | damage +20, maxHp -16, armor -4 | leechOnKill | 它永远在饿。 |
 
 ## 5. 品质分布
 
@@ -295,10 +296,9 @@
 （式中 luck 为 幸运属性/100；02_stats.js 内 F.rarityWeights 实际以 l=luck/100 代入）
 ~~~
 
-### 5.2 抽取门槛 (08_shop.js 的 rollRarity)
+### 5.2 抽取门槛 (13_meta.js 的 rollRarityForMarket / rollLootTier)
 
-- wave < 4：紫色、红色权重强制为 0（前期只出白/绿/蓝）
-- wave < 8：红色权重强制为 0（中期才出紫，后期才出红）
+- 市场/掉落按地图档位动态上浮；紫色、红色随档位与幸运逐步解锁
 
 ### 5.3 实际比例（幸运=0，已应用门槛）
 
@@ -316,27 +316,43 @@
 ### 6.1 难度成长 G.waveScale(wave)（作用于普通/精英；BOSS 用 noScale 固定）
 
 ~~~
-hp  = 1 + 0.26*(wave-1) + 0.013*(wave-1)^2
+hp  = 1 + 0.5*(wave-1) + 0.04*(wave-1)^2
 dmg = 1 + 0.105*(wave-1)
 spd = 1 + 0.011*(wave-1)
 mat = 1 + 0.13*(wave-1)
 ~~~
 
-### 6.2 价格公式
+### 6.2 经济参数（搜打撤）
 
-- 武器：BASE_WPRICE[tier] * (1 + wave*0.085)，tier 价 [11,21,38,65,108]；出售 = 价×0.4
-- 物品：BASE_PRICE[r] * (1 + wave*0.085)，r 价 [9,18,33,58,96]；出售 = 价×0.4
+- 局外货币「深渊币」：卖掉落物（≈基础价×1.25）、撤离时材料 1:1 折现、首通奖励 25×层数
+- 市场买入价 ≈ 基础价×2.5；仓库初始 30 格，扩容 +10 格 = 120×(扩容次数+1) 币
+- 进图门票：T1 免费，T2~T5 分别为 45/140/380/950 币；通关上一层解锁下一层
+- 死亡惩罚：本局携带（装备+背包+材料）全部失去
 
-## 7. 如何扩充（改动清单）
+## 7. 搜打撤地图档位
+
+| 层 | 区域 | 房间 | 门票 | 难度 | 掉落 | 撤离目标 |
+|---|---|---|---|---|---|---|
+| 1 | 裂隙边缘 | 4×3 | 0 | ▲ | ◆ | 存活 60 秒后撤离点开放 |
+| 2 | 幽暗回廊 | 4×4 | 45 | ▲▲ | ◆◆ | 击杀 1 名精英后撤离点开放 |
+| 3 | 深部矿坑 | 5×4 | 140 | ▲▲▲ | ◆◆◆ | 击败腐化巨兽后撤离点开放 |
+| 4 | 深渊腹地 | 5×5 | 380 | ▲▲▲▲▲ | ◆◆◆◆ | 击杀 2 名精英后撤离点开放 |
+| 5 | 终焉之门 | 6×5 | 950 | ▲▲▲▲▲▲▲▲ | ◆◆◆◆◆◆◆ | 击败深渊之主后撤离点开放 |
+
+> 地图为房间网格世界（js/14_map.js）：房间 700px、墙 36px、门洞 104px；每层随机连通+回边，迷雾逐房揭示；房间类型含 战斗/宝库/精英/BOSS/圣泉/祭坛/撤离。
+
+## 8. 如何扩充（改动清单）
 
 - **新增敌人**：js/05_enemies.js 的 E 数组；若需新像素，在 js/01_pixel.js 用 PX.def 定义 sprite，注意行宽一致。出现波次在 W 数组的 pool/elites/boss。
 - **新增武器**：js/04_weapons.js 的 WEAPONS；图标在 js/01_pixel.js 用 PX.tint 定义 icon。
-- **新增物品**：js/03_items.js 的 ITEMS，设 r（0~4）决定品质与商店抽取池（G.ITEMS_BY_R 自动分组）。
-- **调品质比例**：02_stats.js 的 F.rarityWeights + 08_shop.js 的 rollRarity 门槛。
+- **新增物品**：js/03_items.js 的 ITEMS，设 r（0~4）决定品质；类型由 js/13_meta.js 的 G.itemType 按属性自动判定（防具/饰品/遗物）。
+- **新增地图档位**：js/13_meta.js 的 G.TIERS（房间网格、门票、难度、掉落、撤离目标）。
+- **调品质比例**：02_stats.js 的 F.rarityWeights + 13_meta.js 的 rollRarityForMarket / rollLootTier。
 - **调平衡**：05_enemies.js 的 waveScale 与敌人基础值；精英/Boss 的血量直接改 hp（Boss 为 noScale 固定值）。
 - **改完后**：node --check 各文件 → 重跑 _gen_registry.js 刷新本表 → 追加变更日志。
 
 <!--CHANGELOG_START-->
+
 
 
 

@@ -4,6 +4,7 @@
    - 死亡路径（全丢）
    - 存档 / 读档
    - 上锁房门 / 深渊钥匙
+   - 事件房间
    脚本列表从 index.html 解析，与页面永远同步。
    日志写入 _smoke3.log，错误数=0 即通过。
    用法：node tools/_smoke_waves.js
@@ -182,7 +183,7 @@ async function runExtractSuccess() {
   const g = G.game;
   g.player.maxHp = g.player.hp = 1e9;
   driveFrames(20);
-  log(`  [开局] 状态=${g.state} 地图=${g.map.tier.name} 装备=${g.player.weapons.length}武+${g.player.items.length}物 背包=${g.bag.length} 锁门=${(g.map.lockedDoors||[]).length}`);
+  log(`  [开局] 状态=${g.state} 地图=${g.map.tier.name} 装备=${g.player.weapons.length}武+${g.player.items.length}物 背包=${g.bag.length} 锁门=${(g.map.lockedDoors||[]).length} 事件=${(g.events||[]).length}`);
   if (g.player.weapons.length !== 2) throw new Error('应有两把武器（装备栏+职业补给）');
   if (g.player.items.length < 1) throw new Error('应有防具（职业补给）');
   if (!g.map.lockedDoors || !g.map.lockedDoors.length) throw new Error('T1 应有锁门');
@@ -320,6 +321,28 @@ function runLockedDoors() {
   log('  [锁门] 上锁→解锁 ✓ 剩余钥匙=' + g.depthKeys);
 }
 
+/* ---------- 6. 事件房间 ---------- */
+function runEvents() {
+  log('\n===== 档案F：事件房间 (shadow / t1) =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['shadow'], 1));
+  const g = G.game;
+  g.player.maxHp = g.player.hp = 1e9;
+  if (!g.events || !g.events.length) throw new Error('T1 应有事件房间');
+  const ev = g.events[0];
+  g.player.x = ev.x; g.player.y = ev.y;
+  const matsBefore = g.materials;
+  guard('tryInteract', () => g.tryInteract());
+  if (!G.UI._evtOpen) throw new Error('事件面板未打开');
+  const choice = { id: 'test', name: '测试', col: '#fff', desc: '', apply: () => { G.game.addMaterials(5); } };
+  guard('applyEvent', () => G.game.applyEvent(ev, choice));
+  if (!ev.used) throw new Error('事件未标记已用');
+  if (g.materials !== matsBefore + 5) throw new Error('事件效果未应用');
+  guard('closeEvent', () => G.UI.closeEvent());
+  log('  [事件] 触发→选择→应用→关闭 ✓');
+}
+
 (async function () {
   try {
     verifyMaps();
@@ -328,7 +351,8 @@ function runLockedDoors() {
     runSaveResume();
     await runKitchenSink();
     runLockedDoors();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4回归✓ 锁门✓ 错误数=${ERR}`);
+    runEvents();
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4回归✓ 锁门✓ 事件✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

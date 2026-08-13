@@ -269,13 +269,16 @@
     </section>
 
     <!-- 暂停 -->
-    <section id="scrPause" class="screen">
+        <section id="scrPause" class="screen">
       <h2 class="lv-title">已暂停</h2>
       <div class="pause-btns">
         <button class="btn btn-primary" id="btnResume">继续</button>
+        <button class="btn" id="btnSaveProgress">保存进度</button>
+        <button class="btn" id="btnSaveQuit">存档并返回标题</button>
         <button class="btn" id="btnPauseSettings">设置</button>
         <button class="btn" id="btnQuit">放弃本局</button>
       </div>
+      <div class="pause-tip">「保存进度」随时可存，之后可从标题页「继续游戏」原位回到本局</div>
     </section>
 
     <!-- 结算 -->
@@ -342,3 +345,4 @@
 <script src="js/45_ux.js"></script>
 <script src="js/46_hud.js"></script>
 <script src="js/47_aiart3.js"></script>
+<script src="js/48_pause.js"></script>

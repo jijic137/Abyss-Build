@@ -260,6 +260,10 @@ function runSaveResume() {
   driveFrames(15);
   const matsAt = g.materials;
   const shardsAt = g.shards || 0;
+  const roomIdx = g.player.room;
+  const rc2 = G.Map.roomRect(roomIdx % g.map.cols, Math.floor(roomIdx / g.map.cols));
+  const saveX = (rc2.x0 + rc2.x1) / 2, saveY = (rc2.y0 + rc2.y1) / 2;
+  g.player.x = saveX; g.player.y = saveY;
   guard('saveRun', () => g.saveRun());
   const snap = G.Save.getRun();
   if (!snap || snap.mode !== 'extract') throw new Error('快照缺失');
@@ -267,6 +271,7 @@ function runSaveResume() {
   log(`  [读档] 状态=${g.state} 地图=${g.map.tier.name} 材料=${g.materials} 碎片=${g.shards} 词缀=${(g.mapMods||[]).map(x=>x.id).join(',')}`);
   if (g.materials < matsAt) throw new Error('读档材料丢失');
   if ((g.shards || 0) < shardsAt) throw new Error('读档碎片丢失');
+  if (G.dist(g.player.x, g.player.y, saveX, saveY) > 40) throw new Error('读档位置未恢复');
   G.Save.clearRun();
 }
 

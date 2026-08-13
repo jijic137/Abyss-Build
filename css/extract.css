@@ -306,3 +306,6 @@
 #spawnCard.pop{ animation:scIn .3s ease-out; }
 @keyframes scIn{ from{ transform:translateX(-50%) translateY(-14px) scale(.9); opacity:0; } to{ transform:translateX(-50%) translateY(0) scale(1); opacity:1; } }
 
+
+.pause-tip{ margin-top:14px; font-size:11px; color:var(--dim,#8a90a8); letter-spacing:1px; }
+

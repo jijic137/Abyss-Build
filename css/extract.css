@@ -280,3 +280,7 @@
 
 .inv2-grid{ padding:0; }
 
+
+.mkt-icon canvas{ max-width:52px; max-height:52px; }
+.inv2-tile canvas{ max-width:42px; max-height:42px; }
+

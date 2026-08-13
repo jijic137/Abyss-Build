@@ -75,7 +75,17 @@ const JOBS = [
   { key: 'base', file: 'base_camp', w: 1216, h: 832, p: 'wide concept art, underground base camp with wooden tables, weapons rack, treasure chests, warm lanterns, maps on the wall, an abyss hunter organizing loot, ' + STYLE },
   { key: 'result', file: 'result_win', w: 1216, h: 832, p: 'wide key art, triumphant abyss hunter walking away from a glowing rift with a heavy loot pack, golden light, floating embers, cinematic, ' + STYLE },
   { key: 'result', file: 'result_lose', w: 1216, h: 832, p: 'wide key art, fallen abyss hunter gear scattered on dark stone before a cold void gate, somber mood, fading embers, ' + STYLE },
-  { key: 'system', file: 'daily_challenge', w: 1216, h: 832, p: 'wide banner art, ominous clockwork hourglass above an abyss gate, magical hourglass with purple sand, challenge sigils floating, ' + STYLE }
+  { key: 'system', file: 'daily_challenge', w: 1216, h: 832, p: 'wide banner art, ominous clockwork hourglass above an abyss gate, magical hourglass with purple sand, challenge sigils floating, ' + STYLE },
+  { key: 'chars', file: 'char_knight', w: 832, h: 1216, p: 'portrait concept art, iron knight abyss hunter in heavy plate armor with a spear, heroic stance, teal rim light, ' + STYLE },
+  { key: 'chars', file: 'char_ranger', w: 832, h: 1216, p: 'portrait concept art, agile ranger abyss hunter in leather coat with a pistol, calm aim, green accents, ' + STYLE },
+  { key: 'chars', file: 'char_mage', w: 832, h: 1216, p: 'portrait concept art, hooded mage abyss hunter channeling violet elemental magic, floating runes, ' + STYLE },
+  { key: 'chars', file: 'char_brute', w: 832, h: 1216, p: 'portrait concept art, massive berserker abyss hunter with a war hammer, scarred and grinning, orange accents, ' + STYLE },
+  { key: 'chars', file: 'char_engineer', w: 832, h: 1216, p: 'portrait concept art, engineer abyss hunter with goggles and a shoulder turret, wrench in hand, amber workshop glow, ' + STYLE },
+  { key: 'chars', file: 'char_shadow', w: 832, h: 1216, p: 'portrait concept art, shadow assassin abyss hunter in dark cloak with twin daggers, purple smoke, ' + STYLE },
+  { key: 'chars', file: 'char_alchemist', w: 832, h: 1216, p: 'portrait concept art, alchemist abyss hunter with a venom flask and poison vapor, green glow, ' + STYLE },
+  { key: 'chars', file: 'char_warden', w: 832, h: 1216, p: 'portrait concept art, warden abyss hunter in armor with a tower shield and turret, steadfast, blue accents, ' + STYLE },
+  { key: 'market', file: 'market_stall', w: 1216, h: 832, p: 'wide concept art, underground black market stall with glowing wares, lanterns, mysterious merchant behind the counter, ' + STYLE },
+  { key: 'records', file: 'records_wall', w: 1216, h: 832, p: 'wide concept art, memorial wall in a dark base with framed trophies, maps and bloodstained banners, candlelight, ' + STYLE }
 ];
 
 async function submit(prompt, seed, width, height, prefix) {

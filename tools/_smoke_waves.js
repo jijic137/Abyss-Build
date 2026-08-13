@@ -534,6 +534,36 @@ function runChat() {
   G.Chat.end(e);
   log('  [台词] 玩家回应 ✓ 敌人气泡 ✓ 渲染/衰减 ✓');
 }
+/* ---------- 14. 数值平衡 / 整备栏显隐 ---------- */
+function runBalance() {
+  log('\n===== 档案N：数值平衡 / 整备栏 =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['knight'], 2));
+  const g = G.game, p = g.player;
+  p.maxHp = p.hp = 1e9;
+  const ra = G.rollAffixes;
+  G.rollAffixes = () => [];
+  const e1 = g.spawnEnemy('worm', p.x + 200, p.y);
+  const e2 = g.spawnEnemy('el_warden', p.x + 300, p.y);
+  const b1 = g.spawnEnemy('boss_behemoth', p.x + 400, p.y);
+  G.rollAffixes = ra;
+  const sc = G.waveScale(g.map.wave || 1);
+  const expectWorm = Math.round(Math.round(G.ENEMY_MAP['worm'].hp * sc.hp) * 1.3);
+  const expectEl = Math.round(Math.round(G.ENEMY_MAP['el_warden'].hp * sc.hp) * 0.35);
+  if (Math.abs(e1.maxHp - expectWorm) > Math.max(2, expectWorm * 0.05)) throw new Error('小怪加成未生效 ' + e1.maxHp + ' vs ' + expectWorm);
+  if (Math.abs(e2.maxHp - expectEl) > Math.max(2, expectEl * 0.05)) throw new Error('精英削减未生效 ' + e2.maxHp + ' vs ' + expectEl);
+  if (b1.maxHp !== G.ENEMY_MAP['boss_behemoth'].hp) throw new Error('BOSS 不应受影响');
+  /* 整备栏显隐：正常打开背包不应显示 */
+  G.game._pendingDescend = null;
+  G.UI.toggleBag();
+  const normalOpen = !document.getElementById('scrBag').classList.contains('hidden');
+  const barDisplay = document.getElementById('bagPrepBar') ? document.getElementById('bagPrepBar').style.display : 'none';
+  if (!normalOpen) throw new Error('背包未打开');
+  if (barDisplay === 'flex') throw new Error('正常打开背包不应显示整备栏');
+  G.UI.toggleBag();
+  log('  [平衡] 小怪↑ 精英↓ BOSS不变 ✓ 整备栏显隐 ✓');
+}
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {
   log('\n===== 档案I：物品占格 (ranger / t1) =====');
@@ -602,8 +632,9 @@ function runModsPortal() {
     runNewSystems();
     runTierDensity();
     runChat();
+    runBalance();
     runInvDrag();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 错误数=${ERR}`);
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 平衡✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

@@ -314,3 +314,7 @@
 .base-char-line{ display:flex; align-items:center; justify-content:center; gap:12px; font-size:14px; font-weight:800; letter-spacing:2px; margin-bottom:10px; padding:8px 14px; background:rgba(16,20,32,.6); border:1px solid #2a3048; border-radius:10px; }
 #bagPrepBar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; padding:8px 10px; background:linear-gradient(180deg,#241a32,#1a1426); border:1px solid #c07fff66; border-radius:8px; font-size:12px; font-weight:700; }
 
+
+/* ===== 背包可交互修复 ===== */
+.bag-panel{ pointer-events:auto; }
+

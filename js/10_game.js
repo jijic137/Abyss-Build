@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    10_game.js —— 搜打撤核心循环：进图探索 / 目标 / 撤离 / 结算
    ============================================================ */
 'use strict';
@@ -62,14 +62,14 @@
     };
     window.addEventListener('keydown', function (e) {
       if (mapKeys[e.code]) { game.keys[mapKeys[e.code]] = true; e.preventDefault(); }
-      if (e.code === 'Tab') { e.preventDefault(); if (game.player) G.UI.toggleStatPanel(game.player); }
+      if (e.code === 'Tab' && game.state === 'play' && game.player) { e.preventDefault(); G.UI.toggleBag(); }
       if (e.code === 'KeyE' && game.state === 'play' && game.player) {
         e.preventDefault();
         game.tryInteract();
       }
-      if (e.code === 'KeyI' && game.state === 'play' && game.player) {
+      if (e.code === 'KeyI') {
         e.preventDefault();
-        G.UI.toggleBag();
+        G.UI.toggleStatPanel(game.player);
       }
       if (e.code === 'Escape') {
         e.preventDefault();

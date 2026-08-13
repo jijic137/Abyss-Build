@@ -178,6 +178,18 @@ server.listen(8765, '127.0.0.1', async () => {
     await page.evaluate(() => { G.UI.toggleBag(); });
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(OUT, '13_bag.png') });
+    /* 背包真实点击交互验证 */
+    const bagClick = await page.evaluate(() => {
+      const panel = document.getElementById('scrBag');
+      const btn = document.querySelector('#bagGrid .inv2-grid-head .btn');
+      if (!btn) return { ok: false, reason: 'no sort btn', pe: getComputedStyle(panel).pointerEvents };
+      const r = btn.getBoundingClientRect();
+      return { ok: true, x: r.left + r.width / 2, y: r.top + r.height / 2, pe: getComputedStyle(panel).pointerEvents };
+    });
+    if (bagClick.ok) { await page.mouse.click(bagClick.x, bagClick.y); }
+    const bagAfter = await page.evaluate(() => ({ open: !document.getElementById('scrBag').classList.contains('hidden') }));
+    console.log('BAGCLICK ' + JSON.stringify(bagClick) + ' after=' + JSON.stringify(bagAfter));
+    if (!bagClick.ok || bagClick.pe !== 'auto' || !bagAfter.open) throw new Error('背包无法交互');
     await page.evaluate(() => { G.UI.toggleBag(); });
     await page.evaluate(() => {
       const g = G.game;

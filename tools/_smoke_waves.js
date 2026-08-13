@@ -3,6 +3,7 @@
    - 进图 → 开箱 → 撤离成功（物品入库、货币结算、档位解锁）
    - 死亡路径（全丢）
    - 存档 / 读档
+   - 上锁房门 / 深渊钥匙
    脚本列表从 index.html 解析，与页面永远同步。
    日志写入 _smoke3.log，错误数=0 即通过。
    用法：node tools/_smoke_waves.js
@@ -181,9 +182,10 @@ async function runExtractSuccess() {
   const g = G.game;
   g.player.maxHp = g.player.hp = 1e9;
   driveFrames(20);
-  log(`  [开局] 状态=${g.state} 地图=${g.map.tier.name} 装备=${g.player.weapons.length}武+${g.player.items.length}物 背包=${g.bag.length}`);
+  log(`  [开局] 状态=${g.state} 地图=${g.map.tier.name} 装备=${g.player.weapons.length}武+${g.player.items.length}物 背包=${g.bag.length} 锁门=${(g.map.lockedDoors||[]).length}`);
   if (g.player.weapons.length !== 2) throw new Error('应有两把武器（装备栏+职业补给）');
   if (g.player.items.length < 1) throw new Error('应有防具（职业补给）');
+  if (!g.map.lockedDoors || !g.map.lockedDoors.length) throw new Error('T1 应有锁门');
 
   const chest = g.containers.find(c => c.type === 'crate' || c.type === 'chest_wood');
   if (chest) {
@@ -285,6 +287,39 @@ async function runKitchenSink() {
   }
 }
 
+/* ---------- 5. 上锁房门 / 深渊钥匙 ---------- */
+function runLockedDoors() {
+  log('\n===== 档案E：上锁房门 / 钥匙 (ranger / t2) =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['ranger'], 2));
+  const g = G.game;
+  g.player.maxHp = g.player.hp = 1e9;
+  if (!g.map.lockedDoors || !g.map.lockedDoors.length) throw new Error('T2 应有锁门');
+  const ld = g.map.lockedDoors[0];
+  const SEG = G.Map.SEG, W = G.Map.WALL, DOOR = G.Map.DOOR;
+  let rc;
+  if (ld.dir === 'H') {
+    const rr = G.Map.roomRect(ld.c, ld.r);
+    const dy = rr.y0 + G.Map.ROOM / 2;
+    rc = { x0: (ld.c + 1) * SEG, y0: dy - DOOR / 2, x1: (ld.c + 1) * SEG + W, y1: dy + DOOR / 2 };
+  } else {
+    const rr = G.Map.roomRect(ld.c, ld.r);
+    const dx = rr.x0 + G.Map.ROOM / 2;
+    rc = { x0: dx - DOOR / 2, y0: (ld.r + 1) * SEG, x1: dx + DOOR / 2, y1: (ld.r + 1) * SEG + W };
+  }
+  const cx = (rc.x0 + rc.x1) / 2, cy = (rc.y0 + rc.y1) / 2;
+  if (!G.Map.solid(g.map, cx, cy)) throw new Error('锁门应为实心');
+  g.player.x = cx; g.player.y = cy;
+  guard('tryInteract(noKey)', () => g.tryInteract());
+  if (g.unlockedDoors[ld.key]) throw new Error('无钥匙不应解锁');
+  g.depthKeys = 1;
+  guard('tryInteract(key)', () => g.tryInteract());
+  if (!g.unlockedDoors[ld.key]) throw new Error('持钥匙未解锁');
+  if (G.Map.solid(g.map, cx, cy)) throw new Error('解锁后应可通过');
+  log('  [锁门] 上锁→解锁 ✓ 剩余钥匙=' + g.depthKeys);
+}
+
 (async function () {
   try {
     verifyMaps();
@@ -292,7 +327,8 @@ async function runKitchenSink() {
     await runDeath();
     runSaveResume();
     await runKitchenSink();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4回归✓ 错误数=${ERR}`);
+    runLockedDoors();
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4回归✓ 锁门✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

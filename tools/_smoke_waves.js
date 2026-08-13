@@ -65,7 +65,8 @@ const docStub = {
   getElementById(id){ return elCache[id] || (elCache[id]=makeEl()); },
   createElement(){ return makeEl(); },
   addEventListener(){},
-  readyState:'complete'
+  readyState:'complete',
+  body: makeEl()
 };
 const mem = {};
 const lsStub = {
@@ -376,6 +377,39 @@ function runShards() {
   log('  [碎片] 拾取→共鸣→强化 ✓ level=' + p.level + ' shards=' + g.shards + ' pending=' + p.pendingLevels);
 }
 
+/* ---------- 9. 物品占格 ---------- */
+function runInvSizes() {
+  log('\n===== 档案I：物品占格 (ranger / t1) =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['ranger'], 1));
+  const g = G.game, p = g.player;
+  p.maxHp = p.hp = 1e9;
+  const w = G.makeWeapon('pistol', 2);
+  const relic = G.makeItem('executioner', 4);
+  const trink = G.makeItem('clover', 0);
+  if (!w || w.size[0] !== 2 || w.size[1] !== 1) throw new Error('武器占格错误');
+  if (!relic || relic.size[0] !== 2 || relic.size[1] !== 2) throw new Error('遗物占格错误');
+  if (!trink || trink.size[0] !== 1) throw new Error('饰品占格错误');
+  g.bag.push(w, relic, trink);
+  const placed = G.packItems(g.bag, G.BAG_COLS, G.BAG_ROWS);
+  if (!placed || placed.length !== 3) throw new Error('打包失败');
+  if (G.invCells(g.bag) !== 7) throw new Error('格数统计错误');
+  const big = G.makeItem('phoenix_ash', 4);
+  let filled = 0;
+  while (filled < 30) {
+    const it = G.makeItem('clover', 0);
+    if (!G.addBagItem(it)) break;
+    filled++;
+  }
+  const cellsNow = G.invCells(g.bag);
+  if (cellsNow > G.BAG_CELLS) throw new Error('超出容量 ' + cellsNow);
+  if (filled === 0) throw new Error('无法放入小件');
+  if (G.addBagItem(big)) throw new Error('满时不应再放入');
+  guard('renderBag', () => G.UI.renderBag());
+  guard('renderBase', () => G.UI.renderBase());
+  log('  [占格] 武器2x1 遗物2x2 饰品1x1 ✓ 容量=' + cellsNow + '/' + G.BAG_CELLS + ' 小件=' + filled);
+}
 /* ---------- 8. 深渊词缀 / 传送门 ---------- */
 function runModsPortal() {
   log('\n===== 档案H：词缀 / 传送门 (knight / t2) =====');
@@ -407,7 +441,8 @@ function runModsPortal() {
     runEvents();
     runShards();
     runModsPortal();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 错误数=${ERR}`);
+    runInvSizes();
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

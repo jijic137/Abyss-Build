@@ -87,3 +87,25 @@
 
 #keyHud{ top:186px !important; }
 
+
+/* ===== 出货揭示动画 ===== */
+.loot-toast{ position:absolute; left:50%; bottom:150px; transform:translateX(-50%); display:flex; align-items:center; gap:14px; background:rgba(10,12,20,.94); border:2px solid #ffd24a; border-radius:12px; padding:14px 26px; z-index:46; min-width:260px; overflow:hidden; }
+.loot-toast.hidden{ display:none; }
+.loot-r0{ --rc:#d9dde8; } .loot-r1{ --rc:#4fd06b; } .loot-r2{ --rc:#46a2ff; } .loot-r3{ --rc:#b45cff; } .loot-r4{ --rc:#ff4a4a; }
+.loot-toast::before{ content:''; position:absolute; inset:-30%; background:radial-gradient(circle, color-mix(in srgb, var(--rc,#ffd24a) 55%, transparent) 0%, transparent 65%); opacity:0; pointer-events:none; animation:lootRays .85s ease-out forwards; }
+@keyframes lootRays{ 0%{opacity:0; transform:scale(.4);} 25%{opacity:.9;} 100%{opacity:0; transform:scale(1.9);} }
+.loot-pop{ animation:lootIn .28s cubic-bezier(.2,1.4,.4,1); }
+.loot-r4.loot-pop{ animation:lootIn .34s cubic-bezier(.2,1.6,.3,1), lootShine 1.1s ease-out .2s; }
+@keyframes lootShine{ 0%{ box-shadow:0 0 60px var(--rc); } 100%{ box-shadow:0 0 14px var(--rc); } }
+.loot-icon{ position:relative; width:66px; height:66px; display:flex; align-items:center; justify-content:center; flex:none; }
+.loot-icon canvas{ image-rendering:pixelated; }
+.loot-icon canvas + canvas{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
+.loot-name{ font-size:17px; font-weight:900; letter-spacing:1px; }
+.loot-sub{ font-size:11px; color:var(--dim,#8a90a8); margin-top:3px; }
+/* ===== 物品占格 ===== */
+.bag-equip-row{ display:grid; grid-template-columns:repeat(6,1fr); gap:5px; margin-bottom:10px; }
+.bag-pack{ display:grid; gap:4px; position:relative; }
+.bag-slot{ border:1px dashed #262c40; border-radius:4px; background:rgba(14,17,26,.5); min-height:34px; }
+.bag-cell.bag-packed{ position:relative; display:flex; align-items:center; justify-content:center; }
+.stash-grid .bag-slot{ min-height:38px; }
+

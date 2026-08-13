@@ -513,6 +513,27 @@ function runTierDensity() {
   if (counts[0].itemChests < 1) throw new Error('道具房箱子未标记必出物品');
   log('  [分层] 深层宝箱/陷阱显著增多 ✓ 陷阱房/道具房 ✓ 必出物品 ✓');
 }
+/* ---------- 13. 怪物台词 / 快捷回应 ---------- */
+function runChat() {
+  log('\n===== 档案M：怪物台词 / 快捷回应 =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['knight'], 1));
+  const g = G.game, p = g.player;
+  p.maxHp = p.hp = 1e9;
+  if (!G.Chat || !G.Chat.playerSay) throw new Error('Chat 模块缺失');
+  G.Chat.playerSay();
+  if (!p.bubble || !p.bubble.text) throw new Error('玩家气泡未生成');
+  const e = g.spawnEnemy('worm', p.x + 200, p.y);
+  if (!e) throw new Error('生成敌人失败');
+  G.Chat.lastT = 0;
+  G.Chat.say(e, '饿……', 2);
+  if (!e.bubble || !e.bubble.text) throw new Error('敌人气泡未生成');
+  guard('render', () => g.render());
+  guard('tick', () => G.Chat.tick(g, 0.1));
+  G.Chat.end(e);
+  log('  [台词] 玩家回应 ✓ 敌人气泡 ✓ 渲染/衰减 ✓');
+}
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {
   log('\n===== 档案I：物品占格 (ranger / t1) =====');
@@ -580,8 +601,9 @@ function runModsPortal() {
     runInvSizes();
     runNewSystems();
     runTierDensity();
+    runChat();
     runInvDrag();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 错误数=${ERR}`);
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

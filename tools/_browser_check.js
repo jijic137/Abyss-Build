@@ -115,7 +115,46 @@ server.listen(8765, '127.0.0.1', async () => {
 
     /* 新背包/仓库界面渲染 */
     await page.evaluate(() => { G.UI.renderBase(); G.UI.renderMarket(); G.UI.renderBag(); });
-    await page.waitForTimeout(400);    /* 穿墙/瞬移实机验证：顶墙跑 1.2s */
+    await page.waitForTimeout(400);    /* 全屏布局体检：逐屏开启，检测越界元素 */
+    const layout = await page.evaluate(() => {
+      const screens = ['scrTitle','scrPause','scrBase','scrMarket','scrMapSelect','scrSettings','scrRecords','scrAch','scrSave','scrResult','scrLevel','scrCharSelect'];
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const issues = [];
+      screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add('on');
+        const bad = [];
+        el.querySelectorAll('*').forEach(n => {
+          const r = n.getBoundingClientRect();
+          if (r.width < 2 && r.height < 2) return;
+          if (r.left < -4 || r.top < -4 || r.right > vw + 4 || r.bottom > vh + 4) {
+            bad.push((n.id || n.className || n.tagName) + '@' + [r.left.toFixed(0), r.top.toFixed(0), r.right.toFixed(0), r.bottom.toFixed(0)].join(','));
+          }
+        });
+        if (bad.length) issues.push({ screen: id, bad: bad.slice(0, 8) });
+        el.classList.remove('on');
+      });
+      return issues;
+    });
+    console.log('LAYOUT ' + JSON.stringify(layout));
+    if (layout.length) throw new Error('布局越界 ' + JSON.stringify(layout));    /* 关键界面截图（供人工审阅） */
+    await page.evaluate(() => { document.getElementById('scrBase').classList.add('on'); });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(OUT, '10_base.png') });
+    await page.evaluate(() => {
+      document.getElementById('scrBase').classList.remove('on');
+      document.getElementById('scrMarket').classList.add('on');
+    });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(OUT, '11_market.png') });
+    await page.evaluate(() => {
+      document.getElementById('scrMarket').classList.remove('on');
+      document.getElementById('scrMapSelect').classList.add('on');
+    });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(OUT, '12_mapselect.png') });
+    await page.evaluate(() => { document.getElementById('scrMapSelect').classList.remove('on'); });    /* 穿墙/瞬移实机验证：顶墙跑 1.2s */
     await page.evaluate(() => {
       const g = G.game, m = g.map;
       const SEG = G.Map.SEG, ROOM = G.Map.ROOM;
@@ -135,7 +174,23 @@ server.listen(8765, '127.0.0.1', async () => {
     const wallEnd = await page.evaluate(() => ({ x: G.game.player.x, start: window._wallStart, wallX: window._wallX }));
     const wallOk = wallEnd.wallX > 0 && wallEnd.x <= wallEnd.wallX - 14 + 3 && Math.abs(wallEnd.x - wallEnd.start) < 80;
     console.log('WALLTEST ' + JSON.stringify(wallEnd) + ' ok=' + wallOk);
-    if (!wallOk) throw new Error('穿墙或瞬移');    /* 撤离 */
+    if (!wallOk) throw new Error('穿墙或瞬移');    /* 背包浮层与撤离抉择面板截图 */
+    await page.evaluate(() => { G.UI.toggleBag(); });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(OUT, '13_bag.png') });
+    await page.evaluate(() => { G.UI.toggleBag(); });
+    await page.evaluate(() => {
+      const g = G.game;
+      g.map.eliteKills = 1;
+      g.map.time = 999;
+      g.checkObjective();
+      g.player.x = g.map.extract.x;
+      g.player.y = g.map.extract.y;
+      g.tryInteract();
+    });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(OUT, '14_flow.png') });
+    await page.evaluate(() => { G.UI.closeFlow(); });    /* 撤离 */
     await page.evaluate(() => {
       const g = G.game;
       g.map.eliteKills = 1;

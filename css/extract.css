@@ -193,3 +193,90 @@
 
 .inv2-tile:hover .stash-sell{ display:block; }
 
+
+/* ============================================================
+   POLISH —— 全局 UI 打磨（风格统一 / 位置 / 图标比例）
+   ============================================================ */
+/* 屏幕过渡 */
+.screen.on{ animation:screenIn .16s ease-out; }
+@keyframes screenIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+
+/* 按钮焦点可见性（可访问性） */
+.btn:focus-visible, .mkt-tab:focus-visible, .map-card:focus-visible, .inv2-tile:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+::selection{ background:#ffd24a44; }
+
+/* 面板角标统一（事件/抉择/背包/出货） */
+#evtBox, #flowBox, .bag-panel, .loot-toast{ position:relative; }
+#evtBox::before, #evtBox::after, #flowBox::before, #flowBox::after,
+.bag-panel::before, .bag-panel::after, .loot-toast::after{
+  content:''; position:absolute; width:16px; height:16px; pointer-events:none; z-index:3;
+  border:2px solid var(--gold); opacity:.7;
+}
+#evtBox::before{ top:-7px; left:-7px; border-right:none; border-bottom:none; border-color:#c07fff; border-radius:4px 0 0 0; }
+#evtBox::after{ bottom:-7px; right:-7px; border-left:none; border-top:none; border-color:#c07fff; border-radius:0 0 4px 0; }
+#flowBox::before{ top:-7px; left:-7px; border-right:none; border-bottom:none; border-color:#6ee787; border-radius:4px 0 0 0; }
+#flowBox::after{ bottom:-7px; right:-7px; border-left:none; border-top:none; border-color:#6ee787; border-radius:0 0 4px 0; }
+.bag-panel::before{ top:6px; left:6px; border-color:var(--line); opacity:.5; }
+.bag-panel::after{ bottom:6px; right:6px; border-color:var(--line); opacity:.5; }
+.loot-toast::after{ top:6px; right:6px; border-left:none; border-bottom:none; border-color:var(--rc,#ffd24a); opacity:.8; }
+
+/* 事件/抉择卡片悬停 */
+#evtBox div[style*="cursor:pointer"], #flowBox div[style*="cursor:pointer"]{
+  transition:transform .12s, border-color .12s, box-shadow .12s;
+}
+#evtBox div[style*="cursor:pointer"]:hover, #flowBox div[style*="cursor:pointer"]:hover{
+  transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.45);
+}
+
+/* 图标比例统一（磁贴/市场/出货略放大，保持像素锐利） */
+.inv2-tile canvas{ transform:scale(1.12); }
+.mkt-icon canvas{ transform:scale(1.08); }
+.loot-icon canvas{ transform:scale(1.08); }
+.inv2-tile canvas, .mkt-icon canvas, .loot-icon canvas{ transform-origin:center; }
+
+/* 网格质感：底部暗角 + 悬停微亮 */
+.inv2-grid{ background:radial-gradient(circle at 50% 0%, #1b2030 0%, #10131d 78%); border:1px solid #1c2233; border-radius:8px; padding:5px; }
+.inv2-grid:not(.dragging) .inv2-cell:hover{ border-color:#3a4a6d; }
+.inv2-cell{ transition:border-color .12s, background .12s; }
+
+/* 装备/仓库面板质感 */
+.equip-panel{ background:linear-gradient(180deg,#141826cc,#10131dcc); border:1px solid #232a3d; border-radius:12px; padding:12px 14px; }
+.base-side .base-tip, .base-side{ background:linear-gradient(180deg,#141826cc,#10131dcc); border:1px solid #232a3d; border-radius:12px; }
+.base-side{ padding:14px; gap:12px; }
+.base-side .base-tip{ border:none; background:none; padding:0; }
+
+/* HUD 可读性 */
+#waveLabel, #waveTimer, #waveSub, #objLine, .hint, #keyHud, #modLine, #comboLabel{ text-shadow:0 1px 3px rgba(0,0,0,.85); }
+#minimap{ box-shadow:0 0 0 1px #333a52, 0 4px 16px rgba(0,0,0,.5); border-radius:8px; }
+.wave-timer{ font-size:18px; font-weight:800; color:#ffd24a; }
+#objLine{ font-size:12px; letter-spacing:1px; }
+
+/* 记录/成就/结算斑马纹与悬停 */
+.rec-row{ padding:4px 6px; }
+.rec-row:nth-child(even){ background:rgba(255,255,255,.03); }
+.ach-tile{ transition:transform .12s, border-color .12s, box-shadow .12s; }
+.ach-tile:hover{ transform:translateY(-2px); border-color:var(--gold); box-shadow:0 4px 14px rgba(0,0,0,.4); }
+.result-stats .stat-row{ border-bottom:1px solid #1c2233; padding:5px 8px; }
+.result-stats .stat-row:last-child{ border-bottom:none; }
+
+/* 市场页签/卡片微调 */
+.mkt-tab{ transition:transform .1s, border-color .1s, color .1s; }
+.mkt-tab:hover{ transform:translateY(-1px); border-color:#6a76a0; color:#dce2f0; }
+.mkt-card{ min-height:190px; }
+.mkt-buy{ width:100%; }
+
+/* 选图卡微调 */
+.map-card{ border-width:1px; }
+.map-card::after{ content:''; position:absolute; right:8px; bottom:8px; width:0; height:0; border:6px solid transparent; border-left-color:var(--mc,#7fa8ff); opacity:.5; }
+
+/* 结算按钮行距 */
+.result-stats{ margin-bottom:20px; }
+
+/* 滚动条一致性（火狐） */
+*{ scrollbar-width:thin; scrollbar-color:#3a4258 #10131d; }
+
+/* 升级/碎片选择卡悬停微调（沿用现有） */
+.lv-opt{ transition:transform .12s, border-color .12s, box-shadow .12s; }
+
+.inv2-grid{ padding:0; }
+

@@ -1,17 +1,21 @@
 /* ============================================================
-   10_game.js —— 核心循环 / 波次管理 / 碰撞 / 结算
+   10_game.js —— 搜打撤核心循环：进图探索 / 目标 / 撤离 / 结算
    ============================================================ */
 'use strict';
 
 (function () {
 
-  var ARENA = 1600;
   var CELL = 90;
   var MAX_ENEMIES = 230;
+  var BAG_SIZE = 12;
+  G.BAG_SIZE = BAG_SIZE;
 
   var game = {
-    state: 'title',     // title | play | shop | level | pause | result
-    arena: ARENA,
+    state: 'title',     // title | play | level | pause | result
+    arena: 0,
+    map: null,
+    bag: [],
+    carried: null,
     canvas: null, ctx: null,
     dpr: 1, vw: 0, vh: 0,
     camX: 0, camY: 0,
@@ -19,20 +23,29 @@
     player: null,
     enemies: [], bullets: [], ebullets: [], pickups: [],
     particles: [], texts: [], effects: [], turrets: [],
-    drones: [], mines: [],
+    drones: [], mines: [], containers: [],
 
-    wave: 1, waveTime: 0, waveDur: 0,
-    budget: 0, spawnAcc: 0,
-    eliteQueue: [], bossSpawned: false,
+    wave: 1,
     materials: 0,
+    lastRoom: -1,
+    levelCd: 0,
+    _wallRects: [],
 
     shakeAmt: 0, shakeT: 0, hurtFlash: 0, shakeScale: 0.4,
     keys: {}, grid: null,
-    lastT: 0, acc: 0, running: false,
-    // 渲染缓存：离屏地板 / 敌人排序复用数组 / 暗角渐变
-    _arena: null, _renderBuf: [], _vigGrd: null
+    lastT: 0, running: false,
+    _renderBuf: [], _vigGrd: null
   };
   G.game = game;
+
+  /* 局内背包 */
+  G.addBagItem = function (inst) {
+    var g = G.game;
+    if (!g || !g.bag) return false;
+    if (g.bag.length >= BAG_SIZE) return false;
+    g.bag.push(inst);
+    return true;
+  };
 
   /* ============================================================
      初始化
@@ -43,22 +56,30 @@
     this.resize();
     window.addEventListener('resize', function () { game.resize(); });
 
-    var map = {
+    var mapKeys = {
       ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
       KeyA: 'left', KeyD: 'right', KeyW: 'up', KeyS: 'down'
     };
     window.addEventListener('keydown', function (e) {
-      if (map[e.code]) { game.keys[map[e.code]] = true; e.preventDefault(); }
+      if (mapKeys[e.code]) { game.keys[mapKeys[e.code]] = true; e.preventDefault(); }
       if (e.code === 'Tab') { e.preventDefault(); if (game.player) G.UI.toggleStatPanel(game.player); }
+      if (e.code === 'KeyE' && game.state === 'play' && game.player) {
+        e.preventDefault();
+        game.tryInteract();
+      }
+      if (e.code === 'KeyI' && game.state === 'play' && game.player) {
+        e.preventDefault();
+        G.UI.toggleBag();
+      }
       if (e.code === 'Escape') {
         e.preventDefault();
-        // 设置页内按 ESC 直接返回（回到暂停或标题），不触发暂停切换
+        if (G.UI.isScreenOn('scrBag')) { G.UI.toggleBag(); return; }
         if (G.UI.isScreenOn('scrSettings')) { G.UI.closeSettings(); return; }
         game.togglePause();
       }
     });
     window.addEventListener('keyup', function (e) {
-      if (map[e.code]) { game.keys[map[e.code]] = false; e.preventDefault(); }
+      if (mapKeys[e.code]) { game.keys[mapKeys[e.code]] = false; e.preventDefault(); }
     });
     window.addEventListener('blur', function () { game.keys = {}; });
   };
@@ -73,7 +94,6 @@
     this.canvas.width = Math.floor(this.vw * dpr);
     this.canvas.height = Math.floor(this.vh * dpr);
     this.ctx.imageSmoothingEnabled = false;
-    // 重建暗角渐变缓存（随视口尺寸变化）
     try {
       var grd = this.ctx.createRadialGradient(this.vw / 2, this.vh / 2, Math.min(this.vw, this.vh) * 0.35,
         this.vw / 2, this.vh / 2, Math.max(this.vw, this.vh) * 0.72);
@@ -84,237 +104,277 @@
   };
 
   /* ============================================================
-     开局
+     开局（携带局外装备进图）
      ============================================================ */
-  game.newRun = function (charDef) {
-    // 浅克隆角色定义，避免升级写回的 mods 污染全局 G.CHARACTERS
+  game.newRun = function (charDef, tierId) {
     var c = Object.assign({}, charDef);
     c.mods = Object.assign({}, charDef.mods || {});
     this.player = new G.Player(c);
-    this.player.x = ARENA / 2;
-    this.player.y = ARENA / 2;
-    this.player.addWeapon(G.makeWeapon(charDef.startWeapon, 0));
-    this.materials = charDef.startMat;
-    this.wave = 1;
-    this.enemies = []; this.bullets = []; this.ebullets = [];
-    this.pickups = []; this.particles = []; this.texts = [];
-    this.effects = []; this.turrets = [];
-    this.hurtFlash = 0; this.shakeAmt = 0;
-    this.combo = 0; this.comboTimer = 0; this.runTime = 0;
-    G.$('statPanel').classList.add('hidden');
-    G.UI.initHud();
-    this.startWave(1);
-    if (!this.running) { this.running = true; this.lastT = performance.now(); requestAnimationFrame(loop); }
-  };
+    this.player.maxWeapons = 2;
 
-  /* ============================================================
-     波次
-     ============================================================ */
-  game.startWave = function (n) {
-    var cfg = G.WAVES[n - 1];
-    this.wave = n;
-    this.waveDur = cfg.dur;
-    this.waveTime = cfg.dur;
-    this.budget = 0;
-    this.bossSpawned = false;
-    this.eliteQueue = (cfg.elites || []).map(function (e) {
-      return { id: e[0], at: cfg.dur * (1 - e[1]) };  // 剩余时间到达该值时出现
-    });
-    this.state = 'play';
-    G.UI.showScreen(null);
-    G.UI.banner('第 ' + n + ' 波', cfg.boss ? '#ff6b6b' : (cfg.elites ? '#ffd24a' : '#fff'));
-    G.Audio.sfx('wave');
-    // 清掉上一波残留
-    this.bullets.length = 0; this.ebullets.length = 0;
+    var lo = G.Meta.loadout();
+    var carried = { weapons: [], items: [], bag: [], starter: [] };
+    var i;
 
-    if (cfg.boss) {
-      var b = this.spawnEnemy(cfg.boss, ARENA / 2, ARENA / 2 - 340);
-      if (b) { this.bossSpawned = true; }
-      G.UI.banner(G.ENEMY_MAP[cfg.boss].name, '#ff4a4a');
-      G.Audio.sfx('boss');
-    }
-  };
-
-  game.bossAlive = function () {
-    for (var i = 0; i < this.enemies.length; i++)
-      if (this.enemies[i].def.boss && !this.enemies[i].dead) return true;
-    return false;
-  };
-
-  game.updateWave = function (dt) {
-    var cfg = G.WAVES[this.wave - 1];
-    if (this.waveTime > 0) this.waveTime -= dt;
-
-    // 精英登场
-    for (var i = this.eliteQueue.length - 1; i >= 0; i--) {
-      if (this.waveTime <= this.eliteQueue[i].at) {
-        var id = this.eliteQueue[i].id;
-        this.eliteQueue.splice(i, 1);
-        var e = this.spawnEnemy(id);
-        if (e) {
-          G.UI.banner('精英出现', '#ffd24a');
-          G.fx('ring', { x: e.x, y: e.y, r0: 10, r1: 180, col: '#ffd24a', w: 6, life: 0.6 });
+    var wSlots = [lo.w1, lo.w2];
+    for (i = 0; i < 2; i++) {
+      var wInst = wSlots[i];
+      if (wInst && G.WEAPON_MAP[wInst.defId]) {
+        var w = G.makeWeapon(wInst.defId, wInst.tier);
+        this.player.addWeapon(w);
+        carried.weapons.push({ defId: wInst.defId, tier: wInst.tier, starter: false });
+      } else {
+        var sw = G.makeWeapon(charDef.startWeapon, 0);
+        if (sw) {
+          this.player.addWeapon(sw);
+          carried.weapons.push({ defId: charDef.startWeapon, tier: 0, starter: true });
+          carried.starter.push('w:' + charDef.startWeapon);
         }
       }
     }
 
-    // 常规刷怪
-    if (this.waveTime > 0) {
-      this.budget += cfg.rate * dt;
-      var guard = 0;
-      while (this.budget > 0 && this.enemies.length < MAX_ENEMIES && guard++ < 12) {
-        var eid = G.rollEnemy(this.wave);
-        var def = G.ENEMY_MAP[eid];
-        if (this.budget < def.danger) break;
-        this.budget -= def.danger;
-        this.spawnEnemy(eid);
+    var iSlots = [lo.armor, lo.trinket1, lo.trinket2, lo.relic];
+    for (i = 0; i < 4; i++) {
+      var inst = iSlots[i];
+      if (inst && G.ITEM_MAP[inst.defId]) {
+        this.player.addItem(G.ITEM_MAP[inst.defId]);
+        carried.items.push({ defId: inst.defId, tier: inst.tier, starter: false });
+      } else if (i === 0) {
+        var ci = G.ITEM_MAP['cloth_wrap'];
+        if (ci) {
+          this.player.addItem(ci);
+          carried.items.push({ defId: 'cloth_wrap', tier: 0, starter: true });
+          carried.starter.push('i:cloth_wrap');
+        }
       }
     }
+    this.player.recalc();
 
-    // 结束判定
-    if (this.waveTime <= 0 && !this.bossAlive()) this.endWave();
-  };
+    this.materials = charDef.startMat;
+    this.bag = [];
+    this.carried = carried;
+    this.map = G.Map.generate(tierId || 1);
+    this.arena = this.map.worldW;
+    this.map.wave = this.map.tier.waveBand[1];
+    this.buildWallRects();
+    this.containers = this.map.containers.map(function (c2) { return new G.Container(c2); });
+    this.lastRoom = -1;
+    this.levelCd = 0;
+    this.hurtFlash = 0; this.shakeAmt = 0;
+    this.combo = 0; this.comboTimer = 0; this.runTime = 0;
 
-  game.endWave = function () {
-    var p = this.player, i;
-    // 清场
-    for (i = 0; i < this.enemies.length; i++) {
-      var e = this.enemies[i];
-      if (e.dead) continue;
-      G.burst(e.x, e.y, 6, '#556', 120);
-      e.dead = true;
-    }
-    this.enemies.length = 0;
-    this.bullets.length = 0;
-    this.ebullets.length = 0;
-    this.turrets.length = 0;
-    this.drones.length = 0;
-    this.mines.length = 0;
-
-    // 自动收取地面材料
-    var got = 0;
-    for (i = 0; i < this.pickups.length; i++) {
-      if (this.pickups[i].type === 'mat') { got += this.pickups[i].value; p.addXp(this.pickups[i].value); }
-    }
-    if (got) this.addMaterials(got);
-    this.pickups.length = 0;
-
-    // 收获
-    var hv = G.F.harvestGain(p.st.harvesting, this.wave);
-    if (hv > 0) this.addMaterials(hv);
-
-    // 波末治疗
-    var heal = Math.round(p.st.maxHp * p.st.waveHeal / 100);
-    if (heal > 0) p.heal(heal);
-
-    this.wave++;
-    if (this.wave > G.MAX_WAVE) { this.onVictory(); return; }
-
-    if (p.pendingLevels > 0) this.openLevelUp();
-    else this.openShop();
-  };
-
-  game.openLevelUp = function () {
-    var p = this.player;
-    if (p.pendingLevels <= 0) { this.openShop(); return; }
-    this.state = 'level';
-    var opts = G.rollLevelOptions(4, p.level);
-    G.UI.renderLevelUp(this, opts, function (o) {
-      G.addStats(p.st, {});           // 保底
-      p.char.mods[o.key] = (p.char.mods[o.key] || 0) + o.val;  // 写进角色基底，recalc 后保留
-      if (o.negKey) p.char.mods[o.negKey] = (p.char.mods[o.negKey] || 0) - o.negVal;  // 权衡卡负面
-      p.recalc();
-      if (p.st.maxHp < 1) p.st.maxHp = 1;
-      if (o.key === 'maxHp') p.heal(o.val);
-      if (p.hp > p.st.maxHp) p.hp = p.st.maxHp;   // 负面削减最大生命后夹紧当前血量
-      p.pendingLevels--;
-      G.game.openLevelUp();
-    });
-    G.UI.showScreen('scrLevel');
-    G.Audio.sfx('levelup');
-  };
-
-  game.openShop = function () {
-    this.state = 'shop';
-    G.Shop.open(this.wave, this.player);
-    G.UI.renderShop(this);
-    G.UI.showScreen('scrShop');
-    this.saveRun();                       // 进入商店即存盘（关卡 + 构筑快照）
-  };
-
-  /* ============================================================
-     存档：进行中战局序列化 / 恢复
-     ============================================================ */
-  game.saveRun = function () {
-    if (!this.player) return;
-    var p = this.player;
-    var data = {
-      v: 1,
-      charId: p.char.id,
-      charMods: p.char.mods,               // 升级写回的属性（recalc 会再次应用）
-      wave: this.wave,                     // 即将进行的下一波
-      materials: this.materials,
-      level: p.level,
-      xp: p.xp,
-      pendingLevels: p.pendingLevels || 0,
-      hp: p.hp,
-      runTime: this.runTime || 0,
-      stats: p.stats,
-      items: p.items.map(function (it) { return it.id; }),
-      weapons: p.weapons.map(function (w) { return { defId: w.def.id, tier: w.tier }; })
-    };
-    G.Save.saveRun(data);
-  };
-
-  game.resumeRun = function (data) {
-    if (!data || !data.charId) return false;
-    var base = G.CHAR_BY_ID[data.charId];
-    if (!base) return false;
-
-    // 用存档中的 mods 重建角色定义（不含初始武器，由武器快照重建）
-    var c = Object.assign({}, base);
-    c.mods = Object.assign({}, data.charMods || {});
-    this.player = new G.Player(c);
-
-    // 重置战斗现场
     this.enemies = []; this.bullets = []; this.ebullets = [];
     this.pickups = []; this.particles = []; this.texts = [];
     this.effects = []; this.turrets = []; this.drones = []; this.mines = [];
-    this.hurtFlash = 0; this.shakeAmt = 0;
-    this.combo = 0; this.comboTimer = 0; this.runTime = data.runTime || 0;
 
-    // 进度
-    this.materials = data.materials;
-    this.wave = data.wave;
-
-    var p = this.player;
-    p.level = data.level;
-    p.xp = data.xp;
-    p.xpNeed = G.xpForLevel(data.level);
-    p.pendingLevels = data.pendingLevels || 0;
-    (data.items || []).forEach(function (id) { var d = G.ITEM_MAP[id]; if (d) p.addItem(d); });
-    (data.weapons || []).forEach(function (w) { p.addWeapon(G.makeWeapon(w.defId, w.tier)); });
-    p.recalc();
-    p.hp = G.clamp(data.hp, 1, p.st.maxHp);
-    p.stats = data.stats || p.stats;
+    this.player.x = this.map.spawn.x;
+    this.player.y = this.map.spawn.y;
+    this.player.room = this.map.startRoom;
 
     G.$('statPanel').classList.add('hidden');
+    if (G.$('scrBag')) G.$('scrBag').classList.add('hidden');
     G.UI.initHud();
+    this.state = 'play';
+    G.UI.showScreen(null);
+    this.enterRoom(this.map.startRoom);
+    G.UI.banner(this.map.tier.name + ' · ' + this.map.tier.sub, this.map.tier.col);
+    G.UI.updateObjective(this.map);
+    G.Audio.sfx('map_enter');
+    G.Audio.setBgm(G.Save.getSettings().bgm);
+    this.saveRun();
     if (!this.running) { this.running = true; this.lastT = performance.now(); requestAnimationFrame(loop); }
-    this.openShop();                       // 回到存档时的商店界面，可继续购买后进入下一波
-    G.Audio.setBgm(G.Save.getSettings().bgm);   // 续局按设置恢复 BGM
-    return true;
   };
 
-  game.nextWave = function () {
-    if (this.wave > G.MAX_WAVE) { this.onVictory(); return; }
-    this.player.hitCd = 0.8;
-    this.startWave(this.wave);
+  /* 预计算墙矩形（含门洞分段），渲染用 */
+  game.buildWallRects = function () {
+    var m = this.map, rects = [];
+    var W = G.Map.WALL, ROOM = G.Map.ROOM, DOOR = G.Map.DOOR, SEG = G.Map.SEG;
+    var ww = m.worldW, wh = m.worldH;
+    function push(x0, y0, x1, y1) {
+      if (x1 - x0 < 1 || y1 - y0 < 1) return;
+      rects.push([x0, y0, x1, y1]);
+    }
+    push(0, 0, ww, W);
+    push(0, wh - W, ww, wh);
+    push(0, 0, W, wh);
+    push(ww - W, 0, ww, wh);
+    for (var c = 0; c < m.cols - 1; c++) {
+      var x = (c + 1) * SEG;
+      for (var r = 0; r < m.rows; r++) {
+        var rc = G.Map.roomRect(c, r);
+        var doorY = rc.y0 + ROOM / 2;
+        if (m.doorsH[c][r]) {
+          push(x, 0, x + W, doorY - DOOR / 2);
+          push(x, doorY + DOOR / 2, x + W, wh);
+        } else {
+          push(x, 0, x + W, wh);
+        }
+      }
+    }
+    for (c = 0; c < m.cols; c++) {
+      for (r = 0; r < m.rows - 1; r++) {
+        var y = (r + 1) * SEG;
+        var rc2 = G.Map.roomRect(c, r);
+        var doorX = rc2.x0 + ROOM / 2;
+        if (m.doorsV[c][r]) {
+          push(0, y, doorX - DOOR / 2, y + W);
+          push(doorX + DOOR / 2, y, ww, y + W);
+        } else {
+          push(0, y, ww, y + W);
+        }
+      }
+    }
+    this._wallRects = rects;
   };
 
-  game.togglePause = function () {
-    if (this.state === 'play') { this.state = 'pause'; G.UI.showScreen('scrPause'); }
-    else if (this.state === 'pause') { this.state = 'play'; G.UI.showScreen(null); }
+  /* ============================================================
+     房间事件 / 目标 / 互动
+     ============================================================ */
+  game.enterRoom = function (idx) {
+    var rm = this.map.rooms[idx];
+    if (!rm) return;
+    rm.explored = true;
+    var wasVisited = rm.visited;
+    rm.visited = true;
+    if (wasVisited) return;
+
+    if (rm.eliteIds && rm.eliteIds.length) {
+      var center = G.Map.roomCenter(rm.c, rm.r);
+      rm.eliteIds.forEach(function (id) {
+        game.spawnEnemy(id, center.x + G.rand(-80, 80), center.y + G.rand(-80, 80));
+      });
+      G.UI.banner('精英出没', '#ffd24a');
+      G.Audio.sfx('boss');
+      rm.spawned = true;
+    }
+    if (rm.bossId) {
+      var bc = G.Map.roomCenter(rm.c, rm.r);
+      var b = this.spawnEnemy(rm.bossId, bc.x, bc.y - 220);
+      if (b) {
+        G.UI.banner(G.ENEMY_MAP[rm.bossId].name + ' 苏醒', '#ff4a4a');
+        G.Audio.sfx('boss');
+        this.shake(18, 0.6);
+      }
+      rm.spawned = true;
+    }
+  };
+
+  game.checkObjective = function () {
+    var m = this.map;
+    if (!m || m.objDone) return;
+    var t = m.tierId, done = false;
+    if (t === 1) done = m.time >= 60;
+    else if (t === 2) done = m.eliteKills >= 1;
+    else if (t === 3) done = m.bossKills >= 1;
+    else if (t === 4) done = m.eliteKills >= 2;
+    else if (t === 5) done = m.bossKills >= 1;
+    if (done) {
+      m.objDone = true;
+      m.extract.active = true;
+      G.UI.banner('撤离点已开放', '#6ee787');
+      G.Audio.sfx('extract_ready');
+      this.saveRun();
+    }
+  };
+
+  game.tryInteract = function () {
+    var p = this.player, i;
+    if (!this.map) return;
+    var ex = this.map.extract;
+    if (ex.active && G.dist(p.x, p.y, ex.x, ex.y) < 96) {
+      ex.channel = Math.max(ex.channel, 0.01);
+      return;
+    }
+    for (i = 0; i < this.containers.length; i++) {
+      var c = this.containers[i];
+      if (c.opened || c.used) continue;
+      if (G.dist(p.x, p.y, c.x, c.y) < 80) {
+        if (!c.started) {
+          c.started = true;
+          c.ch = 0;
+          G.Audio.sfx('chest_start');
+        }
+        return;
+      }
+    }
+  };
+
+  game.applyContainerReward = function (c, out) {
+    var p = this.player, i;
+    for (i = 0; i < out.length; i++) {
+      var o = out[i];
+      if (o.kind === 'mats') {
+        this.addMaterials(o.value);
+        p.addXp(o.value);
+        G.burst(c.x, c.y + 8, 10, '#ffd24a', 170, { size: 2.6 });
+        G.popText(c.x, c.y - 30, '+' + o.value, { col: '#ffd24a', size: 15 });
+        G.Audio.sfx('pickup');
+      } else if (o.kind === 'heal') {
+        p.heal(o.value);
+        G.popText(c.x, c.y - 30, '+' + o.value + ' 生命', { col: '#6ee787', size: 13 });
+      } else if (o.inst) {
+        if (G.addBagItem(o.inst)) {
+          G.Audio.sfx('item_get');
+          G.UI.showLootCard(o.inst);
+        } else {
+          G.popText(c.x, c.y - 36, '背包已满', { col: '#ff6b6b', size: 13, life: 1 });
+          G.burst(c.x, c.y, 8, '#ff6b6b', 120, { size: 2.5 });
+        }
+      }
+    }
+  };
+
+  /* ============================================================
+     撤离 / 死亡
+     ============================================================ */
+  game.onExtractSuccess = function () {
+    var p = this.player;
+    this.state = 'result';
+    var g = this;
+    var itemsOut = 0, sold = 0;
+    var deposit = function (inst) {
+      if (!inst) return;
+      itemsOut++;
+      if (G.Meta.stashFull()) {
+        G.Meta.addCurrency(Math.round(G.itemWorth(inst) * 0.6));
+        sold++;
+      } else {
+        G.Meta.addToStash(inst);
+      }
+    };
+    var i;
+    for (i = 0; i < p.weapons.length; i++) deposit(G.makeWeapon(p.weapons[i].defId, p.weapons[i].tier));
+    for (i = 0; i < p.items.length; i++) deposit(G.makeItem(p.items[i].id, G.clamp(p.items[i].r, 0, 4)));
+    for (i = 0; i < this.bag.length; i++) deposit(this.bag[i]);
+
+    var mats = this.materials;
+    G.Meta.addCurrency(mats);
+    var earned = mats;
+    var t = this.map.tierId;
+    var d = G.Meta.get();
+    var cleared = d.stats.tierCleared = d.stats.tierCleared || {};
+    var firstClear = !cleared[t];
+    var bonus = 0;
+    if (firstClear) {
+      cleared[t] = true;
+      bonus = 25 * t;
+      G.Meta.addCurrency(bonus);
+      earned += bonus;
+    }
+    if (t < 5) G.Meta.unlockTier(t + 1);
+    G.Meta.addStat('extracts', 1);
+    G.Meta.addStat('itemsExtracted', itemsOut);
+    G.Meta.addStat('totalEarned', earned);
+    G.Meta.addStat('bestTier', Math.max(G.Meta.stats().bestTier || 0, t));
+    G.Meta.flush();
+
+    G.Save.submit(G.MAX_WAVE, p.stats.kills, true);
+    G.Save.clearRun();
+    G.Audio.sfx('extract_done');
+    G.Audio.stopMusic();
+    setTimeout(function () {
+      G.UI.showResult(g, true, { mats: mats, items: itemsOut, sold: sold, firstClear: firstClear, bonus: bonus });
+    }, 650);
   };
 
   game.onPlayerDeath = function () {
@@ -323,20 +383,20 @@
     this.shake(24, 0.6);
     G.Audio.sfx('death');
     G.Audio.stopMusic();
-    G.Save.clearRun();                  // 战局结束，清除续局存档
+    var lost = (this.player.weapons.length + this.player.items.length + this.bag.length);
+    G.Meta.addStat('deaths', 1);
+    G.Meta.addStat('itemsLost', lost);
+    G.Save.clearRun();
     setTimeout(function () {
       g.state = 'result';
-      G.UI.showResult(g, false);
+      G.UI.showResult(g, false, { lost: lost });
     }, 900);
   };
 
-  game.onVictory = function () {
-    this.state = 'result';
-    G.UI.showResult(this, true);
-    G.Save.clearRun();                  // 通关，清除续局存档
-    G.Audio.sfx('victory');
-    G.Audio.stopMusic();
-  };
+  /* 占位：旧入口（新循环不再使用） */
+  game.openShop = function () {};
+  game.nextWave = function () {};
+  game.onVictory = function () { this.onExtractSuccess(); };
 
   /* ============================================================
      敌人生成
@@ -345,29 +405,37 @@
     var def = G.ENEMY_MAP[id];
     if (!def) return null;
     if (this.enemies.length >= MAX_ENEMIES + 40) return null;
+    var m = this.map, p = this.player;
     if (x === undefined) {
-      var p = this.player;
       var rad = Math.max(this.vw, this.vh) * 0.58 + G.rand(20, 120);
       for (var t = 0; t < 10; t++) {
         var a = G.rand(0, Math.PI * 2);
         x = p.x + Math.cos(a) * rad;
         y = p.y + Math.sin(a) * rad;
-        if (x > 30 && y > 30 && x < ARENA - 30 && y < ARENA - 30) break;
+        if (x > G.Map.WALL + 40 && y > G.Map.WALL + 40 &&
+            x < m.worldW - G.Map.WALL - 40 && y < m.worldH - G.Map.WALL - 40 &&
+            !G.Map.solid(m, x, y)) break;
         x = undefined;
       }
       if (x === undefined) {
-        // 退化：随机边缘
-        var side = G.randInt(0, 3);
-        x = side === 0 ? 40 : side === 1 ? ARENA - 40 : G.rand(40, ARENA - 40);
-        y = side === 2 ? 40 : side === 3 ? ARENA - 40 : G.rand(40, ARENA - 40);
+        var rc = G.Map.roomRect(p.room % m.cols, Math.floor(p.room / m.cols));
+        x = G.clamp(p.x + G.rand(-260, 260), rc.x0 + 60, rc.x1 - 60);
+        y = G.clamp(p.y + G.rand(-260, 260), rc.y0 + 60, rc.y1 - 60);
       }
     }
-    x = G.clamp(x, def.r + 4, ARENA - def.r - 4);
-    y = G.clamp(y, def.r + 4, ARENA - def.r - 4);
-    var e = new G.Enemy(def, x, y, this.wave);
-    // 精英词缀变异（BOSS 不加）
+    x = G.clamp(x, G.Map.WALL + def.r + 4, m.worldW - G.Map.WALL - def.r - 4);
+    y = G.clamp(y, G.Map.WALL + def.r + 4, m.worldH - G.Map.WALL - def.r - 4);
+    if (G.Map.solid(m, x, y)) {
+      var rc2 = G.Map.roomRect(Math.floor(G.clamp((x - G.Map.WALL) / G.Map.SEG, 0, m.cols - 1)),
+        Math.floor(G.clamp((y - G.Map.WALL) / G.Map.SEG, 0, m.rows - 1)));
+      x = G.clamp(x, rc2.x0 + def.r + 8, rc2.x1 - def.r - 8);
+      y = G.clamp(y, rc2.y0 + def.r + 8, rc2.y1 - def.r - 8);
+    }
+    var wave = m.wave || 1;
+    var e = new G.Enemy(def, x, y, wave);
+    e.room = G.Map.roomAt(m, x, y).idx;
     if (!def.boss) {
-      var aff = G.rollAffixes(def.elite, this.wave);
+      var aff = G.rollAffixes(def.elite, wave);
       if (aff.length) {
         e.affixes = aff;
         for (var ai = 0; ai < aff.length; ai++) {
@@ -431,7 +499,6 @@
       var d = G.dist2(x, y, e.x, e.y);
       if (d < bd) { bd = d; best = e; }
     }
-    // 网格半径不够时退化到全表（BOSS 等大目标）
     if (!best && maxR > 200) {
       for (var j = 0; j < this.enemies.length; j++) {
         var e2 = this.enemies[j];
@@ -452,15 +519,10 @@
     o = o || {};
     var p = this.player;
 
-    // 处决
     if (p.hasSp('execute') && e.hp / e.maxHp < 0.18 && !o.dot) dmg *= 3;
-
-    // 敌人护甲
     if (e.armor > 0 && !o.dot) dmg *= 1 - Math.min(e.armor / (e.armor + 30), 0.7);
-
     dmg = Math.max(1, dmg);
 
-    // 词缀·护盾：先吸收伤害
     if (e.shieldHp > 0 && !o.dot) {
       var absorbed = Math.min(e.shieldHp, dmg);
       e.shieldHp -= absorbed;
@@ -485,7 +547,6 @@
         size: o.crit ? 17 : 13
       });
     }
-    // 命中粒子：按武器元素/颜色上色，火花+碎片混合，暴击更强
     if (!o.dot && o.srcW && !o.noHitFx) {
       var wd = o.srcW.def, hc = wd.col;
       if (wd.burn) hc = '#ff7a2a';
@@ -496,23 +557,18 @@
       G.burstMix(hx, hy, o.crit ? 9 : 5, hc, o.crit ? 230 : 140, {
         glow: false, debCol: '#8a93b5', lifeMul: 0.8
       });
-      if (o.crit) {
-        G.fx('ring', { x: hx, y: hy, r0: 3, r1: 26, col: '#ffd24a', w: 2.5, life: 0.24 });
-      }
+      if (o.crit) G.fx('ring', { x: hx, y: hy, r0: 3, r1: 26, col: '#ffd24a', w: 2.5, life: 0.24 });
     }
     if (o.crit) {
       this.shake(3, 0.08);
       G.Audio.sfx('crit', Math.max(-1, Math.min(1, (e.x - p.x) / 350)));
-      if (p.hasSp('critExplode')) {
-        G.explode(e.x, e.y, 74, dmg * 0.6, { col: '#ffd24a' });
-      }
+      if (p.hasSp('critExplode')) G.explode(e.x, e.y, 74, dmg * 0.6, { col: '#ffd24a' });
       if (p.hasSp('critSlow') && !e.def.boss) {
         e.slowT = Math.max(e.slowT, 1.2);
         e.slowMul = Math.min(e.slowMul, 0.6);
       }
     }
 
-    // 击退
     if (o.knock) {
       var kl = Math.hypot(o.kx || 0, o.ky || 0) || 1;
       var mass = e.def.boss ? 0.06 : (e.def.elite ? 0.28 : 1);
@@ -521,12 +577,10 @@
     }
     if (o.stun && !e.def.boss) e.stunT = Math.max(e.stunT, o.stun);
 
-    // 状态
     if (o.burn) { e.burnT = Math.max(e.burnT, 3); e.burnDmg = Math.max(e.burnDmg, o.burn + p.st.elementalDamage * 0.4); }
     if (o.poison) { e.poisonT = Math.max(e.poisonT, 3.5); e.poisonDmg = Math.max(e.poisonDmg, o.poison); }
     if (o.slow) { e.slowT = Math.max(e.slowT, o.slowTime || 1.2); e.slowMul = Math.min(e.slowMul, 1 - o.slow); }
 
-    // 物品触发
     if (!o.noChain && !o.dot) {
       if (p.hasSp('burnOnHit') && Math.random() < 0.25) {
         e.burnT = Math.max(e.burnT, 3);
@@ -537,12 +591,11 @@
         e.poisonDmg = Math.max(e.poisonDmg, 4 + p.st.elementalDamage * 0.3);
       }
       if (p.hasSp('chainOnHit') && Math.random() < 0.12) {
-        var t = this.nearestEnemy(e.x, e.y, 170, [e]);
-        if (t) G.chainLightning(this, e.x, e.y, t, dmg * 0.5, false, 2, 150, 0.8, o.srcW, '#8fe8ff');
+        var t2 = this.nearestEnemy(e.x, e.y, 170, [e]);
+        if (t2) G.chainLightning(this, e.x, e.y, t2, dmg * 0.5, false, 2, 150, 0.8, o.srcW, '#8fe8ff');
       }
     }
 
-    // 吸血
     if (p.st.lifesteal > 0 && !o.dot && p.lsCd <= 0 && !p.dead) {
       var h = Math.max(1, Math.round(dmg * p.st.lifesteal / 100));
       if (p.hp < p.st.maxHp) {
@@ -562,8 +615,14 @@
     e.dead = true;
     var p = this.player;
     p.stats.kills++;
-    if (e.def.elite) p.stats.eliteKills++;
-    if (e.def.boss) p.stats.bossKills++;
+    if (e.def.elite) {
+      p.stats.eliteKills++;
+      if (this.map) this.map.eliteKills++;
+    }
+    if (e.def.boss) {
+      p.stats.bossKills++;
+      if (this.map) this.map.bossKills++;
+    }
     this.combo++; this.comboTimer = 3.0;
     if (this.combo > p.stats.comboMax) p.stats.comboMax = this.combo;
     G.Audio.sfx(e.def.boss ? 'bossdie' : 'kill',
@@ -585,14 +644,12 @@
       this.shake(10, 0.3);
     }
 
-    // 分裂
     if (e.def.ai === 'splitter' && e.def.splitInto) {
       for (var i = 0; i < e.def.splitCount; i++) {
         var a = Math.PI * 2 * i / e.def.splitCount + G.rand(0, 1);
         this.spawnEnemy(e.def.splitInto, e.x + Math.cos(a) * 18, e.y + Math.sin(a) * 18);
       }
     }
-    // 词缀·分裂：死亡时一分为二
     if (e.affixes && e.affixes.length) {
       for (var afi = 0; afi < e.affixes.length; afi++) {
         if (e.affixes[afi].id === 'split') {
@@ -604,48 +661,53 @@
         }
       }
     }
-    // 爆弹虫死亡也炸
     if (e.def.ai === 'bomber' && !e.exploded) {
-      G.explode(e.x, e.y, e.def.boomR * 0.8, e.def.boomDmg * 0.7 * G.waveScale(this.wave).dmg,
+      G.explode(e.x, e.y, e.def.boomR * 0.8, e.def.boomDmg * 0.7 * G.waveScale(this.map ? this.map.wave : 1).dmg,
         { hostile: true, col: '#ff9a3a' });
     }
-    // 爆破协议
-    if (p.hasSp('explodeOnKill')) {
-      G.explode(e.x, e.y, 82, 12 + p.st.elementalDamage, { col: '#ff6b3a' });
-    }
-    // 噬魂：击杀回复生命（新特效 leechOnKill）
+    if (p.hasSp('explodeOnKill')) G.explode(e.x, e.y, 82, 12 + p.st.elementalDamage, { col: '#ff6b3a' });
     if (p.hasSp('leechOnKill')) {
       var heal = Math.max(1, Math.round(p.st.maxHp * 0.012));
       p.heal(heal);
     }
 
     this.dropLoot(e);
+    this.checkObjective();
   };
 
   game.dropLoot = function (e) {
     var p = this.player;
-    // 经济校准（方向二）：普通怪每杀的「期望材料」= e.mat * MAT_MUL * (1+dropRate%)，
-    // 用「整数部分必掉 + 小数部分按概率补一个 1 材料包」实现，使每波总材料≈旧配置；
-    // 精英/BOSS 为里程碑奖励，保持原设计不缩放。
     var mul = (e.def.elite || e.def.boss) ? 1 : (G.MAT_MUL || 1);
     var expect = e.mat * mul * (1 + p.st.dropRate / 100);
-    if (expect <= 0) return;
-    var whole = Math.floor(expect);
-    var frac = expect - whole;
-    var n = whole + (Math.random() < frac ? 1 : 0);
-    if (n <= 0) return;
-    var cap = Math.min(n, 10);
-    for (var i = 0; i < cap; i++) {
-      this.pickups.push(new G.Pickup(e.x + G.rand(-8, 8), e.y + G.rand(-8, 8), 'mat', 1));
+    if (expect > 0) {
+      var whole = Math.floor(expect);
+      var frac = expect - whole;
+      var n = whole + (Math.random() < frac ? 1 : 0);
+      if (n > 0) {
+        var cap = Math.min(n, 10);
+        for (var i = 0; i < cap; i++) {
+          this.pickups.push(new G.Pickup(e.x + G.rand(-8, 8), e.y + G.rand(-8, 8), 'mat', 1));
+        }
+        if (n > 10) this.pickups.push(new G.Pickup(e.x, e.y, 'mat', n - 10));
+      }
     }
-    if (n > 10) this.pickups.push(new G.Pickup(e.x, e.y, 'mat', n - 10));
-    // 治疗掉落
     var chance = 0.014 + p.st.luck * 0.00035;
     if (e.def.elite) chance = 0.55;
     if (e.def.boss) chance = 1;
     if (Math.random() < chance) {
       var amt = Math.round(p.st.maxHp * (e.def.boss ? 0.35 : e.def.elite ? 0.15 : 0.07));
       this.pickups.push(new G.Pickup(e.x, e.y, 'heal', Math.max(3, amt)));
+    }
+    /* 物品掉落 → 背包 */
+    var loot = G.rollEnemyLoot(e.def, this.map ? this.map.tierId : 1, p.st.luck);
+    for (var li = 0; li < loot.length; li++) {
+      var inst = loot[li];
+      if (G.addBagItem(inst)) {
+        if (e.def.elite || e.def.boss) {
+          G.Audio.sfx('item_get');
+          G.UI.showLootCard(inst);
+        }
+      }
     }
   };
 
@@ -669,36 +731,55 @@
 
     this.runTime += dt;
     if (this.comboTimer > 0) { this.comboTimer -= dt; if (this.comboTimer <= 0) this.combo = 0; }
+    if (this.map) {
+      this.map.time += dt;
+      this.levelCd = Math.max(0, this.levelCd - dt);
+    }
 
     this.rebuildGrid();
     this.player.update(dt);
-    this.updateWave(dt);
 
-    // 敌人
+    /* 房间切换 */
+    var curRoom = G.Map.roomAt(this.map, this.player.x, this.player.y).idx;
+    if (curRoom !== this.lastRoom) {
+      this.lastRoom = curRoom;
+      this.enterRoom(curRoom);
+      this.player.room = curRoom;
+    }
+
+    this.updateSpawning(dt);
+    this.checkObjective();
+
     for (i = 0; i < this.enemies.length; i++) {
       var e = this.enemies[i];
       if (!e.dead) e.update(dt);
     }
     this.separate();
-
     arr = this.enemies; for (i = arr.length - 1; i >= 0; i--) if (arr[i].dead) arr.splice(i, 1);
 
-    // 其他实体
     stepList(this.bullets, dt);
     stepList(this.ebullets, dt);
     stepList(this.pickups, dt);
     stepList(this.turrets, dt);
     stepList(this.drones, dt);
     stepList(this.mines, dt);
+    stepList(this.containers, dt);
     stepList(this.particles, dt);
     stepList(this.texts, dt);
     stepList(this.effects, dt);
 
-    // 摄像机
+    G.Extract.update(dt);
+
+    /* 升级弹出（战斗中短暂滞后） */
+    if (this.player.pendingLevels > 0 && this.levelCd <= 0 && this.state === 'play') {
+      this.openLevelUp();
+    }
+
     var tx = this.player.x - this.vw / 2;
     var ty = this.player.y - this.vh / 2;
-    if (ARENA < this.vw) tx = (ARENA - this.vw) / 2; else tx = G.clamp(tx, 0, ARENA - this.vw);
-    if (ARENA < this.vh) ty = (ARENA - this.vh) / 2; else ty = G.clamp(ty, 0, ARENA - this.vh);
+    var ww = this.map.worldW, wh = this.map.worldH;
+    if (ww < this.vw) tx = (ww - this.vw) / 2; else tx = G.clamp(tx, 0, ww - this.vw);
+    if (wh < this.vh) ty = (wh - this.vh) / 2; else ty = G.clamp(ty, 0, wh - this.vh);
     this.camX = G.lerp(this.camX, tx, G.clamp(dt * 12, 0, 1));
     this.camY = G.lerp(this.camY, ty, G.clamp(dt * 12, 0, 1));
 
@@ -708,6 +789,44 @@
     G.UI.updateHud(this);
   };
 
+  /* 地图威胁刷怪：当前房间内持续压迫，随停留时间加剧 */
+  game.updateSpawning = function (dt) {
+    var m = this.map, p = this.player;
+    var rm = G.Map.roomAt(m, p.x, p.y);
+    var roomCap = { combat: 8, treasure: 4, elite: 6, boss: 6, shrine: 4, altar: 4, extract: 5, spawn: 3 };
+    var cap = roomCap[rm.type] || 5;
+    var inRoom = 0;
+    for (var i = 0; i < this.enemies.length; i++) {
+      if (!this.enemies[i].dead && this.enemies[i].room === rm.idx) inRoom++;
+    }
+    var danger = m.tier.danger;
+    var interval = G.clamp(1.65 - m.time * 0.008 - danger * 0.055, 0.45, 1.65);
+    m.threatAcc += dt;
+    if (inRoom < cap && this.enemies.length < MAX_ENEMIES - 8 && m.threatAcc >= interval) {
+      m.threatAcc = 0;
+      var eid = this.rollMapEnemy();
+      if (eid) this.spawnEnemy(eid);
+    }
+  };
+
+  game.rollMapEnemy = function () {
+    var m = this.map;
+    var ids = [], ws = [];
+    for (var w = m.tier.waveBand[0]; w <= m.tier.waveBand[1]; w++) {
+      var cfg = G.WAVES[w - 1];
+      if (!cfg) continue;
+      for (var i = 0; i < cfg.pool.length; i++) {
+        var id = cfg.pool[i][0];
+        var wgt = cfg.pool[i][1];
+        var idx = ids.indexOf(id);
+        if (idx >= 0) ws[idx] += wgt;
+        else { ids.push(id); ws.push(wgt); }
+      }
+    }
+    if (!ids.length) return null;
+    return G.weightedPick(ids, ws);
+  };
+
   function stepList(list, dt) {
     for (var i = list.length - 1; i >= 0; i--) {
       list[i].update(dt);
@@ -715,7 +834,6 @@
     }
   }
 
-  /** 敌人之间的相互推挤，避免完全重叠 */
   game.separate = function () {
     var arr = this.enemies, i, j;
     if (arr.length > 260) return;
@@ -748,24 +866,24 @@
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     c.fillStyle = '#0a0c12';
     c.fillRect(0, 0, this.vw, this.vh);
-    if (!this.player) return;
+    if (!this.player || !this.map) return;
 
     var sx = 0, sy = 0;
     if (this.shakeT > 0) {
-      var k = this.shakeAmt * (this.shakeT > 0 ? 1 : 0);
+      var k = this.shakeAmt;
       sx = G.rand(-k, k); sy = G.rand(-k, k);
     }
     c.save();
     c.translate(Math.round(-this.camX + sx), Math.round(-this.camY + sy));
 
-    this.drawArena(c);
+    this.drawMap(c);
 
     for (i = 0; i < this.pickups.length; i++) this.pickups[i].draw(c);
+    for (i = 0; i < this.containers.length; i++) this.containers[i].draw(c);
     for (i = 0; i < this.turrets.length; i++) this.turrets[i].draw(c);
     for (i = 0; i < this.drones.length; i++) this.drones[i].draw(c);
     for (i = 0; i < this.mines.length; i++) this.mines[i].draw(c);
 
-    // 敌人按 y 排序，避免穿插错乱（复用数组，避免每帧 slice 分配）
     var es = this._renderBuf;
     es.length = 0;
     for (i = 0; i < this.enemies.length; i++) es.push(this.enemies[i]);
@@ -780,98 +898,99 @@
     for (i = 0; i < this.effects.length; i++) this.effects[i].draw(c);
     for (i = 0; i < this.texts.length; i++) this.texts[i].draw(c);
 
+    G.Extract.draw(c);
     c.restore();
 
     this.drawOffscreenMarks(c);
 
-    // 受伤红闪
     if (this.hurtFlash > 0) {
       c.fillStyle = 'rgba(200,30,40,' + (this.hurtFlash * 0.28) + ')';
       c.fillRect(0, 0, this.vw, this.vh);
     }
-    // 低血预警
     var hr = this.player.hp / this.player.st.maxHp;
     if (hr < 0.3 && !this.player.dead) {
       var pulse = (Math.sin(performance.now() / 220) + 1) / 2;
       c.fillStyle = 'rgba(180,20,30,' + (0.05 + (0.3 - hr) * 0.5 * pulse) + ')';
       c.fillRect(0, 0, this.vw, this.vh);
     }
-    // 暗角（渐变缓存于 resize，避免每帧创建）
     if (this._vigGrd) {
       c.fillStyle = this._vigGrd;
       c.fillRect(0, 0, this.vw, this.vh);
-    } else {
-      var grd = c.createRadialGradient(this.vw / 2, this.vh / 2, Math.min(this.vw, this.vh) * 0.35,
-        this.vw / 2, this.vh / 2, Math.max(this.vw, this.vh) * 0.72);
-      grd.addColorStop(0, 'rgba(0,0,0,0)');
-      grd.addColorStop(1, 'rgba(0,0,0,.55)');
-      c.fillStyle = grd;
-      c.fillRect(0, 0, this.vw, this.vh);
     }
   };
 
-  /** 预渲染地板为离屏 canvas（ARENA 恒定，只画一次） */
-  game.buildArena = function () {
-    try {
-      var cv = document.createElement('canvas');
-      cv.width = ARENA; cv.height = ARENA;
-      var c = cv.getContext('2d');
-      if (!c) return null;
-      this._paintArena(c);
-      return cv;
-    } catch (e) { return null; }
-  };
-
-  game.drawArena = function (c) {
-    if (this._arena) { c.drawImage(this._arena, 0, 0); return; }
-    if (this._arena === null) { // 尚未尝试构建（浏览器环境首次调用即缓存成功）
-      var cv = this.buildArena();
-      if (cv) { this._arena = cv; c.drawImage(cv, 0, 0); return; }
-      this._arena = false; // 构建失败（无头等），标记后走逐帧回退
-    }
-    // 回退：无离屏环境（无头测试等）逐帧绘制
-    this._paintArena(c);
-  };
-
-  game._paintArena = function (c) {
-    // 地板
-    c.fillStyle = '#12141d';
-    c.fillRect(0, 0, ARENA, ARENA);
-
-    // 棋盘格
+  game.drawMap = function (c) {
+    var m = this.map, i;
     var tile = 64;
-    c.fillStyle = '#151824';
-    for (var i = 0; i * tile < ARENA; i++) {
-      for (var j = 0; j * tile < ARENA; j++) {
-        if ((i + j) % 2) c.fillRect(i * tile, j * tile, tile, tile);
+    /* 地板：只画可见房间 */
+    var c0 = G.clamp(Math.floor((this.camX - G.Map.WALL) / G.Map.SEG), 0, m.cols - 1);
+    var r0 = G.clamp(Math.floor((this.camY - G.Map.WALL) / G.Map.SEG), 0, m.rows - 1);
+    var c1 = G.clamp(Math.ceil((this.camX + this.vw - G.Map.WALL) / G.Map.SEG), 0, m.cols - 1);
+    var r1 = G.clamp(Math.ceil((this.camY + this.vh - G.Map.WALL) / G.Map.SEG), 0, m.rows - 1);
+    c.fillStyle = '#12141d';
+    c.fillRect(0, 0, m.worldW, m.worldH);
+    for (var cr = r0; cr <= r1; cr++) {
+      for (var cc = c0; cc <= c1; cc++) {
+        var rm = m.rooms[cc + cr * m.cols];
+        var rc = G.Map.roomRect(cc, cr);
+        var explored = rm.explored;
+        c.fillStyle = explored ? '#151824' : '#0d0f16';
+        c.fillRect(rc.x0, rc.y0, rc.x1 - rc.x0, rc.y1 - rc.y0);
+        if (explored) {
+          c.fillStyle = '#181b28';
+          for (var tx = rc.x0; tx < rc.x1; tx += tile) {
+            for (var ty = rc.y0; ty < rc.y1; ty += tile) {
+              if (((tx - rc.x0) / tile + (ty - rc.y0) / tile) % 2) c.fillRect(tx, ty, tile, tile);
+            }
+          }
+          /* 房间类型装饰 */
+          if (rm.type === 'extract') {
+            c.strokeStyle = 'rgba(110,231,135,.18)'; c.lineWidth = 6;
+            c.strokeRect(rc.x0 + 10, rc.y0 + 10, rc.x1 - rc.x0 - 20, rc.y1 - rc.y0 - 20);
+          } else if (rm.type === 'treasure') {
+            c.strokeStyle = 'rgba(255,210,74,.12)'; c.lineWidth = 4;
+            c.strokeRect(rc.x0 + 14, rc.y0 + 14, rc.x1 - rc.x0 - 28, rc.y1 - rc.y0 - 28);
+          } else if (rm.type === 'boss') {
+            c.strokeStyle = 'rgba(255,74,107,.16)'; c.lineWidth = 6;
+            c.strokeRect(rc.x0 + 8, rc.y0 + 8, rc.x1 - rc.x0 - 16, rc.y1 - rc.y0 - 16);
+          }
+        } else {
+          c.fillStyle = '#0a0c12';
+          c.fillRect(rc.x0 + 2, rc.y0 + 2, rc.x1 - rc.x0 - 4, rc.y1 - rc.y0 - 4);
+        }
       }
     }
-    // 网格线
-    c.strokeStyle = 'rgba(90,110,160,.07)';
-    c.lineWidth = 1;
-    c.beginPath();
-    for (var k = 0; k <= ARENA; k += tile) {
-      c.moveTo(k, 0); c.lineTo(k, ARENA);
-      c.moveTo(0, k); c.lineTo(ARENA, k);
+    /* 墙 */
+    c.fillStyle = '#1d2232';
+    for (i = 0; i < this._wallRects.length; i++) {
+      var w = this._wallRects[i];
+      if (w[2] < this.camX - 40 || w[0] > this.camX + this.vw + 40 ||
+          w[3] < this.camY - 40 || w[1] > this.camY + this.vh + 40) continue;
+      c.fillRect(w[0], w[1], w[2] - w[0], w[3] - w[1]);
     }
-    c.stroke();
-
-    // 中心标记
-    c.strokeStyle = 'rgba(90,120,200,.10)';
-    c.lineWidth = 3;
-    c.beginPath(); c.arc(ARENA / 2, ARENA / 2, 130, 0, Math.PI * 2); c.stroke();
-    c.beginPath(); c.arc(ARENA / 2, ARENA / 2, 58, 0, Math.PI * 2); c.stroke();
-
-    // 边框
-    c.strokeStyle = '#3a4766';
-    c.lineWidth = 6;
-    c.strokeRect(3, 3, ARENA - 6, ARENA - 6);
-    c.strokeStyle = 'rgba(120,150,230,.25)';
-    c.lineWidth = 2;
-    c.strokeRect(8, 8, ARENA - 16, ARENA - 16);
+    /* 门洞边缘光 */
+    c.fillStyle = '#262c40';
+    c.strokeStyle = '#3a4766'; c.lineWidth = 3;
+    for (var dr = 0; dr < m.rows; dr++) {
+      for (var dc = 0; dc < m.cols - 1; dc++) {
+        if (m.doorsH[dc][dr]) {
+          var rch = G.Map.roomRect(dc, dr);
+          var dy = rch.y0 + G.Map.ROOM / 2;
+          c.fillRect((dc + 1) * G.Map.SEG, dy - G.Map.DOOR / 2, G.Map.WALL, G.Map.DOOR);
+        }
+      }
+    }
+    for (var dr2 = 0; dr2 < m.rows - 1; dr2++) {
+      for (var dc2 = 0; dc2 < m.cols; dc2++) {
+        if (m.doorsV[dc2][dr2]) {
+          var rcv = G.Map.roomRect(dc2, dr2);
+          var dx = rcv.x0 + G.Map.ROOM / 2;
+          c.fillRect(dx - G.Map.DOOR / 2, (dr2 + 1) * G.Map.SEG, G.Map.DOOR, G.Map.WALL);
+        }
+      }
+    }
   };
 
-  /** 屏幕外敌人指示箭头 */
   game.drawOffscreenMarks = function (c) {
     var cx = this.vw / 2, cy = this.vh / 2;
     var margin = 34;
@@ -884,7 +1003,6 @@
       if (!e.def.elite && !e.def.boss && Math.random() > 0.35) continue;
       count++;
       var a = Math.atan2(y - cy, x - cx);
-      var rx = Math.min(cx - margin, cy - margin);
       var px = cx + Math.cos(a) * (cx - margin);
       var py = cy + Math.sin(a) * (cy - margin);
       px = G.clamp(px, margin, this.vw - margin);
@@ -896,6 +1014,154 @@
       c.beginPath(); c.moveTo(s, 0); c.lineTo(-s * 0.7, s * 0.7); c.lineTo(-s * 0.7, -s * 0.7); c.closePath(); c.fill();
       c.restore();
     }
+    /* 撤离点标记（未开放时也提示方向） */
+    if (this.map) {
+      var ex = this.map.extract;
+      var exx = ex.x - this.camX, exy = ex.y - this.camY;
+      if (exx < -20 || exy < -20 || exx > this.vw + 20 || exy > this.vh + 20) {
+        var ea = Math.atan2(exy - cy, exx - cx);
+        var epx = cx + Math.cos(ea) * (cx - 46);
+        var epy = cy + Math.sin(ea) * (cy - 46);
+        epx = G.clamp(epx, 46, this.vw - 46);
+        epy = G.clamp(epy, 46, this.vh - 46);
+        c.save(); c.translate(epx, epy);
+        c.fillStyle = ex.active ? '#6ee787' : '#5a5f72';
+        c.beginPath(); c.moveTo(0, -9); c.lineTo(7, 6); c.lineTo(-7, 6); c.closePath(); c.fill();
+        c.restore();
+      }
+    }
+  };
+
+  /* ============================================================
+     升级（就地选择，返回战斗）
+     ============================================================ */
+  game.openLevelUp = function () {
+    var p = this.player;
+    if (p.pendingLevels <= 0) { this.state = 'play'; return; }
+    this.state = 'level';
+    this.levelCd = 0.8;
+    var opts = G.rollLevelOptions(4, p.level);
+    G.UI.renderLevelUp(this, opts, function (o) {
+      p.char.mods[o.key] = (p.char.mods[o.key] || 0) + o.val;
+      if (o.negKey) p.char.mods[o.negKey] = (p.char.mods[o.negKey] || 0) - o.negVal;
+      p.recalc();
+      if (p.st.maxHp < 1) p.st.maxHp = 1;
+      if (o.key === 'maxHp') p.heal(o.val);
+      if (p.hp > p.st.maxHp) p.hp = p.st.maxHp;
+      p.pendingLevels--;
+      G.game.openLevelUp();
+      G.game.saveRun();
+    });
+    G.UI.showScreen('scrLevel');
+    G.Audio.sfx('levelup');
+  };
+
+  game.togglePause = function () {
+    if (this.state === 'play') { this.state = 'pause'; G.UI.showScreen('scrPause'); }
+    else if (this.state === 'pause') { this.state = 'play'; G.UI.showScreen(null); }
+  };
+
+  /* ============================================================
+     存档：进图即存（读档回到进图状态，地图按种子重建）
+     ============================================================ */
+  game.saveRun = function () {
+    if (!this.player || !this.map) return;
+    var p = this.player;
+    var data = {
+      v: 2, mode: 'extract',
+      charId: p.char.id,
+      charMods: p.char.mods,
+      tierId: this.map.tierId,
+      salt: this.map.salt,
+      materials: this.materials,
+      level: p.level, xp: p.xp,
+      pendingLevels: p.pendingLevels || 0,
+      hp: p.hp,
+      runTime: this.runTime || 0,
+      stats: p.stats,
+      carried: this.carried,
+      mapTime: this.map.time,
+      extractActive: !!this.map.extract.active,
+      explored: [],
+      opened: []
+    };
+    this.map.rooms.forEach(function (rm) { if (rm.explored) data.explored.push(rm.idx); });
+    this.containers.forEach(function (c2) { if (c2.opened || c2.used) data.opened.push(c2.cid); });
+    G.Save.saveRun(data);
+  };
+
+  game.resumeRun = function (data) {
+    if (!data || !data.charId || data.mode !== 'extract') return false;
+    var base = G.CHAR_BY_ID[data.charId];
+    if (!base) return false;
+    var c = Object.assign({}, base);
+    c.mods = Object.assign({}, data.charMods || {});
+    this.player = new G.Player(c);
+    this.player.maxWeapons = 2;
+
+    this.enemies = []; this.bullets = []; this.ebullets = [];
+    this.pickups = []; this.particles = []; this.texts = [];
+    this.effects = []; this.turrets = []; this.drones = []; this.mines = [];
+    this.hurtFlash = 0; this.shakeAmt = 0;
+    this.combo = 0; this.comboTimer = 0; this.runTime = data.runTime || 0;
+    this.materials = data.materials;
+    this.carried = data.carried || { weapons: [], items: [], bag: [], starter: [] };
+
+    var p = this.player;
+    p.level = data.level;
+    p.xp = data.xp;
+    p.xpNeed = G.xpForLevel(data.level);
+    p.pendingLevels = data.pendingLevels || 0;
+
+    var i;
+    (this.carried.weapons || []).forEach(function (w) {
+      var wk = G.makeWeapon(w.defId, w.tier);
+      if (wk) p.addWeapon(wk);
+    });
+    (this.carried.items || []).forEach(function (it) {
+      var d = G.ITEM_MAP[it.defId];
+      if (d) p.addItem(d);
+    });
+    this.bag = [];
+    (this.carried.bag || []).forEach(function (b) {
+      var inst = G.itemFromData(b);
+      if (inst) this.bag.push(inst);
+    }, this);
+    p.recalc();
+    p.hp = G.clamp(data.hp, 1, p.st.maxHp);
+    p.stats = data.stats || p.stats;
+
+    this.map = G.Map.generate(data.tierId || 1, data.salt || 0);
+    this.arena = this.map.worldW;
+    this.map.wave = this.map.tier.waveBand[1];
+    this.map.time = data.mapTime || 0;
+    this.map.extract.active = !!data.extractActive;
+    if (data.extractActive) this.map.objDone = true;
+    this.buildWallRects();
+    this.containers = this.map.containers.map(function (c2) { return new G.Container(c2); });
+    var openedSet = {};
+    (data.opened || []).forEach(function (id) { openedSet[id] = 1; });
+    this.containers.forEach(function (c2) {
+      if (openedSet[c2.cid]) { c2.opened = true; c2.used = true; }
+    });
+    (data.explored || []).forEach(function (idx) { if (G.game.map.rooms[idx]) G.game.map.rooms[idx].explored = true; });
+
+    this.player.x = this.map.spawn.x;
+    this.player.y = this.map.spawn.y;
+    this.player.room = this.map.startRoom;
+    this.lastRoom = -1;
+    this.levelCd = 0;
+
+    G.$('statPanel').classList.add('hidden');
+    G.UI.initHud();
+    this.state = 'play';
+    G.UI.showScreen(null);
+    this.enterRoom(this.map.startRoom);
+    G.UI.banner('继续探索 · ' + this.map.tier.name, this.map.tier.col);
+    G.UI.updateObjective(this.map);
+    if (!this.running) { this.running = true; this.lastT = performance.now(); requestAnimationFrame(loop); }
+    G.Audio.setBgm(G.Save.getSettings().bgm);
+    return true;
   };
 
   /* ============================================================

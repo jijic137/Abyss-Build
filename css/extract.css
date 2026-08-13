@@ -1,0 +1,80 @@
+/* ============================================================
+   extract.css —— 搜打撤界面（整备 / 市场 / 选图 / 背包 / 小地图 / 出货）
+   ============================================================ */
+
+/* ---------- 通用子屏头 ---------- */
+.sub-head{ display:flex; align-items:center; justify-content:center; gap:24px; width:100%; padding:22px 30px 4px; }
+.base-title{ font-size:30px; letter-spacing:6px; }
+.base-currency{ display:flex; align-items:center; gap:8px; font-size:22px; font-weight:800; color:var(--gold,#ffd24a); }
+
+/* ---------- 整备仓库 ---------- */
+.base-screen{ justify-content:flex-start; padding:0; }
+.base-body{ flex:1; width:100%; display:flex; gap:16px; padding:18px 26px 24px; min-height:0; }
+.equip-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+.panel-label{ font-size:11px; color:var(--dim,#8a90a8); letter-spacing:3px; margin-top:4px; }
+.stash-label{ margin-top:12px; }
+.equip-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+.equip-cell{ position:relative; min-height:86px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; }
+.equip-cell canvas{ image-rendering:pixelated; }
+.equip-label{ position:absolute; top:4px; left:6px; font-size:9px; color:var(--dim2,#6a7088); letter-spacing:1px; }
+.equip-name{ font-size:10px; color:var(--dim,#aab); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.stash-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(52px,1fr)); gap:6px; }
+.stash-cell{ position:relative; cursor:pointer; }
+.stash-sell{ position:absolute; bottom:2px; right:3px; font-size:8.5px; color:var(--gold,#ffd24a); background:rgba(8,10,16,.85); padding:0 3px; border-radius:3px; display:none; }
+.stash-cell:hover .stash-sell{ display:block; }
+.base-side{ width:260px; display:flex; flex-direction:column; gap:14px; }
+.base-tip{ font-size:11.5px; color:var(--dim2,#6a7088); line-height:1.8; padding:10px 12px; border:1px solid #2a3048; border-radius:8px; background:rgba(10,12,20,.5); }
+.base-btns{ display:flex; flex-direction:column; gap:8px; margin-top:auto; }
+
+/* ---------- 市场 ---------- */
+.market-screen{ justify-content:flex-start; padding:0; }
+.market-toolbar{ display:flex; align-items:center; justify-content:center; gap:18px; width:100%; padding:10px 30px; }
+.market-tip{ font-size:11px; color:var(--dim2,#6a7088); letter-spacing:1px; }
+.market-cards{ flex:1; width:100%; display:grid; grid-template-columns:repeat(4,1fr); gap:14px; padding:10px 30px; max-width:1100px; }
+
+/* ---------- 选图 ---------- */
+.mapselect-screen{ justify-content:flex-start; }
+.map-char-line{ font-size:13px; color:var(--dim,#8a90a8); margin:6px 0 14px; }
+.map-cards{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; width:100%; max-width:1120px; }
+.map-card{ position:relative; border:1px solid #2a3048; border-radius:10px; background:linear-gradient(180deg,#161a28,#101320); padding:14px 12px; cursor:pointer; transition:transform .12s, border-color .12s, box-shadow .12s; text-align:left; }
+.map-card:hover{ transform:translateY(-3px); border-color:var(--mc,#7fa8ff); }
+.map-card.selected{ border-color:var(--mc,#7fa8ff); box-shadow:0 0 18px var(--mc,#7fa8ff)55, inset 0 0 22px var(--mc,#7fa8ff)22; }
+.map-card.locked{ opacity:.5; cursor:not-allowed; filter:saturate(.4); }
+.map-name{ font-size:17px; font-weight:900; color:var(--mc,#e8eef8); letter-spacing:2px; }
+.map-sub{ font-size:10.5px; color:var(--dim2,#6a7088); margin:5px 0 8px; line-height:1.5; min-height:32px; }
+.map-obj{ font-size:11px; color:#bcd; margin-bottom:6px; }
+.map-fee{ font-size:12px; font-weight:700; color:var(--gold,#ffd24a); margin-bottom:6px; }
+.map-meta{ font-size:10.5px; letter-spacing:1px; }
+.map-lock{ margin-top:8px; font-size:10px; color:#ff8a7a; }
+.map-btns{ margin-top:18px; }
+
+/* ---------- 小地图 ---------- */
+#minimap{ width:150px; height:110px; image-rendering:pixelated; border:1px solid #2a3048; border-radius:6px; background:#0a0c12; margin-top:6px; }
+
+/* ---------- 目标 / 互动提示 ---------- */
+.obj-line{ margin-top:6px; font-size:12px; font-weight:700; color:#ffd24a; letter-spacing:1px; text-align:center; text-shadow:0 0 10px #ffd24a44; }
+.interact-hint{ position:absolute; bottom:86px; left:50%; transform:translateX(-50%); font-size:13px; font-weight:800; color:#fff; background:rgba(10,12,20,.82); border:1px solid #ffd24a; border-radius:6px; padding:5px 14px; letter-spacing:1px; animation:hintPulse 1s ease-in-out infinite; }
+@keyframes hintPulse{ 0%,100%{ box-shadow:0 0 8px #ffd24a44; } 50%{ box-shadow:0 0 18px #ffd24a88; } }
+.kbd-inline{ display:inline-block; padding:0 5px; border:1px solid #4a5270; border-radius:4px; font-size:10px; color:#cfd6ea; background:#181c2c; margin:0 2px; }
+
+/* ---------- 背包浮层 ---------- */
+.bag-panel{ position:absolute; top:14px; right:14px; width:330px; background:rgba(10,12,20,.94); border:1px solid #3a4258; border-radius:10px; padding:12px; z-index:40; box-shadow:0 8px 30px rgba(0,0,0,.55); }
+.bag-head{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.bag-title{ font-size:14px; font-weight:900; letter-spacing:3px; }
+.bag-count{ font-size:11px; color:var(--dim,#8a90a8); flex:1; }
+.btn-sm{ font-size:11px; padding:4px 10px; }
+.bag-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+.bag-cell{ min-height:46px; border:1px dashed #333a52; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; background:rgba(18,21,32,.6); }
+.bag-cell canvas{ image-rendering:pixelated; }
+.bag-cell.equip-slot{ border-style:solid; }
+.bag-cell.empty{ border-style:dashed; opacity:.35; font-size:9px; color:var(--dim2,#6a7088); cursor:default; }
+.bag-tip{ margin-top:8px; font-size:9.5px; color:var(--dim2,#6a7088); line-height:1.6; }
+
+/* ---------- 出货卡片 ---------- */
+.loot-toast{ position:absolute; left:50%; bottom:130px; transform:translateX(-50%); display:flex; align-items:center; gap:12px; background:rgba(10,12,20,.94); border:2px solid #ffd24a; border-radius:10px; padding:10px 22px; z-index:45; min-width:240px; }
+.loot-toast.hidden{ display:none; }
+.loot-pop{ animation:lootIn .3s ease-out; }
+@keyframes lootIn{ from{ transform:translateX(-50%) translateY(16px) scale(.92); opacity:0; } to{ transform:translateX(-50%) translateY(0) scale(1); opacity:1; } }
+.loot-icon canvas{ image-rendering:pixelated; }
+.loot-name{ font-size:16px; font-weight:900; letter-spacing:1px; }
+.loot-sub{ font-size:10.5px; color:var(--dim,#8a90a8); margin-top:2px; }

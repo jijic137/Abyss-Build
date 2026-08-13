@@ -1,9 +1,42 @@
 /* ============================================================
    07_player.js —— 玩家角色 + 武器开火逻辑 + 敌人实体
+   （搜打撤版：墙体碰撞 / 视线遮挡）
    ============================================================ */
 'use strict';
 
 (function () {
+
+  /* 世界碰撞（房间地图） */
+  G.Map = G.Map || {};
+  G.Map.canStand = function (m, x, y, r) {
+    if (!m) return true;
+    if (G.Map.solid(m, x - r, y - r) || G.Map.solid(m, x + r, y - r) ||
+        G.Map.solid(m, x - r, y + r) || G.Map.solid(m, x + r, y + r) ||
+        G.Map.solid(m, x, y)) return false;
+    return true;
+  };
+  function collideWorld(x, y, r) {
+    var g = G.game;
+    if (!g.map) {
+      x = G.clamp(x, r, g.arena - r);
+      y = G.clamp(y, r, g.arena - r);
+      return { x: x, y: y };
+    }
+    var m = g.map, W = G.Map.WALL;
+    x = G.clamp(x, W + r, m.worldW - W - r);
+    y = G.clamp(y, W + r, m.worldH - W - r);
+    if (G.Map.canStand(m, x, y, r)) return { x: x, y: y };
+    var nx = x, ny = y;
+    if (!G.Map.solid(m, x, y - r) && !G.Map.solid(m, x, y + r)) {
+      while (G.Map.solid(m, nx, y) && nx > W + r) nx -= 2;
+      while (G.Map.solid(m, nx, y) && nx < m.worldW - W - r) nx += 2;
+    } else {
+      while (G.Map.solid(m, x, ny) && ny > W + r) ny -= 2;
+      while (G.Map.solid(m, x, ny) && ny < m.worldH - W - r) ny += 2;
+    }
+    return { x: nx, y: ny };
+  }
+  G.collideWorld = collideWorld;
 
   /* ============================================================
      玩家
@@ -15,9 +48,10 @@
     this.vx = 0; this.vy = 0;
     this.face = 1;
     this.dead = false;
+    this.room = -1;
 
-    this.items = [];                 // 物品定义数组（可重复）
-    this.weapons = [];               // 武器实例数组，最多 6
+    this.items = [];
+    this.weapons = [];
     this.maxWeapons = 6;
 
     this.st = G.baseStats();
@@ -41,7 +75,6 @@
     this.recalc();
   }
 
-  /** 重新计算最终属性（基础 + 角色 + 物品 + 武器附加） */
   Player.prototype.recalc = function () {
     var old = this.st ? this.st.maxHp : 0;
     var s = G.baseStats();
@@ -55,11 +88,9 @@
     s.maxHp = Math.max(10, Math.round(s.maxHp));
     this.st = s;
 
-    // 最大生命变化时同步当前生命
     if (old && s.maxHp > old) this.hp += (s.maxHp - old);
     this.hp = G.clamp(this.hp, 1, s.maxHp);
 
-    // 特殊效果集合
     this.sp = {};
     for (i = 0; i < this.items.length; i++) {
       if (this.items[i].sp) this.sp[this.items[i].sp] = (this.sp[this.items[i].sp] || 0) + 1;
@@ -123,7 +154,6 @@
     G.burst(this.x, this.y, 8, '#ff6b6b', 160, { size: 3 });
     G.Audio.sfx('hurt');
 
-    // 荆棘反伤
     if (this.st.thorns > 0 && src && src.isEnemy) {
       g.damageEnemy(src, this.st.thorns, { x: src.x, y: src.y, thorn: true });
     }
@@ -153,7 +183,6 @@
     this.lsCd = Math.max(0, this.lsCd - dt);
     this.flash = Math.max(0, this.flash - dt * 5);
 
-    /* 移动 */
     var ix = 0, iy = 0;
     if (g.key('left')) ix -= 1;
     if (g.key('right')) ix += 1;
@@ -167,9 +196,10 @@
     var acc = len > 0 ? 16 : 13;
     this.vx = G.lerp(this.vx, tvx, G.clamp(acc * dt, 0, 1));
     this.vy = G.lerp(this.vy, tvy, G.clamp(acc * dt, 0, 1));
-    this.x += this.vx * dt; this.y += this.vy * dt;
-    this.x = G.clamp(this.x, this.r, g.arena - this.r);
-    this.y = G.clamp(this.y, this.r, g.arena - this.r);
+    var nxp = this.x + this.vx * dt;
+    var nyp = this.y + this.vy * dt;
+    var mv = collideWorld(nxp, nyp, this.r);
+    this.x = mv.x; this.y = mv.y;
     if (len > 0) {
       this.walkT += dt * 10;
       if (Math.random() < dt * 14) {
@@ -180,7 +210,6 @@
       }
     }
 
-    /* 生命回复 */
     if (this.st.hpRegen > 0 && this.hp < this.st.maxHp) {
       this.regenAcc += this.st.hpRegen * dt;
       if (this.regenAcc >= 1) {
@@ -190,7 +219,6 @@
       }
     }
 
-    /* 光环类特效 */
     this.auraTick -= dt;
     if (this.auraTick <= 0) {
       this.auraTick = 0.25;
@@ -207,7 +235,6 @@
       G.burst(this.x + G.rand(-60, 60), this.y + G.rand(-60, 60), 1, '#8fe8ff', 20, { size: 2 });
     }
 
-    /* 雷霆光环：周期性向最近敌人释放连锁闪电 */
     this.thunderT = (this.thunderT || 0) - dt;
     if (this.hasSp('thunderAura') && this.thunderT <= 0) {
       this.thunderT = 0.9;
@@ -215,13 +242,16 @@
       if (tt) G.chainLightning(g, this.x, this.y, tt, 8 + this.st.elementalDamage * 0.6, false, 3, 160, 0.82, null, '#9fe8ff');
     }
 
-    /* 武器开火 */
     for (i = 0; i < this.weapons.length; i++) this.updateWeapon(this.weapons[i], dt, i);
   };
 
-  /* ------------------------------------------------------------
-     武器逻辑
-     ------------------------------------------------------------ */
+  /* 视线遮挡（近战 / 锥形不隔墙打人） */
+  function hasLOS(x1, y1, x2, y2) {
+    var g = G.game;
+    if (!g.map || !G.Map.los) return true;
+    return G.Map.los(g.map, x1, y1, x2, y2);
+  }
+
   Player.prototype.updateWeapon = function (w, dt, idx) {
     var g = G.game, def = w.def, st = this.st;
     w.swingT = Math.max(0, w.swingT - dt);
@@ -244,7 +274,6 @@
     w.angle = ang;
     this.face = Math.cos(ang) >= 0 ? 1 : -1;
 
-    // 枪口闪光：发射型武器开火瞬间的短促光点
     if (['shot', 'spread', 'lob', 'bouncer', 'returner', 'cone', 'chain', 'homing'].indexOf(def.kind) >= 0) {
       var mx = this.x + Math.cos(ang) * 24, my = this.y + Math.sin(ang) * 24;
       G.fx('flash', { x: mx, y: my, r: 9, col: def.col || '#ffd98a', life: 0.07 });
@@ -271,6 +300,7 @@
           if (dd > rng + e.r) continue;
           var da = Math.abs(angDiff(Math.atan2(e.y - this.y, e.x - this.x), ang));
           if (da > half) continue;
+          if (!hasLOS(this.x, this.y, e.x, e.y)) continue;
           d = G.F.weaponDamage(st, { base: G.wDamage(w), tags: def.tags });
           g.damageEnemy(e, d.dmg, {
             crit: d.crit, x: e.x, y: e.y, knock: def.knock,
@@ -290,6 +320,7 @@
           var e2 = ls2[i];
           if (e2.dead) continue;
           if (distToSeg(e2.x, e2.y, this.x, this.y, ex, ey) > (def.width / 2 + e2.r)) continue;
+          if (!hasLOS(this.x, this.y, e2.x, e2.y)) continue;
           d = G.F.weaponDamage(st, { base: G.wDamage(w), tags: def.tags });
           g.damageEnemy(e2, d.dmg, {
             crit: d.crit, x: e2.x, y: e2.y, knock: def.knock,
@@ -356,6 +387,7 @@
           var dd3 = G.dist(this.x, this.y, e3.x, e3.y);
           if (dd3 > rng + e3.r) continue;
           if (Math.abs(angDiff(Math.atan2(e3.y - this.y, e3.x - this.x), ang)) > half2) continue;
+          if (!hasLOS(this.x, this.y, e3.x, e3.y)) continue;
           d = G.F.weaponDamage(st, { base: G.wDamage(w), tags: def.tags });
           g.damageEnemy(e3, d.dmg, {
             crit: d.crit, x: e3.x, y: e3.y, silent: Math.random() > 0.35,
@@ -365,7 +397,6 @@
             srcW: w
           });
         }
-        // 火焰粒子
         for (i = 0; i < 3; i++) {
           var fa = ang + G.rand(-half2, half2);
           var fs = G.rand(rng * 1.4, rng * 2.4);
@@ -487,11 +518,9 @@
     var bob = Math.sin(this.walkT) * 1.6;
     var inv = this.hitCd > 0 && Math.floor(this.hitCd * 22) % 2 === 0;
 
-    // 霜寒/毒雾光环
     if (this.hasSp('frostAura')) ringAura(c, this.x, this.y, 130, 'rgba(120,220,255,.12)', 'rgba(120,220,255,.35)');
     if (this.hasSp('poisonAura')) ringAura(c, this.x, this.y, 150, 'rgba(140,200,60,.10)', 'rgba(160,220,70,.30)');
 
-    // 影子
     c.globalAlpha = 0.28; c.fillStyle = '#000';
     c.beginPath(); c.ellipse(this.x, this.y + 17, 12, 4.5, 0, 0, Math.PI * 2); c.fill();
     c.globalAlpha = 1;
@@ -500,7 +529,6 @@
       flip: this.face < 0, flash: this.flash, alpha: inv ? 0.45 : 1
     });
 
-    // 武器手持造型：朝目标悬浮，按 kind 做挥砍/突刺/后坐动画
     var n = this.weapons.length;
     for (var i = 0; i < n; i++) {
       var w = this.weapons[i];
@@ -508,21 +536,21 @@
       var def = w.def;
       var a = w.angle;
       var reach = 13 + (i % 3) * 3;
-      var rot = a + Math.PI / 2;            // 图标尖端指向目标
+      var rot = a + Math.PI / 2;
       if (def.kind === 'swing') {
-        var sp = w.swingT > 0 ? (1 - w.swingT / 0.18) : 0;   // 0→1 挥砍进度
+        var sp = w.swingT > 0 ? (1 - w.swingT / 0.18) : 0;
         var half = (def.arc || 1.6) / 2;
-        a = a - half + sp * 2 * half;        // 沿弧扫动
+        a = a - half + sp * 2 * half;
         rot = a + Math.PI / 2;
         reach += 3;
       } else if (def.kind === 'thrust') {
         var tp = w.swingT > 0 ? (1 - w.swingT / 0.16) : 0;
-        reach += Math.sin(tp * Math.PI) * 16; // 突刺前冲后回
+        reach += Math.sin(tp * Math.PI) * 16;
         rot = a + Math.PI / 2;
       } else if (w.swingT > 0) {
-        reach -= 5;                           // 远程开火微后坐
+        reach -= 5;
       }
-      var perp = (i - (n - 1) / 2) * 5;       // 多武器沿垂直方向错开避免重叠
+      var perp = (i - (n - 1) / 2) * 5;
       var wx = this.x + Math.cos(a) * reach + Math.cos(a + Math.PI / 2) * perp;
       var wy = this.y + Math.sin(a) * reach + Math.sin(a + Math.PI / 2) * perp + bob;
       var wc = G.weaponIcon(w.def, w.tier, 2);
@@ -564,13 +592,11 @@
     c.restore();
   }
 
-  /** 连锁闪电 */
   function chainLightning(g, sx, sy, first, dmg, crit, jumps, range, falloff, w, col) {
     var cur = first, px = sx, py = sy, hit = [], pts, d = dmg;
     col = col || '#8fe8ff';
     for (var j = 0; j <= jumps && cur; j++) {
       pts = [px, py];
-      // 折线
       var steps = 3;
       for (var s = 1; s < steps; s++) {
         var t = s / steps;

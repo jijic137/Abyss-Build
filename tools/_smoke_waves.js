@@ -1,7 +1,11 @@
-/* 无浏览器环境下驱动全 20 波，验证新增敌人/武器/物品/波次/平衡数值无运行时错误。
-   复用 _test_save.js 的 DOM/Canvas 桩；手动驱动 game.update / game.render。
-   日志用 fs.appendFileSync 同步写入，避免崩溃时丢失。
-   用法：node _smoke_waves.js
+/* 无浏览器环境下驱动搜打撤核心循环：
+   - 地图生成（5 档位连通性 / 出生≠撤离 / 容器）
+   - 进图 → 开箱 → 撤离成功（物品入库、货币结算、档位解锁）
+   - 死亡路径（全丢）
+   - 存档 / 读档
+   脚本列表从 index.html 解析，与页面永远同步。
+   日志写入 _smoke3.log，错误数=0 即通过。
+   用法：node tools/_smoke_waves.js
 */
 'use strict';
 const fs = require('fs');
@@ -48,6 +52,7 @@ function makeEl() {
       if(k==='getBoundingClientRect') return ()=>({left:0,top:0,width:100,height:100});
       if(k==='querySelector') return ()=>makeEl();
       if(k==='querySelectorAll') return ()=>[];
+      if(k==='remove') return ()=>{};
       if(k in o) return o[k];
       return undefined;
     },
@@ -58,7 +63,8 @@ const elCache = {};
 const docStub = {
   getElementById(id){ return elCache[id] || (elCache[id]=makeEl()); },
   createElement(){ return makeEl(); },
-  addEventListener(){}, readyState:'complete'
+  addEventListener(){},
+  readyState:'complete'
 };
 const mem = {};
 const lsStub = {
@@ -80,94 +86,216 @@ global.innerWidth = 1280; global.innerHeight = 720;
 process.on('uncaughtException', (e) => { log('UNCAUGHT: ' + (e && e.stack || e)); process.exit(3); });
 process.on('unhandledRejection', (e) => { log('UNHANDLED: ' + (e && e.stack || e)); });
 
-/* ---------- 顺序加载全部脚本 ---------- */
-const files = ['00_util','12_audio','01_pixel','02_stats','03_items','04_weapons','05_enemies',
-               '06_entities','07_player','07b_enemy','08_shop','09_ui','10_game','11_main'];
+/* ---------- 从 index.html 解析脚本列表 ---------- */
+const html = fs.readFileSync('index.html', 'utf8');
+const files = [];
+const re = /<script src="js\/([\w]+\.js)"><\/script>/g;
+let m;
+while ((m = re.exec(html)) !== null) files.push(m[1]);
+log('脚本列表：' + files.join(', '));
 try {
-  for(const f of files){
-    const code = fs.readFileSync(`js/${f}.js`,'utf8');
-    vm.runInThisContext(code, { filename:`js/${f}.js` });
+  for (const f of files) {
+    const code = fs.readFileSync(`js/${f}`, 'utf8');
+    vm.runInThisContext(code, { filename: `js/${f}` });
   }
 } catch (e) { log('LOAD ERROR: ' + (e && e.stack || e)); process.exit(2); }
 
-// 正确模拟：renderLevelUp 只暂存回调，由驱动每帧处理一个升级（避免 openLevelUp 同步递归爆栈）
+/* 无头：升级立刻消化，避免递归/浮层卡死 */
 let pendingLevelCb = null;
 G.UI.renderLevelUp = function (g, opts, cb) { pendingLevelCb = { cb: cb, opts: opts }; };
-G.UI.renderShop = function () {};
 
 let ERR = 0;
 function guard(label, fn) {
   try { return fn(); }
   catch (e) { ERR++; log('  ✗ 运行时错误 @ ' + label + ': ' + (e && e.stack || e)); }
 }
-
-function runProfile(name, charId, setup) {
-  log(`\n===== 档案 ${name} (${charId}) =====`);
-  guard('init', () => G.game.init());
-  const charDef = G.CHAR_BY_ID[charId];
-  guard('newRun', () => G.game.newRun(charDef));
-  if (setup) guard('setup', () => setup(G.game.player, G.game));
-
-  G.game.player.maxHp = 1e9;
-  G.game.player.hp = 1e9;
-
-  const dt = 1/30;
-  const CAP = 200000;
-  let frames = 0, peakBullets = 0, lastWave = G.game.wave, wframes = 0, wmax = 0;
-  while (G.game.state !== 'result' && frames < CAP) {
+function resetMeta() {
+  Object.keys(mem).forEach(k => delete mem[k]);
+  const d = G.Meta.get();
+  d.currency = 60; d.stash = []; d.stashSize = 30;
+  d.loadout = { w1: null, w2: null, armor: null, trinket1: null, trinket2: null, relic: null };
+  d.tiers = { 1: true };
+  d.stats = { extracts: 0, deaths: 0, itemsExtracted: 0, itemsLost: 0, bestTier: 0, totalEarned: 0, totalSpent: 0, tierCleared: {} };
+  G.Meta.flush();
+}
+function driveFrames(n, dt) {
+  dt = dt || 1/30;
+  for (let i = 0; i < n; i++) {
     if (G.game.state === 'play') {
-      guard('update@w' + G.game.wave, () => G.game.update(dt));
-      guard('render@w' + G.game.wave, () => G.game.render());
+      guard('update', () => G.game.update(dt));
+      guard('render', () => G.game.render());
       G.game.player.hp = G.game.player.st.maxHp = 1e9;
-      const nb = G.game.bullets.length + G.game.ebullets.length;
-      peakBullets = Math.max(peakBullets, nb); wmax = Math.max(wmax, nb);
-      if (G.game.waveTime <= 0 && G.game.bossAlive()) {
-        G.game.enemies.slice().forEach(e => { if (e.def.boss) guard('killBoss', () => G.game.killEnemy(e)); });
-      }
-      wframes++;
-    } else if (G.game.state === 'shop') {
-      guard('nextWave@w' + G.game.wave, () => G.game.nextWave());
-    } else if (G.game.state === 'level') {
-      // 每帧只消化一个升级，避免 openLevelUp 递归爆栈
       if (pendingLevelCb) {
         const pc = pendingLevelCb; pendingLevelCb = null;
-        guard('levelUp@w' + G.game.wave, () => {
+        guard('levelUp', () => {
           if (pc.opts && pc.opts.length) pc.cb(pc.opts[0]);
-          else { G.game.player.pendingLevels = 0; G.game.openShop(); }
+          else { G.game.player.pendingLevels = 0; G.game.openLevelUp(); }
         });
       }
+    } else {
+      break;
     }
-    if (G.game.wave !== lastWave) {
-      log(`  [${name}] wave ${G.game.wave} state=${G.game.state} enemies=${G.game.enemies.length} peakBullets=${peakBullets}`);
-      lastWave = G.game.wave; peakBullets = 0;
-    }
-    if (frames % 600 === 0) log(`  ... heartbeat ${name} wave=${G.game.wave} state=${G.game.state} frames=${frames} pend=${G.game.player && G.game.player.pendingLevels} kills=${G.game.player && G.game.player.stats.kills}`);
-    frames++;
   }
-  const ks = G.game.player ? G.game.player.stats.kills : 0;
-  log(`[run] ${name} -> state=${G.game.state} wave=${G.game.wave} peakBullets=${peakBullets} kills=${ks} frames=${frames}`);
-  return G.game.state === 'result';
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- 0. 地图生成验证（5 档位） ---------- */
+function verifyMaps() {
+  log('===== 地图生成验证 =====');
+  for (let tier = 1; tier <= 5; tier++) {
+    const m = guard('gen@t' + tier, () => G.Map.generate(tier));
+    if (!m) continue;
+    guard('mapChecks@t' + tier, () => {
+      if (m.spawn.room === m.extractRoom) throw new Error('出生与撤离同房');
+      if (!m.containers.length) throw new Error('无容器');
+      const W = G.Map.WALL, S = G.Map.SEG;
+      const c0 = Math.floor((m.spawn.x - W) / S), r0 = Math.floor((m.spawn.y - W) / S);
+      const rc = G.Map.roomRect(c0, r0);
+      if (G.Map.solid(m, m.spawn.x, m.spawn.y)) throw new Error('出生点在墙内');
+      if (!G.Map.solid(m, (c0 + 1) * S + W / 2, rc.y0 + 10)) throw new Error('墙判定失效');
+      const seen = new Set([m.startRoom]);
+      const q = [m.startRoom];
+      while (q.length) {
+        const cur = q.shift();
+        const cc = cur % m.cols, cr = Math.floor(cur / m.cols);
+        const nbs = [];
+        if (cc > 0 && m.doorsH[cc-1][cr]) nbs.push(cur-1);
+        if (cc < m.cols-1 && m.doorsH[cc][cr]) nbs.push(cur+1);
+        if (cr > 0 && m.doorsV[cc][cr-1]) nbs.push(cur-m.cols);
+        if (cr < m.rows-1 && m.doorsV[cc][cr]) nbs.push(cur+m.cols);
+        nbs.forEach(nb => { if (!seen.has(nb)) { seen.add(nb); q.push(nb); } });
+      }
+      if (seen.size !== m.cols * m.rows) throw new Error(`连通性不足 ${seen.size}/${m.cols*m.rows}`);
+      log(`  [t${tier}] ${m.cols}x${m.rows} 房间 ${m.rooms.length} 容器 ${m.containers.length} 连通 ✓`);
+    });
+  }
 }
 
-try {
-  const skipA = process.env.SKIP_A === '1';
-  const okA = skipA ? true : runProfile('new-alchemist', 'alchemist', null);
-  const okB = runProfile('kitchenSink-mage', 'mage', function (p, g) {
-    p.maxWeapons = 12;
-    ['spark_rod','club','trident','blunderbuss','throwing_axe',
-     'gravity_cannon','storm_staff','spike_shotgun','pulse_core','orbit_blade'].forEach(id =>
-      p.addWeapon(G.makeWeapon(id, 4)));
-    ['cloth_wrap','pebble','wood_stick','cheap_ring','rope_belt','dry_berry',
-     'spiked_boot','quiver','focus_lens','war_paint','spring_coil','blood_charm',
-     'storm_brand','frost_sigil','iron_will',
-     'tin_can','greased_gear','razor_edge','vampiric_charm','soul_reaver',
-     'frost_mail','abyssal_blade','glutton_core'].forEach(id => {
-       const d = G.ITEM_MAP[id]; if (d) p.addItem(d);
-     });
-    p.recalc();
-  });
-  log(`\n结果：档案A=${okA?'到达结算':'未完成'} 档案B=${okB?'到达结算':'未完成'} 错误数=${ERR}`);
-} catch (e) {
-  log('TOP-LEVEL THROW: ' + (e && e.stack || e));
+/* ---------- 1. 撤离成功路径 ---------- */
+async function runExtractSuccess() {
+  log('\n===== 档案A：撤离成功 (alchemist / t1) =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  const charDef = G.CHAR_BY_ID['alchemist'];
+  guard('newRun', () => G.game.newRun(charDef, 1));
+  const g = G.game;
+  g.player.maxHp = g.player.hp = 1e9;
+  driveFrames(20);
+  log(`  [开局] 状态=${g.state} 地图=${g.map.tier.name} 装备=${g.player.weapons.length}武+${g.player.items.length}物 背包=${g.bag.length}`);
+  if (g.player.weapons.length !== 2) throw new Error('应有两把武器（装备栏+职业补给）');
+  if (g.player.items.length < 1) throw new Error('应有防具（职业补给）');
+
+  const chest = g.containers.find(c => c.type === 'crate' || c.type === 'chest_wood');
+  if (chest) {
+    g.player.x = chest.x; g.player.y = chest.y;
+    chest.started = true;
+    driveFrames(60);
+    log(`  [开箱] ${chest.type} opened=${chest.opened} 材料=${g.materials} 背包=${g.bag.length}`);
+    if (!chest.opened) throw new Error('箱子未开启');
+  }
+
+  g.map.time = 61;
+  guard('checkObjective', () => g.checkObjective());
+  if (!g.map.extract.active) throw new Error('撤离点未激活');
+  g.player.x = g.map.extract.x;
+  g.player.y = g.map.extract.y;
+  driveFrames(120);
+  await sleep(900);
+  log(`  [撤离] 状态=${g.state} 提取=${G.Meta.stats().itemsExtracted} 币=${G.Meta.currency()} 仓=${G.Meta.stash().length} t2解锁=${G.Meta.tierUnlocked(2)}`);
+  if (g.state !== 'result') throw new Error('未进入结算');
+  if (G.Meta.stats().extracts !== 1) throw new Error('撤离统计未记录');
+  if (G.Meta.stash().length === 0) throw new Error('仓库未收到物品');
+  if (!G.Meta.tierUnlocked(2)) throw new Error('第 2 层未解锁');
+
+  guard('renderBase', () => G.UI.renderBase());
+  guard('renderMarket', () => G.UI.renderMarket());
+  guard('renderMapSelect', () => G.UI.renderMapSelect());
+  log('  [界面] 整备/市场/选图渲染 ✓');
 }
-process.exit(ERR ? 1 : 0);
+
+/* ---------- 2. 死亡全丢路径 ---------- */
+async function runDeath() {
+  log('\n===== 档案B：死亡全丢 (knight / t2) =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  const charDef = G.CHAR_BY_ID['knight'];
+  guard('newRun', () => G.game.newRun(charDef, 2));
+  const g = G.game;
+  g.player.maxHp = g.player.hp = 1e9;
+  driveFrames(20);
+  const stashBefore = G.Meta.stash().length;
+  guard('onPlayerDeath', () => g.onPlayerDeath());
+  await sleep(1100);
+  log(`  [死亡] 状态=${g.state} 死亡=${G.Meta.stats().deaths} 损失=${G.Meta.stats().itemsLost} 仓=${G.Meta.stash().length}`);
+  if (g.state !== 'result') throw new Error('死亡未进入结算');
+  if (G.Meta.stash().length !== stashBefore) throw new Error('死亡后仓库不应变化');
+  if (G.Meta.stats().itemsLost < 1) throw new Error('损失统计未记录');
+}
+
+/* ---------- 3. 存档 / 读档 ---------- */
+function runSaveResume() {
+  log('\n===== 档案C：存档/读档 (mage / t3) =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  const charDef = G.CHAR_BY_ID['mage'];
+  guard('newRun', () => G.game.newRun(charDef, 3));
+  const g = G.game;
+  g.player.maxHp = g.player.hp = 1e9;
+  driveFrames(15);
+  const levelAt = g.player.level;
+  const matsAt = g.materials;
+  guard('saveRun', () => g.saveRun());
+  const snap = G.Save.getRun();
+  if (!snap || snap.mode !== 'extract') throw new Error('快照缺失');
+  guard('resumeRun', () => g.resumeRun(snap));
+  log(`  [读档] 状态=${g.state} 地图=${g.map.tier.name} Lv=${g.player.level} 材料=${g.materials}`);
+  if (g.player.level < levelAt) throw new Error('读档等级丢失');
+  if (g.materials < matsAt) throw new Error('读档材料丢失');
+  G.Save.clearRun();
+}
+
+/* ---------- 4. 深图战斗回归（T4 大构筑） ---------- */
+async function runKitchenSink() {
+  log('\n===== 档案D：T4 构筑回归 (engineer) =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  const charDef = G.CHAR_BY_ID['engineer'];
+  guard('newRun', () => G.game.newRun(charDef, 4));
+  const g = G.game, p = g.player;
+  p.maxHp = p.hp = 1e9;
+  p.maxWeapons = 6;
+  ['spark_rod','club','turret','gravity_cannon','pulse_core','orbit_blade'].forEach(id => {
+    const w = G.makeWeapon(id, 3); if (w) p.addWeapon(w);
+  });
+  ['cloth_wrap','iron_plate','blood_charm','storm_brand','frost_sigil','iron_will',
+   'soul_reaver','frost_mail','abyssal_blade','glutton_core'].forEach(id => {
+    const d = G.ITEM_MAP[id]; if (d) p.addItem(d);
+  });
+  p.recalc();
+  driveFrames(240);
+  log(`  [T4] 状态=${g.state} 敌=${g.enemies.length} 杀=${p.stats.kills} 材料=${g.materials} 背包=${g.bag.length} 精英杀=${p.stats.eliteKills}`);
+  if (ERR === 0 && g.state !== 'result') {
+    g.map.time = 999;
+    g.checkObjective();
+    if (g.map.extract.active) {
+      g.player.x = g.map.extract.x; g.player.y = g.map.extract.y;
+      driveFrames(150);
+      await sleep(900);
+    }
+  }
+}
+
+(async function () {
+  try {
+    verifyMaps();
+    await runExtractSuccess();
+    await runDeath();
+    runSaveResume();
+    await runKitchenSink();
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4回归✓ 错误数=${ERR}`);
+  } catch (e) {
+    log('TOP-LEVEL THROW: ' + (e && e.stack || e));
+    ERR++;
+  }
+  process.exit(ERR ? 1 : 0);
+})();

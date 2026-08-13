@@ -1,5 +1,5 @@
 /* ============================================================
-   07b_enemy.js —— 敌人实体与 AI
+   07b_enemy.js —— 敌人实体与 AI（搜打撤版：墙体碰撞 / 房间归属 / 视线）
    ============================================================ */
 'use strict';
 
@@ -24,6 +24,7 @@
     this.flash = 0;
     this.t = G.rand(0, 10);
     this.contactCd = 0;
+    this.room = -1;
 
     this.burnT = 0; this.burnDmg = 0;
     this.poisonT = 0; this.poisonDmg = 0;
@@ -31,7 +32,6 @@
     this.stunT = 0;
     this.dotAcc = 0;
 
-    // AI 状态
     this.state = 'idle';
     this.sTimer = G.rand(0.4, 1.6);
     this.fireT = G.rand(0.4, 1.6);
@@ -39,9 +39,37 @@
     this.spiralA = 0;
     this.volley = 0;
     this.wave = wave;
+    this.wanderA = G.rand(0, Math.PI * 2);
+    this.wanderT = G.rand(1, 2.5);
   }
 
   Enemy.prototype.hurt = function () { this.flash = 1; this.hurtT = 0.11; };
+
+  /* 世界边界 / 墙体碰撞 */
+  Enemy.prototype._clampMove = function () {
+    var g = G.game, m = g.map;
+    if (!m) {
+      this.x = G.clamp(this.x, this.r, g.arena - this.r);
+      this.y = G.clamp(this.y, this.r, g.arena - this.r);
+      return;
+    }
+    var W = G.Map.WALL;
+    this.x = G.clamp(this.x, W + this.r, m.worldW - W - this.r);
+    this.y = G.clamp(this.y, W + this.r, m.worldH - W - this.r);
+    if (G.Map.canStand(m, this.x, this.y, this.r)) return;
+    if (G.Map.canStand(m, this.x - this.vx * 0.016, this.y, this.r) ||
+        !G.Map.solid(m, this.x, this.y - this.r)) {
+      var nx = this.x;
+      while (G.Map.solid(m, nx, this.y) && nx > W + this.r) nx -= 2;
+      while (G.Map.solid(m, nx, this.y) && nx < m.worldW - W - this.r) nx += 2;
+      this.x = nx;
+    } else {
+      var ny = this.y;
+      while (G.Map.solid(m, this.x, ny) && ny > W + this.r) ny -= 2;
+      while (G.Map.solid(m, this.x, ny) && ny < m.worldH - W - this.r) ny += 2;
+      this.y = ny;
+    }
+  };
 
   /* ------------------------------------------------------------
      更新
@@ -53,7 +81,6 @@
     this.hurtT = Math.max(0, this.hurtT - dt);
     this.contactCd = Math.max(0, this.contactCd - dt);
 
-    /* 持续伤害 */
     if (this.burnT > 0) {
       this.burnT -= dt;
       this.dotAcc += this.burnDmg * dt;
@@ -83,31 +110,35 @@
     if (this.slowT > 0) this.slowT -= dt; else this.slowMul = 1;
     if (this.stunT > 0) this.stunT -= dt;
 
-    /* 击退衰减 */
     var kd = Math.pow(0.86, dt * 60);
     this.kx *= kd; this.ky *= kd;
 
-    /* AI */
     var slow = this.slowT > 0 ? this.slowMul : 1;
     var frost = (p.hasSp('frostAura') && G.dist(this.x, this.y, p.x, p.y) < 130) ? 0.7 : 1;
     var mul = slow * frost;
-    if (this.stunT <= 0) this.ai(dt, p, g, mul);
-    else { this.vx *= 0.85; this.vy *= 0.85; }
 
-    /* 位移 */
+    /* 房间归属：玩家不在本房间时巡逻等待，不隔墙追击 */
+    var sameRoom = !g.map || this.room < 0 || this.room === p.room;
+    if (this.stunT <= 0) {
+      if (sameRoom) this.ai(dt, p, g, mul);
+      else this.wander(dt, mul);
+    } else {
+      this.vx *= 0.85; this.vy *= 0.85;
+    }
+
     this.x += (this.vx + this.kx) * dt;
     this.y += (this.vy + this.ky) * dt;
-
-    /* 边界 */
-    var m = this.r;
-    if (this.x < m) { this.x = m; this.kx = Math.abs(this.kx) * 0.4; }
-    if (this.y < m) { this.y = m; this.ky = Math.abs(this.ky) * 0.4; }
-    if (this.x > g.arena - m) { this.x = g.arena - m; this.kx = -Math.abs(this.kx) * 0.4; }
-    if (this.y > g.arena - m) { this.y = g.arena - m; this.ky = -Math.abs(this.ky) * 0.4; }
+    this._clampMove();
 
     if (Math.abs(this.vx) > 2) this.face = this.vx > 0 ? 1 : -1;
 
-    /* 接触伤害 */
+    /* 远距离清除（避免整图敌人堆积） */
+    if (g.map && this.room >= 0 && this.room !== p.room && G.dist(this.x, this.y, p.x, p.y) > 1500) {
+      G.burst(this.x, this.y, 4, '#556', 80);
+      this.dead = true;
+      return;
+    }
+
     if (!p.dead) {
       var rr = this.r + p.r;
       if (G.dist2(this.x, this.y, p.x, p.y) < rr * rr && this.contactCd <= 0) {
@@ -118,7 +149,6 @@
           this.contactCd = 0.55;
           this.kx += (this.x - p.x) * 2.2;
           this.ky += (this.y - p.y) * 2.2;
-          // 词缀·吸血：近战命中回复生命
           if (this.affixes && this.hp < this.maxHp) {
             for (var vi = 0; vi < this.affixes.length; vi++) {
               if (this.affixes[vi].id === 'vamp') {
@@ -132,6 +162,25 @@
         }
       }
     }
+  };
+
+  /* 巡逻：房间内随机游荡 */
+  Enemy.prototype.wander = function (dt, mul) {
+    this.wanderT -= dt;
+    if (this.wanderT <= 0) {
+      this.wanderT = G.rand(1.2, 2.6);
+      this.wanderA = G.rand(0, Math.PI * 2);
+    }
+    var m = G.game.map;
+    if (m) {
+      var rm = m.rooms[this.room];
+      if (rm) {
+        var rc = G.Map.roomRect(rm.c, rm.r);
+        var cx = (rc.x0 + rc.x1) / 2, cy = (rc.y0 + rc.y1) / 2;
+        if (G.dist(this.x, this.y, cx, cy) > ROOM_WANDER_R) this.wanderA = Math.atan2(cy - this.y, cx - this.x);
+      }
+    }
+    this.moveTo(this.wanderA, this.spd * 0.35 * mul, dt);
   };
 
   /* ------------------------------------------------------------
@@ -181,7 +230,7 @@
         this.fireT -= dt * mul;
         if (this.fireT <= 0 && d < keep + 130) {
           this.fireT = def.fireCd;
-          this.shoot(a, def);
+          if (!g.map || G.Map.los(g.map, this.x, this.y, p.x, p.y)) this.shoot(a, def);
         }
         break;
       }
@@ -243,7 +292,6 @@
       case 'boss2': this.boss2(dt, p, g, a, d, mul); break;
     }
 
-    /* 铁卫的震荡波 */
     if (this.def.shockCd) {
       this.shockT = (this.shockT === undefined ? this.def.shockCd : this.shockT) - dt;
       if (this.shockT <= 0 && d < this.def.shockR + 60) {
@@ -312,7 +360,6 @@
         this.vx *= 0.82; this.vy *= 0.82;
         this.flash = Math.max(this.flash, 0.4 + Math.sin(this.t * 26) * 0.35);
         if (this.sTimer <= 0) {
-          // 蓄力完成 → 进入践踏（phase2 三连）
           this.state = 'slam';
           this.sTimer = 0;
           this.slamN = this.phase === 2 ? 3 : 1;
@@ -387,7 +434,6 @@
     var ps = 1 + (this.phase - 1) * 0.28;
     this.sTimer -= dt;
 
-    // 裂地：phase3 的延迟爆炸点倒计时
     if (this.rifts && this.rifts.length) {
       for (var ri = this.rifts.length - 1; ri >= 0; ri--) {
         var rf = this.rifts[ri];
@@ -500,13 +546,15 @@
         this.vx *= 0.85; this.vy *= 0.85;
         this.flash = Math.max(this.flash, 0.4 + Math.sin(this.t * 22) * 0.3);
         if (this.sTimer <= 0) {
-          // 在玩家周围撕开 4 道深渊裂口（1.1s 后喷发）
           this.rifts = this.rifts || [];
+          var m = g.map, W = G.Map.WALL;
+          var lo = W + 60, hiW = m ? m.worldW - W - 60 : g.arena - 60;
+          var hiH = m ? m.worldH - W - 60 : g.arena - 60;
           for (var rk = 0; rk < 4; rk++) {
             var ra = Math.PI * 2 * rk / 4 + G.rand(-0.25, 0.25);
             var rd = G.rand(90, 150);
-            var rx = G.clamp(p.x + Math.cos(ra) * rd, 60, g.arena - 60);
-            var ry = G.clamp(p.y + Math.sin(ra) * rd, 60, g.arena - 60);
+            var rx = G.clamp(p.x + Math.cos(ra) * rd, lo, hiW);
+            var ry = G.clamp(p.y + Math.sin(ra) * rd, lo, hiH);
             this.rifts.push({ x: rx, y: ry, fuse: 1.1 + rk * 0.15, rad: 95 });
             G.fx('ring', { x: rx, y: ry, r0: 8, r1: 70, col: '#b98aff', w: 4, life: 0.5 });
           }
@@ -533,7 +581,6 @@
     var cv = G.PX.get(def.sprite, def.sc);
     var bob = Math.sin(this.t * 6) * (def.boss ? 2.5 : 1.4);
     var alpha = def.ghost ? 0.62 + Math.sin(this.t * 3) * 0.14 : 1;
-    // 受击抖动：短促随机位移（像素级，克制的冲击感）
     var jx = 0, jy = 0;
     if (this.hurtT > 0) {
       var k = Math.floor(this.hurtT * 60) % 2 ? 1.6 : -1.6;
@@ -542,12 +589,10 @@
     }
     var dx = this.x + jx, dy = this.y + jy;
 
-    // 影子
     c.globalAlpha = 0.3 * alpha; c.fillStyle = '#000';
     c.beginPath(); c.ellipse(this.x, this.y + this.r * 0.85, this.r * 0.8, this.r * 0.3, 0, 0, Math.PI * 2); c.fill();
     c.globalAlpha = 1;
 
-    // 精英/BOSS 光环
     if (def.elite || def.boss) {
       c.save();
       var pr = this.r + 8 + Math.sin(this.t * 3) * 3;
@@ -556,7 +601,6 @@
       c.beginPath(); c.arc(this.x, this.y, pr, 0, Math.PI * 2); c.stroke();
       c.restore();
     }
-    // 词缀视觉：彩色外环 + 头顶符号
     if (this.affixes && this.affixes.length) {
       c.save();
       for (var qi = 0; qi < this.affixes.length; qi++) {
@@ -592,7 +636,6 @@
       c.beginPath(); c.arc(dx, dy, this.r + 2, 0, Math.PI * 2); c.fill(); c.restore();
     }
 
-    // 血条（精英 / BOSS / 受伤的大怪）
     if ((def.elite || this.maxHp > 60) && !def.boss && this.hp < this.maxHp) {
       var w = this.r * 2.2, h = 4;
       var hx = dx - w / 2, hy = dy - this.r - 11;
@@ -601,7 +644,6 @@
       c.fillRect(hx, hy, w * (this.hp / this.maxHp), h);
     }
 
-    // BOSS 裂地预警（深渊之主的延迟爆炸点）
     if (this.rifts && this.rifts.length) {
       c.save();
       for (var rki = 0; rki < this.rifts.length; rki++) {
@@ -620,5 +662,8 @@
   };
 
   G.Enemy = Enemy;
+
+  /* 巡逻半径（房间中心距） */
+  var ROOM_WANDER_R = 260;
 
 })();

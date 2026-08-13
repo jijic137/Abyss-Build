@@ -445,6 +445,9 @@ function runNewSystems() {
   guard('descend', () => g.descend());
   if (g.map.tierId !== tierBefore + 1) throw new Error('未深入下一层');
   if ((g.depth || 0) !== 1) throw new Error('深度未记录');
+  if (!g._pendingDescend || g.state !== 'pause') throw new Error('层间整备未开启');
+  guard('beginNextFloor', () => g.beginNextFloor());
+  if (g.state !== 'play') throw new Error('深入后未进入战斗');
   guard('closeFlow', () => G.UI.closeFlow());
   log('  [深入] T' + tierBefore + '→T' + g.map.tierId + ' ✓');
 }

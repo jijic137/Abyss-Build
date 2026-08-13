@@ -488,6 +488,31 @@ function runInvDrag() {
   guard('renderBase', () => G.UI.renderBase());
   log('  [拖拽] 移动✓ 交换✓ 越界拒绝✓ 整理✓ 持久化✓');
 }
+/* ---------- 12. 分层内容密度 ---------- */
+function runTierDensity() {
+  log('\n===== 档案L：分层内容密度 =====');
+  const counts = [];
+  for (let tier = 1; tier <= 5; tier++) {
+    resetMeta();
+    guard('init', () => G.game.init());
+    guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['knight'], tier));
+    const g = G.game;
+    const chests = g.containers.filter(c => c.type !== 'shrine' && c.type !== 'altar').length;
+    const traps = g.traps.length;
+    const trapRooms = g.map.rooms.filter(rm => rm.type === 'trap').length;
+    const itemRooms = g.map.rooms.filter(rm => rm.type === 'item').length;
+    const itemChests = g.containers.filter(c => c.forceItem).length;
+    counts.push({ tier, chests, traps, trapRooms, itemRooms, itemChests });
+  }
+  log('  ' + counts.map(c => 'T' + c.tier + ' 箱' + c.chests + ' 陷' + c.traps + ' 陷阱房' + c.trapRooms + ' 道具房' + c.itemRooms).join(' | '));
+  const c1 = counts[0], c5 = counts[4];
+  if (c5.chests <= c1.chests * 1.5) throw new Error('深层宝箱未显著增多 T1=' + c1.chests + ' T5=' + c5.chests);
+  if (counts[1].trapRooms < 1 || counts[2].trapRooms < 1) throw new Error('T2/T3 应有陷阱房');
+  if (counts[0].itemRooms < 1) throw new Error('T1 应有道具房');
+  if (counts[4].trapRooms < 2) throw new Error('T5 陷阱房应 >= 2');
+  if (counts[0].itemChests < 1) throw new Error('道具房箱子未标记必出物品');
+  log('  [分层] 深层宝箱/陷阱显著增多 ✓ 陷阱房/道具房 ✓ 必出物品 ✓');
+}
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {
   log('\n===== 档案I：物品占格 (ranger / t1) =====');
@@ -554,8 +579,9 @@ function runModsPortal() {
     runModsPortal();
     runInvSizes();
     runNewSystems();
+    runTierDensity();
     runInvDrag();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 错误数=${ERR}`);
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

@@ -113,7 +113,27 @@ server.listen(8765, '127.0.0.1', async () => {
     });
     console.log('SPRITE ' + JSON.stringify(spr));
 
-    /* 撤离 */
+    /* 穿墙/瞬移实机验证：顶墙跑 1.2s */
+    await page.evaluate(() => {
+      const g = G.game, m = g.map;
+      const SEG = G.Map.SEG, ROOM = G.Map.ROOM;
+      let wall = null;
+      for (let c = 0; c < m.cols - 1 && !wall; c++) {
+        for (let r = 0; r < m.rows; r++) {
+          if (!m.doorsH[c][r]) { wall = { x: (c + 1) * SEG, y: G.Map.roomRect(c, r).y0 + ROOM / 2 }; break; }
+        }
+      }
+      window._wallX = wall ? wall.x : 0;
+      if (wall) { g.player.x = wall.x - 20; g.player.y = wall.y; g.player.vx = 0; g.player.vy = 0; }
+      window._wallStart = g.player.x;
+    });
+    await page.keyboard.down('d');
+    await page.waitForTimeout(1200);
+    await page.keyboard.up('d');
+    const wallEnd = await page.evaluate(() => ({ x: G.game.player.x, start: window._wallStart, wallX: window._wallX }));
+    const wallOk = wallEnd.wallX > 0 && wallEnd.x <= wallEnd.wallX - 14 + 3 && Math.abs(wallEnd.x - wallEnd.start) < 80;
+    console.log('WALLTEST ' + JSON.stringify(wallEnd) + ' ok=' + wallOk);
+    if (!wallOk) throw new Error('穿墙或瞬移');    /* 撤离 */
     await page.evaluate(() => {
       const g = G.game;
       g.map.eliteKills = 1;

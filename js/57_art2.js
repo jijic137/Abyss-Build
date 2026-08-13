@@ -1539,4 +1539,140 @@
     '....oooo........'
   ]);
 
+  /* ============================================================
+     8. 玩家角色精灵升级（与敌人美术风格统一）
+     ============================================================ */
+
+  /* 铁卫：重盔 + 顶缨 + 甲胄高光 */
+  DEF('char_knight', { o: '#14161f', a: '#7d8aa8', b: '#4d5773', s: '#e8b98a', e: '#1a1c26', c: '#3f7dff', d: '#c9d4e8', k: '#10121a' }, [
+    '....oooo......',
+    '...obbbbo..c.',
+    '..oaaaaaao..c.',
+    '..oaccccao.c..',
+    '..obseeesbo...',
+    '..obaaaaabo...',
+    '..oaccccaao...',
+    '.oaaacccaaao..',
+    '.oaaaaaaaao...',
+    '..oabbbbbao...',
+    '..oa.bb.ao....',
+    '..ob....bo....',
+    '..oo....oo....'
+  ]);
+
+  /* 游侠：兜帽 + 围巾 + 箭袋 */
+  DEF('char_ranger', { o: '#14161f', a: '#4fa86b', b: '#2f6b45', s: '#e8b98a', e: '#d8ffa0', c: '#c9a227', d: '#8fe0a8', k: '#12241a' }, [
+    '....oooo......',
+    '...oaaaao.....',
+    '..oaaaaaao....',
+    '..osssssso....',
+    '..oseeeeso....',
+    '...osssso.....',
+    '..obbbbbbo....',
+    '.obacccacbo...',
+    '.obaaaaaabo...',
+    '..ob.bb.bo....',
+    '..ob..b.bo....',
+    '..ob..b.bo....',
+    '..oo..oo......'
+  ]);
+
+  /* 术士：尖兜帽 + 法眼 */
+  DEF('char_mage', { o: '#14161f', a: '#8b5cf6', b: '#5b32b8', s: '#e8b98a', e: '#ffe66d', c: '#ffd24a', d: '#c8a0ff', k: '#1c1230' }, [
+    '.....oo.......',
+    '....oaao......',
+    '...oaaaao.....',
+    '..oaaaaaao....',
+    '..osseesso....',
+    '..osssssso....',
+    '...ossso......',
+    '..obaaabo.....',
+    '.obaacaabo....',
+    '.obaaaaabo....',
+    '..obaaabo.....',
+    '...obbbbo.....',
+    '..oo....oo....'
+  ]);
+
+  /* 狂徒：伤疤 + 獠牙 + 厚甲 */
+  DEF('char_brute', { o: '#14161f', a: '#c0392b', b: '#7b1f16', s: '#d9a06b', e: '#ffdd55', c: '#3a3f52', d: '#e06050', k: '#1e0f0c', w: '#ffe8d0' }, [
+    '...oooooo.....',
+    '..obbbbbbo....',
+    '..osssssso....',
+    '..oseecceo....',
+    '..ossccsso....',
+    '...oaaaao.....',
+    '.oaaaaaaaao...',
+    'oaabaaaabaao..',
+    '.oaaaaaaaao...',
+    '..oaawwaao....',
+    '..ob.ww.bo....',
+    '..ob....bo....',
+    '.ooo....ooo...'
+  ]);
+
+  /* 工匠：护目镜 + 扳手 */
+  DEF('char_engineer', { o: '#14161f', a: '#e0902a', b: '#8a5311', s: '#e8b98a', e: '#1a1c26', c: '#5aa7ff', d: '#ffd24a', k: '#241506' }, [
+    '...oooooo.....',
+    '..oaaaaaao....',
+    '..obbbbbbo....',
+    '..osssssso....',
+    '..oceeecco....',
+    '..ossssso.....',
+    '..obaaabo.....',
+    '.obacccabo....',
+    '.obaaaaabo....',
+    '..ob.a.bo.....',
+    '..ob...bo.....',
+    '.ooo...ooo....'
+  ]);
+
+  /* 影刺：兜帽 + 幽瞳 + 披风 */
+  DEF('char_shadow', { o: '#0e0f16', a: '#3d4a6b', b: '#222a40', s: '#c9a78a', e: '#7de0ff', c: '#7de0ff', d: '#a0c8ff', k: '#0a0c12' }, [
+    '....oooo......',
+    '...obbbbo.....',
+    '..obaaaabo....',
+    '..obssssbo....',
+    '..obeeeebo....',
+    '...oaaaao.....',
+    '..obaaaabo....',
+    '.obaacaabo....',
+    '.obaaaaabo....',
+    '..ob.aa.bo....',
+    '...ob..bo.....',
+    '..oo....oo....'
+  ]);
+
+  /* 炼金术士：风镜 + 药剂壶 */
+  DEF('char_alchemist', { o: '#14161f', a: '#4f8a3a', b: '#2f5a24', s: '#e8d8b0', e: '#8fc040', c: '#c9a227', d: '#b8f078', k: '#16240f' }, [
+    '....oooo......',
+    '...oaaaao.....',
+    '..oaaaaaao....',
+    '..osssssso....',
+    '..osecceso....',
+    '...oaaaao.....',
+    '..obaaabo.....',
+    '.obaacaabo....',
+    '.obaaaaabo....',
+    '..ob.ao.bo....',
+    '...ob..bo.....',
+    '..oo....oo....'
+  ]);
+
+  /* 守望者：冠盔 + 金瞳 */
+  DEF('char_warden', { o: '#14161f', a: '#5a7d9c', b: '#2f4457', s: '#e8b98a', e: '#ffd24a', c: '#c9d6e2', d: '#9fd0ff', k: '#141c26' }, [
+    '...oooooo.....',
+    '..oaaaaaao....',
+    '..occcccco....',
+    '..obbbbbbo....',
+    '..oseeeeso....',
+    '..ossssso.....',
+    '..obaaabo.....',
+    '.obacccabo....',
+    '.obaaaaabo....',
+    '..obaaabo.....',
+    '...obbbo......',
+    '.ooo...ooo....'
+  ]);
+
 })();

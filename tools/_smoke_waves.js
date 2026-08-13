@@ -1,4 +1,4 @@
-/* 无浏览器环境下驱动搜打撤核心循环：
+﻿/* 无浏览器环境下驱动搜打撤核心循环：
    - 地图生成（5 档位连通性 / 出生≠撤离 / 容器）
    - 进图 → 开箱 → 撤离成功（物品入库、货币结算、档位解锁）
    - 死亡路径（全丢）/ 存档读档 / 锁门钥匙 / 事件房间
@@ -198,11 +198,14 @@ async function runExtractSuccess() {
 
   const chest = g.containers.find(c => c.type === 'crate' || c.type === 'chest_wood');
   if (chest) {
+    const matsBefore = g.materials;
     g.player.x = chest.x; g.player.y = chest.y;
     chest.started = true;
     driveFrames(60);
     log(`  [开箱] ${chest.type} opened=${chest.opened} 材料=${g.materials} 背包=${g.bag.length}`);
     if (!chest.opened) throw new Error('箱子未开启');
+    if (typeof G.game.onContainerOpen !== 'function') throw new Error('onContainerOpen 缺失');
+    if (g.materials <= matsBefore && g.bag.length === 0) throw new Error('开箱奖励未结算');
   }
 
   g.map.time = 61;

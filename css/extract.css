@@ -338,3 +338,7 @@
 
 .bag-modal{ display:flex; pointer-events:auto; }
 
+
+/* ===== 出货卡定位修复（恢复居中） ===== */
+.loot-toast{ position:absolute; left:50%; bottom:150px; transform:translateX(-50%); }
+

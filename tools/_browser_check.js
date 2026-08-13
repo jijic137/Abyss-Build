@@ -221,7 +221,17 @@ server.listen(8765, '127.0.0.1', async () => {
     }));
     console.log('LOOT ' + JSON.stringify(loot));
     if (loot.opened === 0) throw new Error('箱子未开启');
-    if (loot.mats <= loot.mats0 && loot.bag === 0) throw new Error('开箱无奖励');    /* 撤离 */
+    if (loot.mats <= loot.mats0 && loot.bag === 0) throw new Error('开箱无奖励');
+    /* 出货卡强制显示校验 */
+    await page.evaluate(() => { G.UI.showLootCard(G.makeItem('executioner', 4)); });
+    await page.waitForTimeout(500);
+    const toastInfo = await page.evaluate(() => {
+      const t = document.getElementById('lootToast');
+      const r = t.getBoundingClientRect();
+      return { hidden: t.classList.contains('hidden'), visible: !t.classList.contains('hidden') && r.width > 0 && r.height > 0, rect: [r.left.toFixed(0), r.top.toFixed(0), r.width.toFixed(0), r.height.toFixed(0)], name: document.getElementById('lootName').textContent };
+    });
+    console.log('TOAST ' + JSON.stringify(toastInfo));
+    if (!toastInfo.visible || !toastInfo.name) throw new Error('出货卡未显示');    /* 撤离 */
     await page.evaluate(() => {
       const g = G.game;
       g.map.eliteKills = 1;

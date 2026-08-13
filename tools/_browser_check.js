@@ -202,7 +202,28 @@ server.listen(8765, '127.0.0.1', async () => {
     });
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(OUT, '14_flow.png') });
-    await page.evaluate(() => { G.UI.closeFlow(); });    /* 开箱反馈实机验证 */
+    await page.evaluate(() => { G.UI.closeFlow(); });
+    await page.evaluate(() => { G.UI.closeFlow(); });
+    /* 深入下一层：层间整备实机验证（descend → 整备 → 继续深入） */
+    await page.evaluate(() => {
+      const g = G.game;
+      g.map.eliteKills = 1; g.map.time = 999; g.checkObjective();
+      g.player.x = g.map.extract.x; g.player.y = g.map.extract.y;
+      g.descend();
+    });
+    await page.waitForTimeout(400);
+    const prep = await page.evaluate(() => {
+      const g = G.game;
+      const bar = document.getElementById('bagPrepBar');
+      return { pending: !!g._pendingDescend, state: g.state, bagOpen: !document.getElementById('scrBag').classList.contains('hidden'), bar: !!bar, barVisible: bar ? getComputedStyle(bar).display !== 'none' : false, bagLen: g.bag.length, weapons: g.player.weapons.length, items: g.player.items.length, barText: bar ? bar.textContent : '' };
+    });
+    console.log('PREP ' + JSON.stringify(prep));
+    if (!prep.pending || !prep.bagOpen || !prep.barVisible || prep.barText.indexOf('继续深入') < 0) throw new Error('层间整备异常');
+    await page.evaluate(() => { const b = document.querySelector('#bagPrepBar button'); if (b) b.click(); });
+    await page.waitForTimeout(300);
+    const prepGo = await page.evaluate(() => ({ state: G.game.state, tier: G.game.map.tierId, pending: !!G.game._pendingDescend }));
+    console.log('PREPGO ' + JSON.stringify(prepGo));
+    if (prepGo.state !== 'play' || prepGo.pending) throw new Error('继续深入未生效');
     await page.evaluate(() => {
       const g = G.game;
       window._mats0 = g.materials;

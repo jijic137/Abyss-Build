@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    49_flow2.js —— 进入流程理顺
    探索深渊 → 选角色 → 整备仓库 → 选图 → 出发
    - 角色确认后进入整备页（不再直接开始）
@@ -155,9 +155,10 @@
     if (!bar) {
       bar = document.createElement('div');
       bar.id = 'bagPrepBar';
-      var head = bag.querySelector ? bag.querySelector('.bag-head') : null;
-      if (head && head.nextSibling) bag.insertBefore(bar, head.nextSibling);
-      else bag.insertBefore(bar, bag.firstChild);
+      var panel = bag.querySelector ? (bag.querySelector('.bag-panel') || bag) : bag;
+    var head = panel.querySelector ? panel.querySelector('.bag-head') : null;
+      if (head && head.nextSibling) panel.insertBefore(bar, head.nextSibling);
+      else panel.appendChild(bar);
     }
     var prep = g._pendingDescend || {};
     bar.innerHTML = '';

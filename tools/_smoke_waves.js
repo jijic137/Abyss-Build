@@ -1,10 +1,8 @@
 /* 无浏览器环境下驱动搜打撤核心循环：
    - 地图生成（5 档位连通性 / 出生≠撤离 / 容器）
    - 进图 → 开箱 → 撤离成功（物品入库、货币结算、档位解锁）
-   - 死亡路径（全丢）
-   - 存档 / 读档
-   - 上锁房门 / 深渊钥匙
-   - 事件房间
+   - 死亡路径（全丢）/ 存档读档 / 锁门钥匙 / 事件房间
+   - 属性碎片（替代等级）/ 深渊词缀 / 传送门
    脚本列表从 index.html 解析，与页面永远同步。
    日志写入 _smoke3.log，错误数=0 即通过。
    用法：node tools/_smoke_waves.js
@@ -31,6 +29,7 @@ function ctxStub() {
       if(k==='createImageData'||k==='getImageData') return (w,h)=>({ data:new Uint8ClampedArray(((w|0)*(h|0)||1)*4), width:w, height:h });
       if(k==='createRadialGradient'||k==='createLinearGradient') return ()=>({ addColorStop(){} });
       if(k==='putImageData') return ()=>{};
+      if(k==='measureText') return ()=>({ width: 40 });
       if(k in t) return t[k];
       return ()=>{};
     },
@@ -102,9 +101,10 @@ try {
   }
 } catch (e) { log('LOAD ERROR: ' + (e && e.stack || e)); process.exit(2); }
 
-/* 无头：升级立刻消化，避免递归/浮层卡死 */
+/* 无头：升级立刻消化 */
 let pendingLevelCb = null;
-G.UI.renderLevelUp = function (g, opts, cb) { pendingLevelCb = { cb: cb, opts: opts }; };
+let levelTriggered = false;
+G.UI.renderLevelUp = function (g, opts, cb) { levelTriggered = true; pendingLevelCb = { cb: cb, opts: opts }; };
 
 let ERR = 0;
 function guard(label, fn) {
@@ -134,6 +134,14 @@ function driveFrames(n, dt) {
           else { G.game.player.pendingLevels = 0; G.game.openLevelUp(); }
         });
       }
+    } else if (G.game.state === 'level') {
+      if (pendingLevelCb) {
+        const pc = pendingLevelCb; pendingLevelCb = null;
+        guard('levelUpLv', () => {
+          if (pc.opts && pc.opts.length) pc.cb(pc.opts[0]);
+          else { G.game.player.pendingLevels = 0; G.game.openLevelUp(); }
+        });
+      } else break;
     } else {
       break;
     }
@@ -178,15 +186,15 @@ async function runExtractSuccess() {
   log('\n===== 档案A：撤离成功 (alchemist / t1) =====');
   resetMeta();
   guard('init', () => G.game.init());
-  const charDef = G.CHAR_BY_ID['alchemist'];
-  guard('newRun', () => G.game.newRun(charDef, 1));
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['alchemist'], 1));
   const g = G.game;
   g.player.maxHp = g.player.hp = 1e9;
   driveFrames(20);
-  log(`  [开局] 状态=${g.state} 地图=${g.map.tier.name} 装备=${g.player.weapons.length}武+${g.player.items.length}物 背包=${g.bag.length} 锁门=${(g.map.lockedDoors||[]).length} 事件=${(g.events||[]).length}`);
+  log(`  [开局] 状态=${g.state} 地图=${g.map.tier.name} 装备=${g.player.weapons.length}武+${g.player.items.length}物 背包=${g.bag.length} 词缀=${(g.mapMods||[]).map(x=>x.id).join(',')}`);
   if (g.player.weapons.length !== 2) throw new Error('应有两把武器（装备栏+职业补给）');
   if (g.player.items.length < 1) throw new Error('应有防具（职业补给）');
   if (!g.map.lockedDoors || !g.map.lockedDoors.length) throw new Error('T1 应有锁门');
+  if (!g.mapMods || !g.mapMods.length) throw new Error('T1 应有词缀');
 
   const chest = g.containers.find(c => c.type === 'crate' || c.type === 'chest_wood');
   if (chest) {
@@ -221,8 +229,7 @@ async function runDeath() {
   log('\n===== 档案B：死亡全丢 (knight / t2) =====');
   resetMeta();
   guard('init', () => G.game.init());
-  const charDef = G.CHAR_BY_ID['knight'];
-  guard('newRun', () => G.game.newRun(charDef, 2));
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['knight'], 2));
   const g = G.game;
   g.player.maxHp = g.player.hp = 1e9;
   driveFrames(20);
@@ -240,20 +247,19 @@ function runSaveResume() {
   log('\n===== 档案C：存档/读档 (mage / t3) =====');
   resetMeta();
   guard('init', () => G.game.init());
-  const charDef = G.CHAR_BY_ID['mage'];
-  guard('newRun', () => G.game.newRun(charDef, 3));
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['mage'], 3));
   const g = G.game;
   g.player.maxHp = g.player.hp = 1e9;
   driveFrames(15);
-  const levelAt = g.player.level;
   const matsAt = g.materials;
+  const shardsAt = g.shards || 0;
   guard('saveRun', () => g.saveRun());
   const snap = G.Save.getRun();
   if (!snap || snap.mode !== 'extract') throw new Error('快照缺失');
   guard('resumeRun', () => g.resumeRun(snap));
-  log(`  [读档] 状态=${g.state} 地图=${g.map.tier.name} Lv=${g.player.level} 材料=${g.materials}`);
-  if (g.player.level < levelAt) throw new Error('读档等级丢失');
+  log(`  [读档] 状态=${g.state} 地图=${g.map.tier.name} 材料=${g.materials} 碎片=${g.shards} 词缀=${(g.mapMods||[]).map(x=>x.id).join(',')}`);
   if (g.materials < matsAt) throw new Error('读档材料丢失');
+  if ((g.shards || 0) < shardsAt) throw new Error('读档碎片丢失');
   G.Save.clearRun();
 }
 
@@ -262,8 +268,7 @@ async function runKitchenSink() {
   log('\n===== 档案D：T4 构筑回归 (engineer) =====');
   resetMeta();
   guard('init', () => G.game.init());
-  const charDef = G.CHAR_BY_ID['engineer'];
-  guard('newRun', () => G.game.newRun(charDef, 4));
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['engineer'], 4));
   const g = G.game, p = g.player;
   p.maxHp = p.hp = 1e9;
   p.maxWeapons = 6;
@@ -276,7 +281,7 @@ async function runKitchenSink() {
   });
   p.recalc();
   driveFrames(240);
-  log(`  [T4] 状态=${g.state} 敌=${g.enemies.length} 杀=${p.stats.kills} 材料=${g.materials} 背包=${g.bag.length} 精英杀=${p.stats.eliteKills}`);
+  log(`  [T4] 状态=${g.state} 敌=${g.enemies.length} 杀=${p.stats.kills} 材料=${g.materials} 背包=${g.bag.length} 精英杀=${p.stats.eliteKills} 碎片=${g.shards}`);
   if (ERR === 0 && g.state !== 'result') {
     g.map.time = 999;
     g.checkObjective();
@@ -343,6 +348,51 @@ function runEvents() {
   log('  [事件] 触发→选择→应用→关闭 ✓');
 }
 
+/* ---------- 7. 属性碎片 ---------- */
+function runShards() {
+  log('\n===== 档案G：属性碎片 (mage / t1) =====');
+  resetMeta();
+  levelTriggered = false;
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['mage'], 1));
+  const g = G.game, p = g.player;
+  p.maxHp = p.hp = 1e9;
+  const matBefore = g.materials;
+  g.pickups.push(new G.Pickup(p.x + 2, p.y, 'shard', 1));
+  driveFrames(8);
+  if (g.shards !== 1) throw new Error('碎片未拾取 shards=' + g.shards);
+  g.pickups.push(new G.Pickup(p.x + 2, p.y, 'shard', 1));
+  driveFrames(6);
+  g.pickups.push(new G.Pickup(p.x + 2, p.y, 'shard', 1));
+  driveFrames(30);
+  if (!levelTriggered) throw new Error('碎片未触发强化选择');
+  if (p.level !== 1) throw new Error('不应有等级增长 level=' + p.level);
+  g.pickups.push(new G.Pickup(p.x + 2, p.y, 'mat', 5));
+  driveFrames(8);
+  if (g.materials !== matBefore + 5) throw new Error('材料拾取异常');
+  log('  [碎片] 拾取→共鸣→强化 ✓ level=' + p.level + ' shards=' + g.shards + ' pending=' + p.pendingLevels);
+}
+
+/* ---------- 8. 深渊词缀 / 传送门 ---------- */
+function runModsPortal() {
+  log('\n===== 档案H：词缀 / 传送门 (knight / t2) =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['knight'], 2));
+  const g = G.game;
+  g.player.maxHp = g.player.hp = 1e9;
+  if (!g.mapMods || !g.mapMods.length) throw new Error('T2 应有词缀');
+  if (!g.portals || !g.portals.length) throw new Error('应有传送门');
+  const pt = g.portals[0];
+  const fromX = g.player.x, fromY = g.player.y;
+  g.player.x = pt.x; g.player.y = pt.y;
+  guard('portalUse', () => g.tryInteract());
+  if (!pt.used) throw new Error('传送门未使用');
+  if (G.dist(g.player.x, g.player.y, fromX, fromY) < 250) throw new Error('未传送');
+  driveFrames(10);
+  log('  [随机] 词缀=' + g.mapMods.map(x => x.id).join(',') + ' 传送 ✓');
+}
+
 (async function () {
   try {
     verifyMaps();
@@ -352,7 +402,9 @@ function runEvents() {
     await runKitchenSink();
     runLockedDoors();
     runEvents();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4回归✓ 锁门✓ 事件✓ 错误数=${ERR}`);
+    runShards();
+    runModsPortal();
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

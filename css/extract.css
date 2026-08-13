@@ -78,3 +78,12 @@
 .loot-icon canvas{ image-rendering:pixelated; }
 .loot-name{ font-size:16px; font-weight:900; letter-spacing:1px; }
 .loot-sub{ font-size:10.5px; color:var(--dim,#8a90a8); margin-top:2px; }
+
+/* 2026-08-13 搜打撤 UI 修正 */
+.interact-hint{ display:none !important; }
+#keyHud{ left:auto !important; right:20px !important; bottom:auto !important; top:152px !important; transform:none !important; }
+#modLine{ position:absolute; left:50%; top:94px; transform:translateX(-50%); font-size:11px; color:#9fb4ff; letter-spacing:1px; z-index:30; text-shadow:0 0 8px rgba(0,0,0,.85); }
+
+
+#keyHud{ top:186px !important; }
+

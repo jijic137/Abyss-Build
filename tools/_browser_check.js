@@ -190,7 +190,26 @@ server.listen(8765, '127.0.0.1', async () => {
     });
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(OUT, '14_flow.png') });
-    await page.evaluate(() => { G.UI.closeFlow(); });    /* 撤离 */
+    await page.evaluate(() => { G.UI.closeFlow(); });    /* 开箱反馈实机验证 */
+    await page.evaluate(() => {
+      const g = G.game;
+      window._mats0 = g.materials;
+      const chest = g.containers.find(c => !c.opened && !c.used && c.type !== 'shrine' && c.type !== 'altar');
+      if (chest) { g.player.x = chest.x; g.player.y = chest.y; chest.started = true; }
+    });
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: path.join(OUT, '15_chest_open.png') });
+    await page.waitForTimeout(1200);
+    const loot = await page.evaluate(() => ({
+      mats: G.game.materials,
+      mats0: window._mats0,
+      bag: G.game.bag.length,
+      toastHidden: document.getElementById('lootToast').classList.contains('hidden'),
+      opened: G.game.containers.filter(c => c.opened).length
+    }));
+    console.log('LOOT ' + JSON.stringify(loot));
+    if (loot.opened === 0) throw new Error('箱子未开启');
+    if (loot.mats <= loot.mats0 && loot.bag === 0) throw new Error('开箱无奖励');    /* 撤离 */
     await page.evaluate(() => {
       const g = G.game;
       g.map.eliteKills = 1;

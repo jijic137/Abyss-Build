@@ -113,7 +113,9 @@ server.listen(8765, '127.0.0.1', async () => {
     });
     console.log('SPRITE ' + JSON.stringify(spr));
 
-    /* 穿墙/瞬移实机验证：顶墙跑 1.2s */
+    /* 新背包/仓库界面渲染 */
+    await page.evaluate(() => { G.UI.renderBase(); G.UI.renderMarket(); G.UI.renderBag(); });
+    await page.waitForTimeout(400);    /* 穿墙/瞬移实机验证：顶墙跑 1.2s */
     await page.evaluate(() => {
       const g = G.game, m = g.map;
       const SEG = G.Map.SEG, ROOM = G.Map.ROOM;

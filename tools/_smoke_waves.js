@@ -443,6 +443,43 @@ function runNewSystems() {
   guard('closeFlow', () => G.UI.closeFlow());
   log('  [深入] T' + tierBefore + '→T' + g.map.tierId + ' ✓');
 }
+/* ---------- 11. 背包拖拽/整理 ---------- */
+function runInvDrag() {
+  log('\n===== 档案K：背包拖拽/整理 =====');
+  resetMeta();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['ranger'], 1));
+  const g = G.game, p = g.player;
+  p.maxHp = p.hp = 1e9;
+  const a = G.makeItem('clover', 0);
+  const b = G.makeItem('lucky_coin', 0);
+  const c = G.makeWeapon('pistol', 2);
+  const d = G.makeItem('executioner', 4);
+  if (!G.addBagItem(a) || !G.addBagItem(b) || !G.addBagItem(c) || !G.addBagItem(d)) throw new Error('入包失败');
+  G.invFixLayout(g.bag, 5, 4);
+  let freeCell = null;
+  for (let y = 0; y < 4 && !freeCell; y++) for (let x = 0; x < 5 && !freeCell; x++)
+    if (G.invCanPlace(g.bag, 5, 4, x, y, 1, 1, null)) freeCell = { x: x, y: y };
+  if (!freeCell) throw new Error('无空位');
+  const oldB = { x: b.ix, y: b.iy };
+  const r1 = G.invTryMove(g.bag, 5, 4, a, freeCell.x, freeCell.y);
+  if (!r1.ok || a.ix !== freeCell.x || a.iy !== freeCell.y) throw new Error('拖拽移动失败');
+  const r2 = G.invTryMove(g.bag, 5, 4, b, freeCell.x, freeCell.y);
+  if (!r2.ok || !r2.swap) throw new Error('同尺寸交换失败');
+  if (b.ix !== freeCell.x || b.iy !== freeCell.y || a.ix !== oldB.x || a.iy !== oldB.y) throw new Error('交换坐标错误');
+  const r3 = G.invTryMove(g.bag, 5, 4, d, 4, 3);
+  if (r3.ok) throw new Error('越界应拒绝');
+  G.invSort(g.bag);
+  G.invPackAll(g.bag, 5, 4);
+  const first = g.bag[0];
+  if (!G.invCanPlace(g.bag, 5, 4, first.ix, first.iy, first.size[0], first.size[1], first)) throw new Error('整理后重叠');
+  const d1 = G.itemData(a);
+  const a2 = G.itemFromData(d1);
+  if (a2.ix !== a.ix || a2.iy !== a.iy) throw new Error('坐标未持久化');
+  guard('renderBag', () => G.UI.renderBag());
+  guard('renderBase', () => G.UI.renderBase());
+  log('  [拖拽] 移动✓ 交换✓ 越界拒绝✓ 整理✓ 持久化✓');
+}
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {
   log('\n===== 档案I：物品占格 (ranger / t1) =====');
@@ -509,7 +546,8 @@ function runModsPortal() {
     runModsPortal();
     runInvSizes();
     runNewSystems();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 错误数=${ERR}`);
+    runInvDrag();
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

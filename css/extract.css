@@ -294,3 +294,15 @@
 #bossPortrait{ position:absolute; left:-4px; top:50%; transform:translateY(-50%); width:58px; height:78px; object-fit:cover; border:1px solid #3a4258; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.6); }
 #evtBox, #flowBox{ background-size:cover; background-position:center; }
 
+
+/* ===== AI 集成二 ===== */
+#scrBase, #scrMarket, #scrResult{ background-size:cover; background-position:center; }
+#scrBase::before, #scrMarket::before, #scrResult::before{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(7,9,16,.86), rgba(7,9,16,.9)); z-index:0; }
+#scrBase > *, #scrMarket > *, #scrResult > *{ position:relative; z-index:1; }
+#spawnCard{ position:fixed; top:64px; left:50%; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:5px; z-index:70; pointer-events:none; }
+#spawnCard img{ height:170px; border:2px solid var(--sc,#ffd24a); border-radius:8px; box-shadow:0 0 26px var(--sc,#ffd24a); opacity:.96; }
+#spawnCard .sc-name{ font-size:19px; font-weight:900; color:var(--sc,#ffd24a); letter-spacing:4px; text-shadow:0 0 14px var(--sc,#ffd24a); }
+#spawnCard .sc-sub{ font-size:11px; color:#dce2f0; letter-spacing:3px; }
+#spawnCard.pop{ animation:scIn .3s ease-out; }
+@keyframes scIn{ from{ transform:translateX(-50%) translateY(-14px) scale(.9); opacity:0; } to{ transform:translateX(-50%) translateY(0) scale(1); opacity:1; } }
+

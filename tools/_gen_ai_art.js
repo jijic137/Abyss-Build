@@ -1,4 +1,4 @@
-/* 批量 AI 美术生成：调 ComfyUI API（flux2-dev 立绘/概念图）
+﻿/* 批量 AI 美术生成：调 ComfyUI API（flux2-dev 立绘/概念图）
    特性：连接超时 + 请求重试 + 断点续跑（已下载的跳过）+ 服务预检
    用法：node tools/_gen_ai_art.js
    产物：assets/art/ai/{cover,tiers,boss,events}/
@@ -65,7 +65,17 @@ const JOBS = [
   { key: 'boss', file: 'boss1_behemoth', w: 832, h: 1216, p: 'portrait concept art, colossal corrupted behemoth with chitinous armor and glowing molten cracks, heavy chains, snarling, full body, ' + STYLE },
   { key: 'boss', file: 'boss2_abyss', w: 832, h: 1216, p: 'portrait concept art, the Lord of the Abyss, regal eldritch figure in tattered black-gold robes, void crown, seven glowing eyes, tendrils of darkness, floating, imposing, full body, ' + STYLE },
   { key: 'events', file: 'event_altar', w: 832, h: 1216, p: 'concept art, mysterious altar in a dark shrine room, floating runes, offering bowl with violet flame, treasure chests around, intimate scale, ' + STYLE },
-  { key: 'events', file: 'portal_rift', w: 832, h: 1216, p: 'concept art, swirling violet rift portal between reality and the abyss, energy tendrils, cracked stone arch, glowing particles, centered composition, ' + STYLE }
+  { key: 'events', file: 'portal_rift', w: 832, h: 1216, p: 'concept art, swirling violet rift portal between reality and the abyss, energy tendrils, cracked stone arch, glowing particles, centered composition, ' + STYLE },
+  { key: 'elites', file: 'el1_warden', w: 832, h: 1216, p: 'portrait concept art, armored elite abyss warden with a heavy shield and glowing green runes, stern, full body, ' + STYLE },
+  { key: 'elites', file: 'el2_ironclad', w: 832, h: 1216, p: 'portrait concept art, massive ironclad elite golem with layered plate armor and glowing blue core, slow and menacing, full body, ' + STYLE },
+  { key: 'elites', file: 'el3_butcher', w: 832, h: 1216, p: 'portrait concept art, crazed butcher elite with twin cleavers and blood-soaked apron, crimson eyes, charging pose, full body, ' + STYLE },
+  { key: 'elites', file: 'el4_hexer', w: 832, h: 1216, p: 'portrait concept art, hooded hexer elite casting purple curse magic, floating runes around hands, glowing eyes, full body, ' + STYLE },
+  { key: 'elites', file: 'el5_brood', w: 832, h: 1216, p: 'portrait concept art, bloated broodmother elite with spider eggs hanging from her back, green ichor glow, unsettling, full body, ' + STYLE },
+  { key: 'elites', file: 'el6_reaper', w: 832, h: 1216, p: 'portrait concept art, hooded reaper elite wielding a giant scythe, wispy dark cloak, glowing white eyes, full body, ' + STYLE },
+  { key: 'base', file: 'base_camp', w: 1216, h: 832, p: 'wide concept art, underground base camp with wooden tables, weapons rack, treasure chests, warm lanterns, maps on the wall, an abyss hunter organizing loot, ' + STYLE },
+  { key: 'result', file: 'result_win', w: 1216, h: 832, p: 'wide key art, triumphant abyss hunter walking away from a glowing rift with a heavy loot pack, golden light, floating embers, cinematic, ' + STYLE },
+  { key: 'result', file: 'result_lose', w: 1216, h: 832, p: 'wide key art, fallen abyss hunter gear scattered on dark stone before a cold void gate, somber mood, fading embers, ' + STYLE },
+  { key: 'system', file: 'daily_challenge', w: 1216, h: 832, p: 'wide banner art, ominous clockwork hourglass above an abyss gate, magical hourglass with purple sand, challenge sigils floating, ' + STYLE }
 ];
 
 async function submit(prompt, seed, width, height, prefix) {

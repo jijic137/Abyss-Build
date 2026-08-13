@@ -210,6 +210,20 @@
       c.fill();
       c.restore();
     }
+    if (this.poisonT > 0) {
+      c.save();
+      c.globalAlpha = 0.20 + Math.sin(this.t * 9) * 0.06;
+      c.fillStyle = '#8fc040';
+      c.beginPath();
+      c.arc(dx, dy, this.r + 1, 0, Math.PI * 2);
+      c.fill();
+      c.strokeStyle = 'rgba(143,192,64,0.55)';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(dx, dy, this.r + 4 + Math.sin(this.t * 6) * 2, 0, Math.PI * 2);
+      c.stroke();
+      c.restore();
+    }
 
     /* 护盾词缀：蓝色圆弧 */
     if (shielded) {

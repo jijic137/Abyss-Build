@@ -61,15 +61,19 @@
 
     <div id="waveBanner" class="wave-banner"></div>
 
-    <!-- 背包浮层 -->
-    <div id="scrBag" class="bag-panel hidden">
-      <div class="bag-head">
-        <span class="bag-title">背包</span>
-        <span class="bag-count" id="bagCount">0 / 12</span>
-        <button class="btn btn-sm" id="btnBagClose">关闭</button>
+        <!-- 背包弹层 -->
+    <div id="scrBag" class="bag-modal hidden">
+      <div class="bag-backdrop"></div>
+      <div class="bag-panel">
+        <div class="bag-head">
+          <span class="bag-title">背 包</span>
+          <span class="bag-count" id="bagCount">0 / 20 格</span>
+          <span class="bag-head-spacer"></span>
+          <button class="btn btn-sm" id="btnBagClose">关闭</button>
+        </div>
+        <div class="bag-grid" id="bagGrid"></div>
+        <div class="bag-tip">TAB 关闭 · 点击物品装备 · 拖动整理 · 撤离后全部入仓</div>
       </div>
-      <div class="bag-grid" id="bagGrid"></div>
-      <div class="bag-tip">点击背包物品装备到对应栏位 · 点击已装备物品卸下 · 撤离后全部入仓</div>
     </div>
 
     <!-- 出货卡片 -->
@@ -348,3 +352,4 @@
 <script src="js/48_pause.js"></script>
 <script src="js/49_flow2.js"></script>
 <script src="js/50_fix.js"></script>
+<script src="js/51_bag.js"></script>

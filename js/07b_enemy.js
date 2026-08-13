@@ -1,5 +1,6 @@
 /* ============================================================
-   07b_enemy.js —— 敌人实体与 AI（搜打撤版：墙体碰撞 / 房间归属 / 视线）
+   07b_enemy.js —— 敌人实体与 AI（搜打撤版：分轴碰撞 / 房间归属 / 视线）
+   修复穿墙与瞬移：移动改为分轴 + 包围盒判定。
    ============================================================ */
 'use strict';
 
@@ -45,7 +46,7 @@
 
   Enemy.prototype.hurt = function () { this.flash = 1; this.hurtT = 0.11; };
 
-  /* 世界边界 / 墙体碰撞 */
+  /* 世界边界夹紧（碰撞已在移动时分轴处理） */
   Enemy.prototype._clampMove = function () {
     var g = G.game, m = g.map;
     if (!m) {
@@ -56,19 +57,6 @@
     var W = G.Map.WALL;
     this.x = G.clamp(this.x, W + this.r, m.worldW - W - this.r);
     this.y = G.clamp(this.y, W + this.r, m.worldH - W - this.r);
-    if (G.Map.canStand(m, this.x, this.y, this.r)) return;
-    if (G.Map.canStand(m, this.x - this.vx * 0.016, this.y, this.r) ||
-        !G.Map.solid(m, this.x, this.y - this.r)) {
-      var nx = this.x;
-      while (G.Map.solid(m, nx, this.y) && nx > W + this.r) nx -= 2;
-      while (G.Map.solid(m, nx, this.y) && nx < m.worldW - W - this.r) nx += 2;
-      this.x = nx;
-    } else {
-      var ny = this.y;
-      while (G.Map.solid(m, this.x, ny) && ny > W + this.r) ny -= 2;
-      while (G.Map.solid(m, this.x, ny) && ny < m.worldH - W - this.r) ny += 2;
-      this.y = ny;
-    }
   };
 
   /* ------------------------------------------------------------
@@ -117,7 +105,6 @@
     var frost = (p.hasSp('frostAura') && G.dist(this.x, this.y, p.x, p.y) < 130) ? 0.7 : 1;
     var mul = slow * frost;
 
-    /* 房间归属：玩家不在本房间时巡逻等待，不隔墙追击 */
     var sameRoom = !g.map || this.room < 0 || this.room === p.room;
     if (this.stunT <= 0) {
       if (sameRoom) this.ai(dt, p, g, mul);
@@ -126,13 +113,23 @@
       this.vx *= 0.85; this.vy *= 0.85;
     }
 
-    this.x += (this.vx + this.kx) * dt;
-    this.y += (this.vy + this.ky) * dt;
+    /* 分轴移动 + 包围盒碰撞（不可穿墙） */
+    var m = g.map;
+    if (m) {
+      var ex = this.x + (this.vx + this.kx) * dt;
+      var ey = this.y + (this.vy + this.ky) * dt;
+      if (!G.Map.bboxSolid(m, ex, this.y, this.r)) this.x = ex;
+      else { this.vx = 0; this.kx = 0; }
+      if (!G.Map.bboxSolid(m, this.x, ey, this.r)) this.y = ey;
+      else { this.vy = 0; this.ky = 0; }
+    } else {
+      this.x += (this.vx + this.kx) * dt;
+      this.y += (this.vy + this.ky) * dt;
+    }
     this._clampMove();
 
     if (Math.abs(this.vx) > 2) this.face = this.vx > 0 ? 1 : -1;
 
-    /* 远距离清除（避免整图敌人堆积） */
     if (g.map && this.room >= 0 && this.room !== p.room && G.dist(this.x, this.y, p.x, p.y) > 1500) {
       G.burst(this.x, this.y, 4, '#556', 80);
       this.dead = true;
@@ -663,7 +660,6 @@
 
   G.Enemy = Enemy;
 
-  /* 巡逻半径（房间中心距） */
   var ROOM_WANDER_R = 260;
 
 })();

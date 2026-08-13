@@ -109,3 +109,54 @@
 .bag-cell.bag-packed{ position:relative; display:flex; align-items:center; justify-content:center; }
 .stash-grid .bag-slot{ min-height:38px; }
 
+
+/* ===== 宝箱出货飞行动画 ===== */
+.loot-fly{ position:fixed; z-index:80; pointer-events:none; display:flex; align-items:center; justify-content:center; transform:translate(-50%,-50%); filter:drop-shadow(0 0 8px var(--rc,#ffd24a)); will-change:transform,opacity; }
+.loot-fly canvas{ image-rendering:pixelated; }
+.loot-fly-pop{ animation:lootFlyPop .18s cubic-bezier(.2,1.5,.4,1); }
+@keyframes lootFlyPop{
+  0%{ opacity:0; transform:translate(-50%,-50%) scale(.3); filter:drop-shadow(0 0 0 var(--rc,#ffd24a)); }
+  60%{ opacity:1; transform:translate(-50%,-50%) scale(1.18); filter:drop-shadow(0 0 20px var(--rc,#ffd24a)); }
+  100%{ opacity:1; transform:translate(-50%,-50%) scale(1); filter:drop-shadow(0 0 10px var(--rc,#ffd24a)); }
+}
+.loot-fly-fly{ transition:transform .34s cubic-bezier(.45,0,.7,.4), opacity .32s ease-in; }
+/* ===== 34_loot_fly 补充：位移过渡 + 搜索扫描光环 ===== */
+.loot-fly-fly{
+  transition:left .42s cubic-bezier(.5,0,.3,1), top .42s cubic-bezier(.5,0,.3,1),
+    transform .34s cubic-bezier(.45,0,.7,.4), opacity .32s ease-in;
+  transform:translate(-50%,-50%) scale(.45);
+  opacity:.2;
+}
+.loot-scan{
+  position:fixed; z-index:79; pointer-events:none;
+  width:34px; height:34px; border-radius:50%;
+  transform:translate(-50%,-50%);
+  border:2px solid var(--rc,#ffd24a);
+  animation:lootScan .28s ease-out forwards;
+}
+@keyframes lootScan{
+  0%{ width:30px; height:30px; opacity:.95; }
+  100%{ width:76px; height:76px; opacity:0; }
+}
+
+/* ===== 市场重做 ===== */
+.mkt-tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+.mkt-tab{ font-size:12px; padding:5px 12px; border:1px solid #3a4258; border-radius:6px; background:#151827; color:#9aa0b8; cursor:pointer; }
+.mkt-tab.on{ border-color:#ffd24a; color:#ffd24a; box-shadow:0 0 10px #ffd24a33; }
+.market-toolbar{ flex-wrap:wrap; }
+.mkt-card{ position:relative; border:1px solid #2a3048; border-radius:10px; background:linear-gradient(180deg,#171b2a,#111425); padding:12px 12px 12px 16px; overflow:hidden; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:transform .12s, border-color .12s; }
+.mkt-card:hover{ transform:translateY(-3px); border-color:var(--rc,#7fa8ff); }
+.mkt-card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:linear-gradient(180deg, var(--rc), transparent); box-shadow:0 0 14px var(--rc); }
+.mkt-r0{ --rc:#d9dde8; } .mkt-r1{ --rc:#4fd06b; } .mkt-r2{ --rc:#46a2ff; } .mkt-r3{ --rc:#b45cff; } .mkt-r4{ --rc:#ff4a4a; }
+.mkt-r4{ box-shadow:0 0 22px #ff4a4a33; }
+.mkt-head{ display:flex; align-items:center; gap:10px; }
+.mkt-icon{ width:54px; height:54px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle, var(--rc)22, transparent 70%); border-radius:8px; flex:none; }
+.mkt-icon canvas{ image-rendering:pixelated; }
+.mkt-name{ font-size:15px; font-weight:900; color:var(--rc); }
+.mkt-type{ font-size:10px; color:#7a82a0; letter-spacing:1px; margin-top:2px; }
+.mkt-mods{ display:flex; flex-wrap:wrap; gap:4px; font-size:10.5px; }
+.mkt-mods span{ background:#1c2132; border:1px solid #2a3048; border-radius:4px; padding:2px 6px; color:#aab; }
+.mkt-flavor{ font-size:10px; color:#6a7088; font-style:italic; flex:1; line-height:1.5; }
+.mkt-buy{ margin-top:4px; }
+.mkt-empty{ grid-column:1/-1; text-align:center; color:#6a7088; padding:30px; }
+

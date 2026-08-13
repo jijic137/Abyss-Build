@@ -121,8 +121,10 @@ server.listen(8765, '127.0.0.1', async () => {
       g.checkObjective();
       g.player.x = g.map.extract.x;
       g.player.y = g.map.extract.y;
+      g.tryInteract();
+      if (G.UI._flowOpen) g.extractNow();
     });
-    await page.waitForTimeout(3600);
+    await page.waitForTimeout(4200);
     const result = await page.evaluate(() => ({
       state: G.game.state,
       resultOn: document.getElementById('scrResult').classList.contains('on'),

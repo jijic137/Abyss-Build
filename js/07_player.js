@@ -1,6 +1,6 @@
 /* ============================================================
    07_player.js —— 玩家角色 + 武器开火逻辑 + 敌人实体
-   （搜打撤版：墙体碰撞 / 视线遮挡）
+   （搜打撤版：分轴移动碰撞 / 视线遮挡；修复穿墙与瞬移）
    ============================================================ */
 'use strict';
 
@@ -15,6 +15,12 @@
         G.Map.solid(m, x, y)) return false;
     return true;
   };
+  G.Map.bboxSolid = function (m, x, y, r) {
+    if (!m) return false;
+    return G.Map.solid(m, x - r, y - r) || G.Map.solid(m, x + r, y - r) ||
+           G.Map.solid(m, x - r, y + r) || G.Map.solid(m, x + r, y + r) ||
+           G.Map.solid(m, x, y);
+  };
   function collideWorld(x, y, r) {
     var g = G.game;
     if (!g.map) {
@@ -25,16 +31,7 @@
     var m = g.map, W = G.Map.WALL;
     x = G.clamp(x, W + r, m.worldW - W - r);
     y = G.clamp(y, W + r, m.worldH - W - r);
-    if (G.Map.canStand(m, x, y, r)) return { x: x, y: y };
-    var nx = x, ny = y;
-    if (!G.Map.solid(m, x, y - r) && !G.Map.solid(m, x, y + r)) {
-      while (G.Map.solid(m, nx, y) && nx > W + r) nx -= 2;
-      while (G.Map.solid(m, nx, y) && nx < m.worldW - W - r) nx += 2;
-    } else {
-      while (G.Map.solid(m, x, ny) && ny > W + r) ny -= 2;
-      while (G.Map.solid(m, x, ny) && ny < m.worldH - W - r) ny += 2;
-    }
-    return { x: nx, y: ny };
+    return { x: x, y: y };
   }
   G.collideWorld = collideWorld;
 
@@ -196,10 +193,25 @@
     var acc = len > 0 ? 16 : 13;
     this.vx = G.lerp(this.vx, tvx, G.clamp(acc * dt, 0, 1));
     this.vy = G.lerp(this.vy, tvy, G.clamp(acc * dt, 0, 1));
-    var nxp = this.x + this.vx * dt;
-    var nyp = this.y + this.vy * dt;
-    var mv = collideWorld(nxp, nyp, this.r);
-    this.x = mv.x; this.y = mv.y;
+
+    /* 分轴移动 + 包围盒碰撞（不可穿墙） */
+    var m = g.map;
+    if (m) {
+      var tx = this.x + this.vx * dt;
+      var ty = this.y + this.vy * dt;
+      if (!G.Map.bboxSolid(m, tx, this.y, this.r)) this.x = tx;
+      else this.vx = 0;
+      if (!G.Map.bboxSolid(m, this.x, ty, this.r)) this.y = ty;
+      else this.vy = 0;
+      var cl = collideWorld(this.x, this.y, this.r);
+      this.x = cl.x; this.y = cl.y;
+    } else {
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      var cl2 = collideWorld(this.x, this.y, this.r);
+      this.x = cl2.x; this.y = cl2.y;
+    }
+
     if (len > 0) {
       this.walkT += dt * 10;
       if (Math.random() < dt * 14) {
@@ -291,7 +303,6 @@
           a0: ang - half, a1: ang + half,
           col: def.col, w: 8, life: 0.2
         });
-        var hitAny = false;
         var ls = g.queryEnemies(this.x, this.y, rng + 30);
         for (i = 0; i < ls.length; i++) {
           var e = ls[i];
@@ -306,7 +317,6 @@
             crit: d.crit, x: e.x, y: e.y, knock: def.knock,
             kx: e.x - this.x, ky: e.y - this.y, stun: def.stun, srcW: w
           });
-          hitAny = true;
         }
         break;
       }

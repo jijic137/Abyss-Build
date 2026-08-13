@@ -214,8 +214,11 @@ async function runExtractSuccess() {
   if (!g.map.extract.active) throw new Error('撤离点未激活');
   g.player.x = g.map.extract.x;
   g.player.y = g.map.extract.y;
+  guard('flowA', () => g.tryInteract());
+  if (!G.UI._flowOpen) throw new Error('抉择面板未打开');
+  guard('extractNow', () => g.extractNow());
   driveFrames(120);
-  await sleep(900);
+  await sleep(1200);
   log(`  [撤离] 状态=${g.state} 提取=${G.Meta.stats().itemsExtracted} 币=${G.Meta.currency()} 仓=${G.Meta.stash().length} t2解锁=${G.Meta.tierUnlocked(2)}`);
   if (g.state !== 'result') throw new Error('未进入结算');
   if (G.Meta.stats().extracts !== 1) throw new Error('撤离统计未记录');
@@ -291,8 +294,10 @@ async function runKitchenSink() {
     g.checkObjective();
     if (g.map.extract.active) {
       g.player.x = g.map.extract.x; g.player.y = g.map.extract.y;
+      guard('flowD', () => g.tryInteract());
+      if (G.UI._flowOpen) g.extractNow();
       driveFrames(150);
-      await sleep(900);
+      await sleep(1200);
     }
   }
 }
@@ -347,7 +352,8 @@ function runEvents() {
   const choice = { id: 'test', name: '测试', col: '#fff', desc: '', apply: () => { G.game.addMaterials(5); } };
   guard('applyEvent', () => G.game.applyEvent(ev, choice));
   if (!ev.used) throw new Error('事件未标记已用');
-  if (g.materials !== matsBefore + 5) throw new Error('事件效果未应用');
+  var matMul = (g.mapMods || []).some(function (x) { return x.id === 'mats'; }) ? 1.5 : 1;
+  if (g.materials !== matsBefore + Math.round(5 * matMul)) throw new Error('事件效果未应用');
   guard('closeEvent', () => G.UI.closeEvent());
   log('  [事件] 触发→选择→应用→关闭 ✓');
 }
@@ -373,10 +379,70 @@ function runShards() {
   if (p.level !== 1) throw new Error('不应有等级增长 level=' + p.level);
   g.pickups.push(new G.Pickup(p.x + 2, p.y, 'mat', 5));
   driveFrames(8);
-  if (g.materials !== matBefore + 5) throw new Error('材料拾取异常');
+  var matMul2 = (g.mapMods || []).some(function (x) { return x.id === 'mats'; }) ? 1.5 : 1;
+  if (g.materials !== matBefore + Math.round(5 * matMul2)) throw new Error('材料拾取异常');
   log('  [碎片] 拾取→共鸣→强化 ✓ level=' + p.level + ' shards=' + g.shards + ' pending=' + p.pendingLevels);
 }
 
+/* ---------- 10. 新系统：词条/碰撞/深入/机关 ---------- */
+function runNewSystems() {
+  log('\n===== 档案J：词条/碰撞/深入/机关 =====');
+  if (!G.STAT_HIDDEN || !G.STAT_HIDDEN.harvesting) throw new Error('隐藏词条未定义');
+  if (G.STAT_DEFS.some(d => G.STAT_HIDDEN[d.key])) throw new Error('属性面板仍有隐藏词条');
+  if (G.ITEM_MAP['sickle'] && G.ITEM_MAP['sickle'].mods && G.ITEM_MAP['sickle'].mods.harvesting !== undefined) throw new Error('物品仍有收获词条');
+  resetMeta();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['knight'], 1));
+  const g = G.game, p = g.player;
+  p.maxHp = p.hp = 1e9;
+
+  /* 碰撞：不可穿墙、不瞬移 */
+  const m = g.map;
+  let wall = null;
+  for (let c = 0; c < m.cols - 1 && !wall; c++) {
+    for (let r = 0; r < m.rows; r++) {
+      if (!m.doorsH[c][r]) { wall = { x: (c + 1) * G.Map.SEG, y: G.Map.roomRect(c, r).y0 + G.Map.ROOM / 2 }; break; }
+    }
+  }
+  if (!wall) throw new Error('未找到墙体');
+  g.keys.right = true;
+  p.x = wall.x - p.r - 6;
+  p.y = wall.y;
+  const startX = p.x;
+  driveFrames(60);
+  g.keys.right = false;
+  if (p.x > wall.x - p.r + 3) throw new Error('穿墙！x=' + p.x + ' wall=' + wall.x);
+  if (Math.abs(p.x - startX) > 50) throw new Error('异常位移/瞬移');
+  log('  [碰撞] 墙阻=✓ 位移=' + G.fmt(p.x - startX, 1));
+
+  if (!g.barrels || !g.barrels.length) throw new Error('无爆炸桶');
+  if (!g.traps || !g.traps.length) throw new Error('无尖刺陷阱');
+  const barrel = g.barrels[0];
+  const beforeBarrel = g.barrels.length;
+  g.bullets.push(new G.Bullet({ x: barrel.x - 60, y: barrel.y, vx: 900, vy: 0, dmg: 50, r: 5, sprite: 'b_bullet', col: '#ffd24a', life: 0.4 }));
+  driveFrames(10);
+  if (g.barrels.length >= beforeBarrel) throw new Error('爆炸桶未被引爆');
+  log('  [机关] 爆炸桶引爆 ✓ 陷阱=' + g.traps.length);
+
+  const combatRooms = {};
+  g.containers.forEach(c => { combatRooms[c.room] = (combatRooms[c.room] || 0) + 1; });
+  let maxC = 0;
+  m.rooms.forEach(rm => { if (rm.type === 'combat') maxC = Math.max(maxC, combatRooms[rm.idx] || 0); });
+  if (maxC > 1) throw new Error('战斗房容器过多 ' + maxC);
+  log('  [布置] 战斗房容器≤1 ✓');
+
+  g.map.time = 61;
+  g.checkObjective();
+  g.player.x = g.map.extract.x; g.player.y = g.map.extract.y;
+  guard('flowJ', () => g.tryInteract());
+  if (!G.UI._flowOpen) throw new Error('抉择面板未打开');
+  const tierBefore = g.map.tierId;
+  guard('descend', () => g.descend());
+  if (g.map.tierId !== tierBefore + 1) throw new Error('未深入下一层');
+  if ((g.depth || 0) !== 1) throw new Error('深度未记录');
+  guard('closeFlow', () => G.UI.closeFlow());
+  log('  [深入] T' + tierBefore + '→T' + g.map.tierId + ' ✓');
+}
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {
   log('\n===== 档案I：物品占格 (ranger / t1) =====');
@@ -442,7 +508,8 @@ function runModsPortal() {
     runShards();
     runModsPortal();
     runInvSizes();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 错误数=${ERR}`);
+    runNewSystems();
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

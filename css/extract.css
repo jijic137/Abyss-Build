@@ -284,3 +284,13 @@
 .mkt-icon canvas{ max-width:52px; max-height:52px; }
 .inv2-tile canvas{ max-width:42px; max-height:42px; }
 
+
+/* ===== AI 美术集成 ===== */
+.map-card{ background-size:cover; background-position:center; }
+.map-card::before{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,10,16,.28), rgba(8,10,16,.74)); border-radius:10px; z-index:0; pointer-events:none; }
+.map-card > *{ position:relative; z-index:1; }
+.map-card:hover{ border-color:var(--mc,#7fa8ff); }
+.boss-bar-wrap{ position:relative; padding-left:72px; }
+#bossPortrait{ position:absolute; left:-4px; top:50%; transform:translateY(-50%); width:58px; height:78px; object-fit:cover; border:1px solid #3a4258; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.6); }
+#evtBox, #flowBox{ background-size:cover; background-position:center; }
+

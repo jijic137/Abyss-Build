@@ -132,6 +132,9 @@ node tools/_browser_check.js
 
 # 重新生成内容登记表
 node tools/_gen_registry.js
+
+# 批量 AI 美术（调远程 ComfyUI 服务，断点续跑/自动重试；产物入 assets/art/ai/）
+node tools/_gen_ai_art.js
 ```
 
 ## 路线图

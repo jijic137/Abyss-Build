@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>深渊猎手 · AI 美术产出预览</title>
+<style>
+  body{ margin:0; background:#0b0d14; color:#e6e9f5; font-family:"Segoe UI","PingFang SC",sans-serif; padding:24px; }
+  h1{ letter-spacing:4px; color:#ffd24a; font-size:22px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin-top:18px; }
+  .card{ background:#141826; border:1px solid #333a52; border-radius:10px; overflow:hidden; }
+  .card img{ width:100%; display:block; aspect-ratio:auto; }
+  .card .cap{ padding:8px 10px; font-size:12px; color:#8a90a8; letter-spacing:1px; }
+  .card .cap b{ color:#dce2f0; }
+  .done{ border-color:#3f7d5a; }
+  .missing{ opacity:.25; }
+</style>
+</head>
+<body>
+<h1>深渊猎手 · AI 美术产出预览</h1>
+<div class="grid" id="grid"></div>
+<script>
+const ITEMS = [
+  ['封面 / 宣传', 'assets/art/covers/cover.png', 'cover'],
+  ['区域 · 裂隙边缘', 'assets/art/ai/tiers/tier1_fringe.png', 'tiers'],
+  ['区域 · 幽暗回廊', 'assets/art/ai/tiers/tier2_corridor.png', 'tiers'],
+  ['区域 · 深部矿坑', 'assets/art/ai/tiers/tier3_mine.png', 'tiers'],
+  ['区域 · 深渊腹地', 'assets/art/ai/tiers/tier4_heartland.png', 'tiers'],
+  ['区域 · 终焉之门', 'assets/art/ai/tiers/tier5_gate.png', 'tiers'],
+  ['BOSS · 腐化巨兽', 'assets/art/ai/boss/boss1_behemoth.png', 'boss'],
+  ['BOSS · 深渊之主', 'assets/art/ai/boss/boss2_abyss.png', 'boss'],
+  ['事件 · 深渊祭坛', 'assets/art/ai/events/event_altar.png', 'events'],
+  ['传送门 · 深渊裂隙', 'assets/art/ai/events/portal_rift.png', 'events']
+];
+const grid = document.getElementById('grid');
+ITEMS.forEach(function (it) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  const img = document.createElement('img');
+  img.alt = it[0];
+  img.addEventListener('error', function () { card.classList.add('missing'); });
+  img.addEventListener('load', function () { card.classList.add('done'); });
+  img.src = it[1];
+  const cap = document.createElement('div');
+  cap.className = 'cap';
+  cap.innerHTML = '<b>' + it[0] + '</b> · ' + it[2];
+  card.appendChild(img);
+  card.appendChild(cap);
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>

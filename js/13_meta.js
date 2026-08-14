@@ -353,11 +353,11 @@
       persist();
       return d.shop.tokens;
     },
-    nextUpgrade: function () {
-      var lv = G.Market.levelOf();
-      var cost = [0, 0, 3, 6, 10][lv] || 0;
-      return cost;
-    },
+nextUpgrade: function () {
+var lv = G.Market.levelOf();
+var cost = [0, 3, 6, 10, 0][lv] || 0;
+return cost;
+},
     upgrade: function () {
       var lv = G.Market.levelOf();
       if (lv >= 4) return { ok: false, msg: '已满级' };

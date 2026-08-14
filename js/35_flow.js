@@ -307,17 +307,16 @@
     if (rcEl) rcEl.textContent = G.Market.refreshCost();
 
     /* 市场等级 / 贸易代币 / 升级 */
-    var st = $('marketStatus');
-    if (st) {
-      var lv = G.Market.levelOf();
-      var rl = ['', '白色', '绿色', '蓝色', '紫色'][lv] || '';
-      var tk = G.Market.tokenCount();
-      var nxt = G.Market.nextUpgrade();
-      var maxR = G.Market.maxRarity();
-      st.innerHTML = '';
-      var lvBlock = G.el('div', 'mkt-status-item');
-      lvBlock.innerHTML = '<span class="mkt-lvl-name">市场 Lv.' + lv + ' · ' + rl + '</span>' +
-        '<span class="mkt-lvl-desc">可出售 ' + G.rarityName(maxR) + ' 及以下</span>';
+var st = $('marketStatus');
+if (st) {
+var lv = G.Market.levelOf();
+var tk = G.Market.tokenCount();
+var nxt = G.Market.nextUpgrade();
+var maxR = G.Market.maxRarity();
+st.innerHTML = '';
+var lvBlock = G.el('div', 'mkt-status-item');
+lvBlock.innerHTML = '<span class="mkt-lvl-name">市场 Lv.' + lv + ' · 开放' + G.rarityName(maxR) + '</span>' +
+'<span class="mkt-lvl-desc">可出售 ' + G.rarityName(maxR) + ' 及以下</span>';
       st.appendChild(lvBlock);
       var tkBlock = G.el('div', 'mkt-status-item');
       tkBlock.innerHTML = '<span class="mkt-tk-name">贸易代币 ×' + tk + '</span>' +

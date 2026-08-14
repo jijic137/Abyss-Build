@@ -523,7 +523,7 @@ canvas#game{
 
 /* 巨大标题：绝对主体，白→冰蓝渐变 + 深描边 + 蓝辉光 */
 .screen-cover .game-title{
-  font-size:126px; letter-spacing:16px; margin:0; line-height:1.02; font-weight:900;
+  font-size:96px; letter-spacing:12px; margin:0; line-height:1.02; font-weight:900;
   background:linear-gradient(180deg,#ffffff 0%,#e8efff 45%,#b9cdf8 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   filter:drop-shadow(0 3px 0 rgba(4,6,12,.95)) drop-shadow(0 0 34px rgba(120,165,255,.5));
@@ -687,13 +687,13 @@ canvas#game{
 
 /* 窄屏适配 */
 @media (max-width:980px){
-  .screen-cover .game-title{ font-size:64px; letter-spacing:10px; }
+  .screen-cover .game-title{ font-size:52px; letter-spacing:8px; }
   .screen-cover .game-sub{ letter-spacing:4px; }
   .btn-gate-text .gt{ font-size:40px; letter-spacing:11px; }
   .cover-menu .btn{ font-size:12px; padding:6px 14px; }
 }
 @media (max-width:680px){
-  .screen-cover .game-title{ font-size:48px; letter-spacing:8px; }
+  .screen-cover .game-title{ font-size:40px; letter-spacing:6px; }
   .screen-cover .game-sub{ letter-spacing:3px; font-size:11px; }
   .btn-gate-text .gt{ font-size:32px; letter-spacing:8px; }
   .cover-menu{ gap:8px; }
@@ -703,7 +703,7 @@ canvas#game{
 @media (max-height:640px){
   .btn-gate-text .gt{ font-size:36px; letter-spacing:9px; }
   .cover-inner{ top:4%; }
-  .screen-cover .game-title{ font-size:56px; letter-spacing:10px; }
+  .screen-cover .game-title{ font-size:46px; letter-spacing:8px; }
   .cover-tag{ margin-bottom:8px; }
   .title-tip{ display:none; }
 }
@@ -824,7 +824,7 @@ canvas#game{
   .wheel-stage{ width:min(560px,86vw); height:min(440px,52vh); }
 }
 @media (max-width:760px){
-  .screen-cover .game-title{ font-size:56px; letter-spacing:12px; }
+  .screen-cover .game-title{ font-size:46px; letter-spacing:9px; }
   .wheel-token{ width:84px; height:84px; }
   .wheel-token canvas{ width:60px !important; height:60px !important; }
 }

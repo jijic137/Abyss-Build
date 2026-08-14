@@ -81,7 +81,7 @@ const wTags = {};
 G.WEAPONS.forEach(w => (w.tags || []).forEach(t => wTags[t] = (wTags[t] || 0) + 1));
 
 /* ---------------- 物品 ---------------- */
-const typeNames = { armor: '防具', trinket: '饰品', relic: '遗物' };
+const typeNames = { armor: '防具', trinket: '饰品', relic: '遗物', treasure: '宝物' };
 function itemTable(rows) {
   let s = '| id | 名称 | 类型 | 主要属性 | 特效 | 风味 |\n';
   s += '|---|---|---|---|---|---|\n';
@@ -94,7 +94,7 @@ function itemTable(rows) {
 const byR = [[], [], [], [], []];
 G.ITEMS.forEach(it => byR[it.r].push(it));
 const rNames = ['白', '绿', '蓝', '紫', '红'];
-const byType = { armor: [], trinket: [], relic: [] };
+const byType = { armor: [], trinket: [], relic: [], treasure: [] };
 G.ITEMS.forEach(it => byType[G.itemType(it)].push(it));
 
 /* ---------------- 品质分布 ---------------- */
@@ -137,7 +137,7 @@ md += '> 每次新增/修改敌人、武器、物品、地图档位、品质比�
 md += '## 1. 数值总览\n\n';
 md += '- 敌人总数：**' + G.ENEMIES.length + '**（普通 ' + normals.length + ' / 精英 ' + elites.length + ' / BOSS ' + bosses.length + '）\n';
 md += '- 武器总数：**' + G.WEAPONS.length + '**（按标签：' + Object.keys(wTags).map(t => t + '×' + wTags[t]).join('，') + '）\n';
-md += '- 物品总数：**' + G.ITEMS.length + '**（白 ' + byR[0].length + ' / 绿 ' + byR[1].length + ' / 蓝 ' + byR[2].length + ' / 紫 ' + byR[3].length + ' / 红 ' + byR[4].length + '；防具 ' + byType.armor.length + ' / 饰品 ' + byType.trinket.length + ' / 遗物 ' + byType.relic.length + '）\n';
+md += '- 物品总数：**' + G.ITEMS.length + '**（白 ' + byR[0].length + ' / 绿 ' + byR[1].length + ' / 蓝 ' + byR[2].length + ' / 紫 ' + byR[3].length + ' / 红 ' + byR[4].length + '；防具 ' + byType.armor.length + ' / 饰品 ' + byType.trinket.length + ' / 遗物 ' + byType.relic.length + ' / 宝物 ' + byType.treasure.length + '）\n';
 md += '- 角色（职业）：**' + G.CHARACTERS.length + '**\n';
 md += '- 深渊区域（地图档位）：**' + G.TIERS.length + '**\n';
 md += '- 波次配置：**' + G.WAVES.length + '**（作为地图刷怪难度曲线复用；BOSS 波：10、20）\n\n';

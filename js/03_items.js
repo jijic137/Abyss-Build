@@ -361,7 +361,12 @@
     { id: 'tre_painting',name: '深渊仕女图', r: 4, type: 'treasure', icon: 'ic_tre_art', col: '#b45cff', size: [3, 3], fl: '名画级古物，画中人似在凝视每一个拾起它的人。' },
     { id: 'tre_crystal',  name: '蚀刻水晶', r: 2, type: 'treasure', icon: 'ic_tre_crystal', col: '#7fd8ff', size: [2, 2], fl: '能折射光源的贵价标本。' },
     { id: 'tre_router',   name: '古董收音机', r: 1, type: 'treasure', icon: 'ic_tre_elect', col: '#8a6f4e', size: [2, 2], fl: '能收到深渊的杂音，收藏价值很高。' },
-    { id: 'tre_ingot',    name: '秘银锭', r: 3, type: 'treasure', icon: 'ic_tre_ingot', col: '#c0c8d8', size: [1, 1], fl: '一整块沉淀的贵金属。' }
+    { id: 'tre_ingot',    name: '秘银锭', r: 3, type: 'treasure', icon: 'ic_tre_ingot', col: '#c0c8d8', size: [1, 1], fl: '一整块沉淀的贵金属。' },
+    { id: 'tre_burner',   name: '琉璃香炉', r: 0, type: 'treasure', icon: 'ic_tre_art', col: '#c86a4e', size: [1, 1], fl: '青焰纹路的古香炉，香气早已散尽，价格还在。' },
+    { id: 'tre_boots',    name: '限量战靴', r: 1, type: 'treasure', icon: 'ic_tre_fashion', col: '#6a8f4e', size: [2, 1], fl: '旧年代的限量款，鞋底仍残留深渊的灰。' },
+    { id: 'tre_disk',     name: '深渊数据盘', r: 2, type: 'treasure', icon: 'ic_tre_elect', col: '#4e9fc8', size: [1, 1], fl: '加密过的资料，行家愿意出大价钱。' },
+    { id: 'tre_crown',    name: '失落王冠', r: 3, type: 'treasure', icon: 'ic_tre_art', col: '#ffd24a', size: [2, 2], fl: '曾有王座之物，如今是深渊里的展品。' },
+    { id: 'tre_solar',    name: '聚变电池芯', r: 2, type: 'treasure', icon: 'ic_tre_fuel', col: '#7fd5ff', size: [1, 2], fl: '一颗还能持续发热的能源核心。' }
   ];
   TREASURE.forEach(function (t) { ITEMS.push(t); });
 

@@ -22,7 +22,21 @@
       return where === 'bag' ? this.bagRows : Math.max(3, Math.ceil(G.Meta.get().stashSize / this.stashCols));
     },
     colsFor: function (where) { return where === 'bag' ? this.bagCols : this.stashCols; },
-    cellFor: function (where) { return this.cell[where]; }
+    cellFor: function (where) { return this.cell[where]; },
+    adapt: function () {
+      var vw = window.innerWidth || 1200;
+      var sCols = 8, sCell = 52, bCols = 7, bCell = 58;
+      if (vw < 400) { sCols = 5; sCell = 38; bCols = 5; bCell = 48; }
+      else if (vw < 520) { sCols = 5; sCell = 42; bCols = 5; bCell = 54; }
+      else if (vw < 640) { sCols = 6; sCell = 46; bCols = 6; bCell = 54; }
+      else if (vw < 820) { sCols = 7; sCell = 48; bCols = 7; bCell = 56; }
+      var changed = this.stashCols !== sCols || this.cell.stash !== sCell || this.bagCols !== bCols || this.cell.bag !== bCell;
+      this.stashCols = sCols;
+      this.cell.stash = sCell;
+      this.bagCols = bCols;
+      this.cell.bag = bCell;
+      return changed;
+    }
   };
 
   /* ---------- 几何 ---------- */
@@ -192,6 +206,7 @@
   }
 
   G.UI.renderBag = function () {
+    G.Inv2.adapt();
     var g = G.game, p = g.player;
     var grid = $('bagGrid');
     if (!grid) return;
@@ -275,6 +290,7 @@
 
   /* ---------- 渲染：仓库（拖拽 + 装备/出售） ---------- */
   G.UI.renderBase = function () {
+    G.Inv2.adapt();
     var meta = G.Meta.get();
     var cur = $('baseCurrency');
     if (cur) cur.textContent = meta.currency;

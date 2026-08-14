@@ -381,3 +381,26 @@
 .slot-btns .btn{ flex:1; font-size:11px; padding:6px 4px; }
 .slot-empty{ color:#5f6580; font-style:italic; }
 
+
+@media (max-width:880px){
+  .base-body{ flex-direction:column; padding:14px 14px 18px; }
+  .base-side{ width:100%; min-width:0; }
+  .equip-panel{ max-height:46vh; }
+  .stash-grid{ max-width:100%; overflow-x:auto; }
+  .market-toolbar{ padding:10px 14px; gap:10px; justify-content:flex-start; }
+  .market-status{ padding:4px 14px 2px; justify-content:flex-start; }
+  .market-cards{ grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); padding:10px 14px 14px; }
+  .sub-head{ padding:14px 16px 4px; }
+}
+@media (max-width:520px){
+  .base-body{ flex-direction:column; padding:12px 10px 16px; }
+  .base-side{ width:100%; min-width:0; }
+  .market-cards{ grid-template-columns:1fr; max-width:100%; }
+  .market-status, .market-toolbar{ padding-left:10px; padding-right:10px; }
+  .bag-grid{ grid-template-columns:1fr !important; }
+  .bag-grid > .inv2-equip{ grid-column:1; grid-row:auto; flex-direction:column; }
+  .bag-grid > .inv2-grid-head, .bag-grid > .inv2-grid{ grid-column:1; grid-row:auto; }
+  .inv2-grid{ grid-template-columns:none; }
+  #bagGrid .inv2-grid, #bagGrid .inv2-grid-head, #bagGrid .inv2-equip{ max-width:100%; min-width:0; }
+
+}

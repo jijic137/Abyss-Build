@@ -150,7 +150,24 @@ server.listen(8765, '127.0.0.1', async () => {
       return issues;
     });
     console.log('LAYOUT ' + JSON.stringify(layout));
-    if (layout.length) throw new Error('布局越界 ' + JSON.stringify(layout));    /* 关键界面截图（供人工审阅） */
+        /* 市场网格必须在视口内可滚动：防止第三行卡片被截断 */
+    await page.evaluate(() => { document.getElementById('scrMarket').classList.add('on'); G.UI.renderMarket(); });
+    await page.waitForTimeout(200);
+    const mktFit = await page.evaluate(() => {
+      const wrap = document.getElementById('marketCards');
+      if (!wrap) return { ok:false, reason:'no-wrap' };
+      const ws = getComputedStyle(wrap);
+      const cards = document.querySelectorAll('#marketCards .mkt-card');
+      let bottomMost = 0;
+      cards.forEach(e => { const r = e.getBoundingClientRect(); if (r.bottom > bottomMost) bottomMost = r.bottom; });
+      const scrollable = ws.overflowY === 'auto' && wrap.scrollHeight > wrap.clientHeight + 2;
+      const overflowCapped = ws.overflowY === 'auto';
+      return { count: cards.length, bottomMost: Math.round(bottomMost), vh: innerHeight, overflowY: ws.overflowY, scrollable, overflowCapped };
+    });
+    await page.evaluate(() => { document.getElementById('scrMarket').classList.remove('on'); });
+    console.log('MKTLAYOUT ' + JSON.stringify(mktFit));
+    if (!mktFit.overflowCapped || mktFit.count < 8) throw new Error('市场网格溢出未修复');
+if (layout.length) throw new Error('布局越界 ' + JSON.stringify(layout));    /* 关键界面截图（供人工审阅） */
     await page.evaluate(() => { document.getElementById('scrBase').classList.add('on'); });
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(OUT, '10_base.png') });

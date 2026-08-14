@@ -47,11 +47,26 @@
     </div>
 
     <div class="hud-bottom">
-      <div id="statusBar" class="status-bar"></div>
-      <div id="weaponBar" class="weapon-bar"></div>
-      
+      <div class="hud-command">
+        <div id="skillSlot" class="skill-mod hidden">
+          <div class="skill-core">
+            <div class="skill-glyph" id="skillSym"></div>
+            <div class="skill-band" id="skillCd"></div>
+            <div class="skill-ready" id="skillReady">SPACE 就绪</div>
+            <div class="skill-cooldown" id="skillCooldown"></div>
+          </div>
+          <div class="skill-meta">
+            <div class="skill-name" id="skillName"></div>
+            <div class="skill-key">[ 空格 ]</div>
+          </div>
+        </div>
+        <div class="cmd-center">
+          <div id="objLine" class="obj-line"></div>
+          <div id="statusBar" class="status-bar"></div>
+        </div>
+        <div id="weaponBar" class="weapon-bar"></div>
+      </div>
       <div id="interactHint" class="interact-hint hidden"></div>
-      <div id="objLine" class="obj-line"></div>
     </div>
 
     <div id="bossBarWrap" class="boss-bar-wrap hidden">
@@ -160,6 +175,7 @@
         <button class="btn btn-reroll" id="btnMarketRefresh">刷新商品 <span class="dim" id="marketRefreshCost">12</span></button>
         <button class="btn" id="btnMktSellWhite">出售全部白色</button>
       </div>
+      <div class="market-status" id="marketStatus"></div>
       <div class="market-cards" id="marketCards"></div>
       <div class="pause-btns">
         <button class="btn" id="btnMarketBack">返回</button>

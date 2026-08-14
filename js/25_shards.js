@@ -24,6 +24,15 @@
     }
   }
 
+  /* 物品掉落地面：背包放不下 / 手动丢弃时用 */
+  G.dropItemGround = function (inst, x, y) {
+    var g = G.game;
+    if (!g) return;
+    var px = x == null ? g.player.x : x;
+    var py = y == null ? g.player.y : y;
+    g.pickups.push(new G.Pickup(px + G.rand(-14, 14), py + G.rand(-14, 14), 'item', inst));
+  };
+
   /* 掉落：普通 12%（+幸运修正） / 精英 100% / BOSS 2 颗 */
   var _drop = G.game.dropLoot;
   G.game.dropLoot = function (e) {
@@ -43,14 +52,28 @@
   var _collect = G.Pickup.prototype.collect;
   G.Pickup.prototype.collect = function () {
     var g = G.game, p = g.player;
-    this.dead = true;
     if (this.type === 'shard') {
+      this.dead = true;
       shardGain(this.value);
       G.burst(this.x, this.y, 8, '#c07fff', 150, { size: 2.5 });
       G.Audio.sfx('item_get');
       G.popText(this.x, this.y - 10, '碎片 +' + this.value, { col: '#c07fff', size: 12 });
       return;
     }
+    if (this.type === 'item') {
+      var inst = this.value;
+      if (!G.addBagItem(inst)) {
+        G.popText(this.x, this.y - 12, '背包已满', { col: '#ff6b6b', size: 12, life: 1 });
+        G.burst(this.x, this.y, 6, '#ff6b6b', 120, { size: 2.2 });
+        return;   // 留在原地，不移除
+      }
+      this.dead = true;
+      G.Audio.sfx('item_get');
+      G.UI.showLootCard(inst);
+      G.popText(this.x, this.y - 10, (inst.type === 'weapon' ? '武器 ' : '') + inst.def.name, { col: G.rarityColor(inst.tier), size: 12 });
+      return;
+    }
+    this.dead = true;
     if (this.type === 'mat') {
       g.addMaterials(this.value);
       G.burst(this.x, this.y, 3, '#ffd24a', 90, { size: 2 });
@@ -81,8 +104,10 @@
           G.Audio.sfx('item_get');
           G.UI.showLootCard(o.inst);
         } else {
-          G.popText(c.x, c.y - 36, '背包已满', { col: '#ff6b6b', size: 13, life: 1 });
-          G.burst(c.x, c.y, 8, '#ff6b6b', 120, { size: 2.5 });
+          G.dropItemGround(o.inst, c.x, c.y);   // 背包满：掉落地面而不消失
+          G.popText(c.x, c.y - 40, '背包已满 · 物品掉落地面', { col: '#ffd24a', size: 13, life: 1.4 });
+          G.burst(c.x, c.y, 10, '#ffd24a', 150, { size: 3 });
+          G.Audio.sfx('pickup');
         }
       }
     }

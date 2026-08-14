@@ -71,6 +71,11 @@
         e.preventDefault();
         G.UI.toggleStatPanel(game.player);
       }
+      if (e.code === 'Space' && game.state === 'play' && game.player &&
+          !G.UI.isScreenOn('scrBag') && !G.UI._flowOpen && !G.UI._evtOpen) {
+        e.preventDefault();
+        game.player.useSkill();
+      }
       if (e.code === 'Escape') {
         e.preventDefault();
         if (G.UI.isScreenOn('scrBag')) { G.UI.toggleBag(); return; }
@@ -166,6 +171,7 @@
     this.enemies = []; this.bullets = []; this.ebullets = [];
     this.pickups = []; this.particles = []; this.texts = [];
     this.effects = []; this.turrets = []; this.drones = []; this.mines = [];
+    this._poisonClouds = [];
 
     this.player.x = this.map.spawn.x;
     this.player.y = this.map.spawn.y;
@@ -177,6 +183,7 @@
     this.state = 'play';
     G.UI.showScreen(null);
     this.enterRoom(this.map.startRoom);
+    this.seedStartEnemies();
     G.UI.banner(this.map.tier.name + ' · ' + this.map.tier.sub, this.map.tier.col);
     G.UI.updateObjective(this.map);
     G.Audio.sfx('map_enter');
@@ -265,6 +272,20 @@
         this.shake(18, 0.6);
       }
       rm.spawned = true;
+    }
+    if (rm.guards && rm.guards.length) {
+      rm.guards.forEach(function (gu) {
+        var gx = G.clamp(gu.x, G.Map.WALL + 20, game.map.worldW - G.Map.WALL - 20);
+        var gy = G.clamp(gu.y, G.Map.WALL + 20, game.map.worldH - G.Map.WALL - 20);
+        /* 驻守点撞墙/撞内部结构则偏移到最近安全点 */
+        for (var att = 0; att < 10; att++) {
+          if (!G.Map.solid(game.map, gx, gy)) break;
+          gx = G.clamp(gx + (att % 2 ? 46 : -46), G.Map.WALL + 24, game.map.worldW - G.Map.WALL - 24);
+          gy = G.clamp(gy + ((att >>> 1) % 2 ? 40 : -40), G.Map.WALL + 24, game.map.worldH - G.Map.WALL - 24);
+        }
+        game.spawnEnemy(gu.id, gx, gy);
+      });
+      G.UI.banner('宝箱有守卫 · 清除驻守', '#ffd24a');
     }
   };
 
@@ -718,6 +739,7 @@
         }
       }
     }
+    if (G.Market && G.Market.dropTokenChance) G.Market.dropTokenChance(e.def, p.st.luck);
   };
 
   game.addMaterials = function (v) {
@@ -834,6 +856,28 @@
     }
     if (!ids.length) return null;
     return G.weightedPick(ids, ws);
+  };
+
+  /* 进入新层时，出生房先刷一批敌人，避免“开局零怪慢慢才刷” */
+  game.seedStartEnemies = function () {
+    var m = this.map, p = this.player;
+    if (!m || !p) return;
+    var rm = G.Map.roomAt(m, p.x, p.y);
+    var rc = G.Map.roomRect(rm.c, rm.r);
+    var tier = m.tierId || 1;
+    var n = G.clamp(3 + tier, 0, 7);
+    for (var i = 0; i < n; i++) {
+      var id = this.rollMapEnemy();
+      if (!id) break;
+      var x = p.x + G.rand(-210, 210);
+      var y = p.y + G.rand(-170, 170);
+      if (G.Map.solid(m, x, y) || x < rc.x0 + 40 || x > rc.x1 - 40 || y < rc.y0 + 40 || y > rc.y1 - 40) {
+        x = rc.x0 + G.Map.ROOM / 2 + G.rand(-120, 120);
+        y = rc.y0 + G.Map.ROOM / 2 + G.rand(-100, 100);
+      }
+      var e = this.spawnEnemy(id, G.clamp(x, rc.x0 + 40, rc.x1 - 40), G.clamp(y, rc.y0 + 40, rc.y1 - 40));
+      if (e) e.room = rm.idx;
+    }
   };
 
   function stepList(list, dt) {
@@ -970,12 +1014,53 @@
       }
     }
     /* 墙 */
-    c.fillStyle = '#1d2232';
     for (i = 0; i < this._wallRects.length; i++) {
       var w = this._wallRects[i];
       if (w[2] < this.camX - 40 || w[0] > this.camX + this.vw + 40 ||
           w[3] < this.camY - 40 || w[1] > this.camY + this.vh + 40) continue;
+      /* 石墙主体 */
+      c.fillStyle = '#232a3d';
       c.fillRect(w[0], w[1], w[2] - w[0], w[3] - w[1]);
+      /* 顶部受光 + 底部阴影，营造体量感 */
+      c.fillStyle = 'rgba(120,140,190,.20)';
+      c.fillRect(w[0], w[1], w[2] - w[0], Math.min(6, w[3] - w[1]));
+      c.fillStyle = 'rgba(0,0,0,.35)';
+      c.fillRect(w[0], w[3] - Math.min(5, w[3] - w[1]), w[2] - w[0], Math.min(5, w[3] - w[1]));
+      /* 砖缝 */
+      c.strokeStyle = 'rgba(10,14,24,.8)';
+      c.lineWidth = 1;
+      var thin = (w[3] - w[1] <= 42) && (w[2] - w[0] >= 3 * (w[3] - w[1]));
+      if (thin) {
+        /* 细墙沿长轴排砖 */
+        var step = 34;
+        var len = Math.max(w[2] - w[0], w[3] - w[1]);
+        var off = w[2] - w[0] > w[3] - w[1] ? w[0] : w[1];
+        for (var bi = step; bi < len; bi += step) {
+          if (w[2] - w[0] > w[3] - w[1]) {
+            c.beginPath(); c.moveTo(off + bi, w[1]); c.lineTo(off + bi, w[3]); c.stroke();
+          } else {
+            c.beginPath(); c.moveTo(w[0], off + bi); c.lineTo(w[2], off + bi); c.stroke();
+          }
+        }
+      } else {
+        /* 大块石砖交错 */
+        var bw = 26, bh = 18;
+        for (var by = w[1] + 9; by < w[3] - 4; by += bh) {
+          var rowOff = ((by / bh | 0) % 2) ? 13 : 0;
+          for (var bx = w[0] + 6 - rowOff; bx < w[2] - 6; bx += bw) {
+            c.beginPath();
+            c.moveTo(bx, by);
+            c.lineTo(bx + bw, by);
+            c.stroke();
+          }
+        }
+        for (var bx2 = w[0] + 13; bx2 < w[2] - 4; bx2 += bw) {
+          c.beginPath();
+          c.moveTo(bx2, w[1]);
+          c.lineTo(bx2, w[3]);
+          c.stroke();
+        }
+      }
     }
     /* 门洞边缘光 */
     c.fillStyle = '#262c40';
@@ -1111,6 +1196,7 @@
     this.enemies = []; this.bullets = []; this.ebullets = [];
     this.pickups = []; this.particles = []; this.texts = [];
     this.effects = []; this.turrets = []; this.drones = []; this.mines = [];
+    this._poisonClouds = [];
     this.hurtFlash = 0; this.shakeAmt = 0;
     this.combo = 0; this.comboTimer = 0; this.runTime = data.runTime || 0;
     this.materials = data.materials;

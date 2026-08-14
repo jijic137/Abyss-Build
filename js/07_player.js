@@ -69,6 +69,10 @@
     this.revived = false;
 
     this.stats = { dmgDealt: 0, kills: 0, matEarned: 0, eliteKills: 0, bossKills: 0, comboMax: 0 };
+    this.skillCd = 0;
+    this.skillBuff = null;
+    this.skillBuffT = 0;
+    this.skillImmuneT = 0;
     this.recalc();
   }
 
@@ -95,6 +99,140 @@
   };
 
   Player.prototype.hasSp = function (k) { return !!this.sp[k]; };
+
+  Player.prototype.skillDef = function () { return this.char.skill || null; };
+
+  Player.prototype.useSkill = function () {
+    if (this.dead || this.skillCd > 0) return false;
+    var def = this.skillDef();
+    if (!def) return false;
+    var g = G.game;
+    if (!g || g.state !== 'play') return false;
+
+    this.skillCd = def.cd;
+    G.Audio.sfx('levelup');
+    G.popText(this.x, this.y - 34, def.name, { col: def.col || '#ffd24a', size: 17, life: 0.9 });
+
+    var st = this.st;
+    var dmg;
+    switch (def.effect) {
+      case 'quake': {
+        var rq = 150 + st.range * 0.8;
+        dmg = 14 + st.meleeDamage * 2.2 + st.damage * 0.5;
+        G.explode(this.x, this.y, rq, dmg, { col: '#d9c98a' });
+        var ql = g.queryEnemies(this.x, this.y, rq + 60);
+        for (var qi = 0; qi < ql.length; qi++) {
+          var qe = ql[qi];
+          if (qe.dead) continue;
+          var qd = G.dist(this.x, this.y, qe.x, qe.y);
+          if (qd > rq + qe.r) continue;
+          var qk = qd > 1 ? (rq / qd) * 0.4 : 1;
+          qe.kx += (qe.x - this.x) / (qd || 1) * 460 * Math.min(2.4, qk);
+          qe.ky += (qe.y - this.y) / (qd || 1) * 460 * Math.min(2.4, qk);
+        }
+        this.skillBuff = 'armor';
+        this.skillBuffT = 3;
+        break;
+      }
+      case 'volley': {
+        var nv = 8 + Math.floor(this.level / 2);
+        var used = [];
+        for (var vi = 0; vi < nv; vi++) {
+          var te = g.nearestEnemy(this.x, this.y, 600, used);
+          if (!te) break;
+          dmg = 8 + st.rangedDamage * 1.6 + st.damage * 0.5;
+          var va = Math.atan2(te.y - this.y, te.x - this.x) + G.rand(-0.12, 0.12);
+          var vsp = 640;
+          g.bullets.push(new G.Bullet({
+            x: this.x, y: this.y,
+            vx: Math.cos(va) * vsp, vy: Math.sin(va) * vsp,
+            dmg: dmg, crit: Math.random() < G.clamp(st.critChance / 100, 0, 1),
+            r: 6, sprite: 'b_bullet', col: '#a8e6a0', pierce: 0,
+            life: 1.4, srcW: { def: { col: '#a8e6a0' } }
+          }));
+          used.push(te);
+        }
+        G.fx('ring', { x: this.x, y: this.y, r0: 8, r1: 60, col: '#a8e6a0', w: 4, life: 0.3 });
+        break;
+      }
+      case 'nova': {
+        var rn = 170 + st.range * 0.8;
+        dmg = 16 + st.elementalDamage * 2.4 + st.damage * 0.5;
+        G.explode(this.x, this.y, rn, dmg, { col: '#c9a6ff' });
+        for (var ai = 0; ai < 8; ai++) {
+          var aa = Math.PI * 2 * ai / 8;
+          G.fx('bolt', { pts: [this.x, this.y, this.x + Math.cos(aa) * rn * 0.9, this.y + Math.sin(aa) * rn * 0.9], col: '#c9a6ff', w: 4, life: 0.25 });
+        }
+        break;
+      }
+      case 'rage': {
+        this.skillBuff = 'rage';
+        this.skillBuffT = 5;
+        G.fx('ring', { x: this.x, y: this.y, r0: 8, r1: 130, col: '#c0392b', w: 6, life: 0.45 });
+        G.burst(this.x, this.y, 26, '#ff8a6b', 240, { size: 4 });
+        break;
+      }
+      case 'overcharge': {
+        G.fx('ring', { x: this.x, y: this.y, r0: 8, r1: 140, col: '#e0902a', w: 5, life: 0.45 });
+        g.turrets.forEach(function (t) { if (!t.dead) { t.timer = Math.max(0, (t.timer || 0) - 4); t.life = t.max; t.flash = 1; } });
+        g.drones.forEach(function (d) { if (!d.dead) { d.timer = Math.max(0, (d.timer || 0) - 4); d.life = d.max; d.flash = 1; } });
+        g.mines.forEach(function (m) { if (!m.dead) { m.arm = 0; } });
+        break;
+      }
+      case 'ambush': {
+        var te2 = g.nearestEnemy(this.x, this.y, 420);
+        var tx = te2 ? te2.x : this.x, ty = te2 ? te2.y : this.y;
+        var dx = tx - this.x, dy = ty - this.y;
+        var dl = Math.hypot(dx, dy) || 1;
+        var ang = Math.atan2(dy, dx);
+        this.x = G.clamp(tx - Math.cos(ang) * 26, 24, g.arena - 24);
+        this.y = G.clamp(ty - Math.sin(ang) * 26, 24, g.arena - 24);
+        G.fx('ring', { x: this.x, y: this.y, r0: 6, r1: 150, col: '#3d4a6b', w: 6, life: 0.4 });
+        dmg = 12 + st.meleeDamage * 1.8 + st.damage * 0.5;
+        G.explode(this.x, this.y, 120, dmg, { col: '#8a9ad8', crit: Math.random() < G.clamp(st.critChance / 100, 0, 1) });
+        G.burst(tx - Math.cos(ang) * 26, ty - Math.sin(ang) * 26, 30, '#ffffff', 300, { size: 3 });
+        break;
+      }
+      case 'smoke': {
+        var sr = 130;
+        for (var si = 0; si < 46; si++) {
+          var sa = Math.random() * Math.PI * 2, sd = Math.sqrt(Math.random()) * sr;
+          g.particles.push(new G.Particle(this.x + Math.cos(sa) * sd, this.y + Math.sin(sa) * sd, {
+            vx: G.rand(-20, 20), vy: G.rand(-20, 20),
+            life: G.rand(1.6, 2.4), size: G.rand(10, 18), col: '#6ab04c',
+            drag: 0.96, shape: 'glow'
+          }));
+        }
+        if (!g._poisonClouds) g._poisonClouds = [];
+        g._poisonClouds.push({
+          x: this.x, y: this.y, r: sr, t: 5,
+          tick: 0, dmg: 6 + st.elementalDamage * 1.1
+        });
+        break;
+      }
+      case 'bulwark': {
+        this.skillBuff = 'bulwark';
+        this.skillBuffT = 3.5;
+        this.skillImmuneT = 2.2;
+        G.fx('ring', { x: this.x, y: this.y, r0: 10, r1: 170, col: '#5a7d9c', w: 8, life: 0.6 });
+        var bl = g.queryEnemies(this.x, this.y, 210);
+        for (var bi = 0; bi < bl.length; bi++) {
+          var be = bl[bi];
+          if (be.dead) continue;
+          var bd = G.dist(this.x, this.y, be.x, be.y);
+          if (bd > 210 + be.r) continue;
+          var k2 = (bd > 1) ? (210 / bd) * 0.4 : 1;
+          be.kx += (be.x - this.x) / (bd || 1) * 420 * Math.min(2.2, k2);
+          be.ky += (be.y - this.y) / (bd || 1) * 420 * Math.min(2.2, k2);
+          if (!be.def.boss) be.stunT = Math.max(be.stunT, 0.8);
+        }
+        break;
+      }
+      default:
+        return false;
+    }
+    return true;
+  };
 
   Player.prototype.addItem = function (def) {
     this.items.push(def);
@@ -134,6 +272,12 @@
   Player.prototype.takeDamage = function (raw, src) {
     if (this.dead || this.hitCd > 0) return;
     var g = G.game;
+
+    if (this.skillImmuneT > 0) {
+      G.popText(this.x, this.y - 20, '守护', { col: '#7fd8ff', size: 12, life: 0.4 });
+      this.hitCd = 0.2;
+      return;
+    }
 
     if (Math.random() < G.F.dodgeChance(this.st.dodge)) {
       G.popText(this.x, this.y - 20, '闪避', { col: '#c4a6ff', size: 13 });
@@ -179,6 +323,12 @@
     this.hitCd = Math.max(0, this.hitCd - dt);
     this.lsCd = Math.max(0, this.lsCd - dt);
     this.flash = Math.max(0, this.flash - dt * 5);
+    this.skillCd = Math.max(0, this.skillCd - dt);
+    this.skillImmuneT = Math.max(0, this.skillImmuneT - dt);
+    if (this.skillBuff) {
+      this.skillBuffT -= dt;
+      if (this.skillBuffT <= 0) { this.skillBuff = null; this.skillBuffT = 0; }
+    }
 
     var ix = 0, iy = 0;
     if (g.key('left')) ix -= 1;
@@ -247,6 +397,28 @@
       G.burst(this.x + G.rand(-60, 60), this.y + G.rand(-60, 60), 1, '#8fe8ff', 20, { size: 2 });
     }
 
+    /* 技能持续效果 */
+    if (g._poisonClouds && g._poisonClouds.length) {
+      var pc;
+      for (var ci = g._poisonClouds.length - 1; ci >= 0; ci--) {
+        pc = g._poisonClouds[ci];
+        pc.t -= dt;
+        pc.tick -= dt;
+        if (pc.t <= 0) { g._poisonClouds.splice(ci, 1); continue; }
+        if (pc.tick <= 0) {
+          pc.tick = 0.35;
+          var pls = g.queryEnemies(pc.x, pc.y, pc.r + 30);
+          for (var pi = 0; pi < pls.length; pi++) {
+            var pe = pls[pi];
+            if (pe.dead) continue;
+            if (G.dist(pc.x, pc.y, pe.x, pe.y) < pc.r + pe.r) {
+              g.damageEnemy(pe, pc.dmg * 0.45, { x: pe.x, y: pe.y, silent: true, noChain: true, dot: true, poison: pc.dmg * 0.35 });
+            }
+          }
+        }
+      }
+    }
+
     this.thunderT = (this.thunderT || 0) - dt;
     if (this.hasSp('thunderAura') && this.thunderT <= 0) {
       this.thunderT = 0.9;
@@ -265,7 +437,20 @@
   }
 
   Player.prototype.updateWeapon = function (w, dt, idx) {
-    var g = G.game, def = w.def, st = this.st;
+    var g = G.game, def = w.def;
+    var st = this.st;
+    if (this.skillBuff === 'rage' && this.skillBuffT > 0) {
+      st = Object.assign({}, this.st, {
+        attackSpeed: this.st.attackSpeed + 40,
+        critChance: this.st.critChance + 30,
+        critDamage: this.st.critDamage + 40,
+        damage: this.st.damage + 18
+      });
+    } else if (this.skillBuff === 'armor' && this.skillBuffT > 0) {
+      st = Object.assign({}, this.st, { armor: this.st.armor + 40 });
+    } else if (this.skillBuff === 'bulwark' && this.skillBuffT > 0) {
+      st = Object.assign({}, this.st, { armor: this.st.armor + 55 });
+    }
     w.swingT = Math.max(0, w.swingT - dt);
     w.timer -= dt;
     if (w.timer > 0) return;

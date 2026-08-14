@@ -184,49 +184,89 @@
       id: 'knight', name: '铁卫', sprite: 'char_knight', color: '#7d8aa8',
       desc: '厚实的前排。用护甲和血量硬扛，代价是慢。',
       mods: { maxHp: 25, armor: 6, attackSpeed: -12, speed: -6 },
-      startWeapon: 'spear', startMat: 15
+      startWeapon: 'spear', startMat: 15,
+      skill: {
+        id: 'shield_wall', name: '地裂', sym: '地', col: '#7d8aa8',
+        cd: 10, desc: '挥出地裂，将周围敌人击退并造成伤害，同时短暂提升护甲。',
+        effect: 'quake'
+      }
     },
     {
       id: 'ranger', name: '游侠', sprite: 'char_ranger', color: '#4fa86b',
       desc: '稳健的远程手。射程与攻速都不错，但很脆。',
       mods: { maxHp: -12, rangedDamage: 3, attackSpeed: 10, range: 15 },
-      startWeapon: 'pistol', startMat: 12
+      startWeapon: 'pistol', startMat: 12,
+      skill: {
+        id: 'volley', name: '箭雨突袭', sym: '箭', col: '#4fa86b',
+        cd: 9, desc: '向周围方向齐射一轮箭矢，每支箭锁定一名敌人。',
+        effect: 'volley'
+      }
     },
     {
       id: 'mage', name: '术士', sprite: 'char_mage', color: '#8b5cf6',
       desc: '元素专精。灼烧、闪电、冰霜都为他而生。',
       mods: { maxHp: -18, elementalDamage: 6, range: 18, armor: -2, critChance: -3 },
-      startWeapon: 'wand', startMat: 12
+      startWeapon: 'wand', startMat: 12,
+      skill: {
+        id: 'nova', name: '元素星爆', sym: '星', col: '#8b5cf6',
+        cd: 9, desc: '在身体四周炸开一圈元素星爆，对一圈敌人造成元素伤害。',
+        effect: 'nova'
+      }
     },
     {
       id: 'brute', name: '狂徒', sprite: 'char_brute', color: '#c0392b',
       desc: '贴脸打。伤害极高，但必须冲进敌群里去拿。',
       mods: { maxHp: 10, meleeDamage: 5, damage: 15, armor: -4, range: -20 },
-      startWeapon: 'hammer', startMat: 10
+      startWeapon: 'hammer', startMat: 10,
+      skill: {
+        id: 'rage', name: '狂暴', sym: '狂', col: '#c0392b',
+        cd: 14, desc: '期间暴击和攻击速度大幅提升。',
+        effect: 'rage'
+      }
     },
     {
       id: 'engineer', name: '工匠', sprite: 'char_engineer', color: '#e0902a',
       desc: '让炮台替你开火。前期弱，成型后是坐着赢。',
       mods: { engineering: 14, harvesting: 3, damage: -18, speed: -4 },
-      startWeapon: 'turret', startMat: 20
+      startWeapon: 'turret', startMat: 20,
+      skill: {
+        id: 'overcharge', name: '爆能过载', sym: '能', col: '#e0902a',
+        cd: 12, desc: '所有炮台和机器仆人全部恢复并附赠一段短暂爆发。',
+        effect: 'overcharge'
+      }
     },
     {
       id: 'shadow', name: '影刺', sprite: 'char_shadow', color: '#3d4a6b',
       desc: '靠暴击和闪避活着。血很薄，容错极低。',
       mods: { maxHp: -25, critChance: 12, critDamage: 25, dodge: 8, speed: 12 },
-      startWeapon: 'knife', startMat: 12
+      startWeapon: 'knife', startMat: 12,
+      skill: {
+        id: 'ambush', name: '影袭', sym: '影', col: '#3d4a6b',
+        cd: 9, desc: '移动到周围最近的敌人并划出影弧，对一圈目标造成伤害。',
+        effect: 'ambush'
+      }
     },
     {
       id: 'alchemist', name: '炼金术士', sprite: 'char_alchemist', color: '#4f8a3a',
       desc: '毒与元素的操盘手。持续伤害把敌人磨死，但自己很脆。',
       mods: { maxHp: -12, elementalDamage: 6, harvesting: 2, armor: -2, critChance: -3 },
-      startWeapon: 'dart', startMat: 12
+      startWeapon: 'dart', startMat: 12,
+      skill: {
+        id: 'smoke', name: '毒雾遮蔽', sym: '毒', col: '#4f8a3a',
+        cd: 11, desc: '布置一片毒雾屏障，对其中敌人持续造成伤害并附加中毒。',
+        effect: 'smoke'
+      }
     },
     {
       id: 'warden', name: '守望者', sprite: 'char_warden', color: '#5a7d9c',
       desc: '让炮台与护甲替你扛线。成型极稳，但输出迟滞。',
       mods: { engineering: 12, armor: 4, damage: -14, speed: -3, hpRegen: 0.3 },
-      startWeapon: 'turret', startMat: 20
+      startWeapon: 'turret', startMat: 20,
+      skill: {
+        id: 'bulwark', name: '守护圆舞', sym: '守', col: '#5a7d9c',
+        cd: 13, desc: '打开守护圆舞，短暂隔绝伤害并震慑周围敌人。',
+        effect: 'bulwark'
+      }
     }
   ];
 

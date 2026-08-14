@@ -176,6 +176,19 @@
       c.restore();
       return;
     }
+    if (this.type === 'item') {
+      var inst = this.value;
+      if (!inst) return;
+      var col = inst.tier === 0 ? '#d9dde8' : G.rarityColor(inst.tier);
+      c.save();
+      c.globalAlpha = 0.18 + 0.10 * (Math.sin(this.t * 5) + 1) / 2;
+      c.fillStyle = col;
+      c.beginPath(); c.arc(this.x, this.y, 14, 0, Math.PI * 2); c.fill();
+      c.restore();
+      var ic = inst.type === 'weapon' ? G.weaponIcon(inst.def, inst.tier, 3) : G.itemIcon(inst.def, 3);
+      G.PX.draw(c, ic, this.x, this.y + bob - 4);
+      return;
+    }
     var cv2 = G.PX.get(this.type === 'mat' ? 'p_mat' : 'p_heal', 3);
     G.PX.draw(c, cv2, this.x, this.y + bob);
   };

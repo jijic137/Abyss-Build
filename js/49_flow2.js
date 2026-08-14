@@ -130,6 +130,7 @@
     g.enemies = []; g.bullets = []; g.ebullets = [];
     g.pickups = []; g.particles = []; g.texts = [];
     g.effects = []; g.turrets = []; g.drones = []; g.mines = [];
+    g._poisonClouds = [];
     g.containers = g.map.containers.map(function (c) { return new G.Container(c); });
     g.traps = [];
     g.barrels = [];
@@ -189,6 +190,7 @@
     p.room = g.map.startRoom;
     g.lastRoom = -1;
     g.enterRoom(g.map.startRoom);
+    if (g.seedStartEnemies) g.seedStartEnemies();
     g.state = 'play';
     G.UI.banner('深入 · ' + prep.name, prep.col);
     G.UI.updateObjective(g.map);

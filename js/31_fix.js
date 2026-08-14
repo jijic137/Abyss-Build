@@ -25,6 +25,16 @@
     this.shake(6, 0.22);
     G.Audio.sfx('chest_open', 0, { tier: (G.chestTierOf && c.type) ? G.chestTierOf(c.type) : 1 });
     if (out) this.applyContainerReward(c, out);
+    /* 宝库/深渊箱概率出「贸易代币」，用于升级市场 */
+    if (G.Market && G.Market.addToken && (c.type === 'chest_gold' || c.type === 'chest_abyss')) {
+      var tkCh = c.type === 'chest_abyss' ? 0.5 : 0.28;
+      if (Math.random() < tkCh) {
+        G.Market.addToken(1);
+        G.popText(c.x, c.y - 46, '贸易代币 +1', { col: '#ffd24a', size: 14, life: 1.4 });
+        G.burst(c.x, c.y, 10, '#ffd24a', 160, { size: 3 });
+        G.Audio.sfx('item_get');
+      }
+    }
     this.saveRun();
   };
 

@@ -20,7 +20,7 @@
 
 (function () {
 
-  var TIER_DMG = [1, 1.5, 2.2, 3.2, 4.6];
+  var TIER_DMG = [0.82, 1.28, 1.9, 2.85, 4.1];
   var TIER_CD  = [1, 0.97, 0.94, 0.90, 0.86];
   var BASE_WPRICE = [11, 21, 38, 65, 108];
 

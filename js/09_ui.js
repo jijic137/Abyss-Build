@@ -282,18 +282,41 @@
     var col = tier === 0 ? '#d9dde8' : G.rarityColor(tier);
     var tmp = { def: def, tier: tier };
     var dmg = G.wDamage(tmp), cd = G.wCooldown(tmp);
+    var mult = weaponMult(def);
+    var dps = (dmg / Math.max(0.05, cd)) * mult;
+    var t0 = { def: def, tier: 0 };
+    var dps0 = (G.wDamage(t0) / Math.max(0.05, G.wCooldown(t0))) * mult;
+    var up = Math.max(0, tier);
+    var gain = up > 0 ? Math.round((dps / dps0 - 1) * 100) : 0;
+    var nx = Math.min(4, tier + 1);
+    var tn = { def: def, tier: nx };
+    var dpsN = (G.wDamage(tn) / Math.max(0.05, G.wCooldown(tn))) * mult;
     var tagName = { melee: '近战', ranged: '远程', elemental: '元素', engineering: '工程' };
     var tags = def.tags.map(function (t) { return tagName[t] || t; }).join(' / ');
     var h = '<div class="tt-name" style="color:' + col + '">' + def.name +
       ' <span style="font-size:11px;opacity:.7">' + G.rarityName(tier) + '</span></div>' +
       '<div style="font-size:11px;color:#8a90a8;margin-bottom:4px">' + tags + '</div>' +
       '<div class="p">基础伤害 ' + G.fmt(dmg, 1) + '</div>' +
-      '<div class="p">冷却 ' + G.fmt(cd, 2) + 's　射程 ' + Math.round(def.range) + '</div>';
+      '<div class="p">冷却 ' + G.fmt(cd, 2) + 's　射程 ' + Math.round(def.range) + '</div>' +
+      '<div class="p">估测DPS ' + Math.round(dps) +
+        (tier < 4 && nx > tier ? ' <span style="color:' + G.rarityColor(nx) + '">升' + G.rarityName(nx) + ' ×' + G.fmt(dpsN / dps, 1) + '</span>' : '') +
+        '</div>' +
+        (gain > 0 ? '<div class="p" style="color:' + G.rarityColor(tier) + '">对比白装 +' + gain + '% 输出</div>' : '');
     var m = G.weaponMods(def, tier);
     if (m) h += modsHtml(m);
     h += '<div class="tt-attr">伤害加成 · ' + G.F.damageAttrText(def.tags) + '（额外受全局「伤害%」影响）</div>';
     h += '<div class="tt-f">' + def.desc + '</div>';
     return h;
+  }
+  /* 多段/多目标武器的估算输出倍率（仅用于展示 DPS 差异，非精确计算） */
+  function weaponMult(def) {
+    if (def.kind === 'spread') return Math.min(3, (def.count || 1) * 0.8);
+    if (def.kind === 'orbit') return Math.min(3, (def.count || 2) * 0.7);
+    if (def.kind === 'turret' || def.kind === 'drone') return 0.9;
+    if (def.kind === 'mine') return 1.2;
+    if (def.kind === 'chain') return Math.min(3, (def.chain || 2) * 0.6);
+    if (def.kind === 'homing' && def.count) return Math.min(3, def.count * 0.9);
+    return 1;
   }
   UI.itemTip = itemTip;
   UI.weaponTip = weaponTip;
@@ -570,7 +593,7 @@
     var w = UI._wheel; if (!w.items) return;
     // 再次点击已选中的角色 → 确认进入深渊
     if (!w.spinning && w.selected === idx && w.items[idx]) {
-      confirmWheelSelection();
+      G.UI.confirmWheelSelection();
       return;
     }
     w.spinning = false;
@@ -640,7 +663,7 @@
       if (e.key === 'ArrowRight' || e.key === 'KeyD') { UI._wheel.targetRot -= step; e.preventDefault(); }
       else if (e.key === 'ArrowLeft' || e.key === 'KeyA') { UI._wheel.targetRot += step; e.preventDefault(); }
       else if (e.key === 'Escape') { UI.exitCharSelect(); e.preventDefault(); }
-      else if (e.key === 'Enter' || e.key === 'Space') { confirmWheelSelection(); e.preventDefault(); }
+      else if (e.key === 'Enter' || e.key === 'Space') { G.UI.confirmWheelSelection(); e.preventDefault(); }
     });
   }
 
@@ -700,10 +723,15 @@
     if (bar.childElementCount !== p.weapons.length || bar.dataset.sig !== wsig(p)) {
       bar.innerHTML = '';
       bar.dataset.sig = wsig(p);
-      p.weapons.forEach(function (w) {
+      p.weapons.forEach(function (w, wi) {
         var s = el('div', 'wslot');
         s.style.borderColor = w.tier === 0 ? '#333a52' : G.rarityColor(w.tier);
+        s.style.setProperty('--rc', w.tier === 0 ? '#333a52' : G.rarityColor(w.tier));
+        s.className += ' ws' + (wi + 1);
         s.appendChild(G.PX.node(G.weaponIcon(w.def, w.tier, 3)));
+        var num = el('span', 'wslot-num', String(wi + 1));
+        s.appendChild(num);
+        var gem = el('span', 'wslot-gem'); s.appendChild(gem);
         var cd = el('div', 'cd'); s.appendChild(cd);
         s._cd = cd; s._w = w;
         bindTip(s, function () { return weaponTip(w.def, w.tier); });

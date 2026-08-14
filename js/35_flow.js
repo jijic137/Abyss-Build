@@ -162,6 +162,7 @@
     p.x = g.map.spawn.x; p.y = g.map.spawn.y;
     p.room = g.map.startRoom;
     g.enterRoom(g.map.startRoom);
+    if (g.seedStartEnemies) g.seedStartEnemies();
     G.UI.banner('深入 · ' + tier.name, tier.col);
     G.UI.updateObjective(g.map);
     G.UI.updateHud(g);
@@ -301,8 +302,39 @@
     if (cur) cur.textContent = meta.currency;
     var tier = Math.max(1, meta.stats.bestTier || 1);
     if (!G.Market.offers.length) G.Market.refresh(tier, 0);
+    G.Market.ensureValid();   // 清理旧档超品级存货并补满货架
     var rcEl = $('marketRefreshCost');
     if (rcEl) rcEl.textContent = G.Market.refreshCost();
+
+    /* 市场等级 / 贸易代币 / 升级 */
+    var st = $('marketStatus');
+    if (st) {
+      var lv = G.Market.levelOf();
+      var rl = ['', '白色', '绿色', '蓝色', '紫色'][lv] || '';
+      var tk = G.Market.tokenCount();
+      var nxt = G.Market.nextUpgrade();
+      var maxR = G.Market.maxRarity();
+      st.innerHTML = '';
+      var lvBlock = G.el('div', 'mkt-status-item');
+      lvBlock.innerHTML = '<span class="mkt-lvl-name">市场 Lv.' + lv + ' · ' + rl + '</span>' +
+        '<span class="mkt-lvl-desc">可出售 ' + G.rarityName(maxR) + ' 及以下</span>';
+      st.appendChild(lvBlock);
+      var tkBlock = G.el('div', 'mkt-status-item');
+      tkBlock.innerHTML = '<span class="mkt-tk-name">贸易代币 ×' + tk + '</span>' +
+        '<span class="mkt-tk-desc">' + (lv >= 4 ? '已满级' : '升到下一级需 ' + nxt + ' 枚 · 击败精英/开宝库箱获取') + '</span>';
+      st.appendChild(tkBlock);
+      if (lv < 4) {
+        var up = G.el('button', 'btn mkt-up', '升级至 Lv.' + (lv + 1) + ' · ' + nxt + ' 代币');
+        up.disabled = tk < nxt;
+        up.addEventListener('click', function () {
+          var r = G.Market.upgrade();
+          if (!r.ok) { G.UI.flashText(up, r.msg); return; }
+          G.Audio.sfx('levelup');
+          G.UI.renderMarket();
+        });
+        st.appendChild(up);
+      }
+    }
 
     /* 页签 */
     var tabs = $('mktTabs');
@@ -324,7 +356,7 @@
     var shown = 0;
     G.Market.offers.forEach(function (o, idx) {
       var inst = G.Market.instance(o);
-      if (!inst) return;
+      if (!inst || inst.tier > G.Market.maxRarity()) return;
       if (G.UI._mktTab !== 'all' && inst.type !== G.UI._mktTab) return;
       shown++;
       var col = inst.tier === 0 ? '#d9dde8' : G.rarityColor(inst.tier);

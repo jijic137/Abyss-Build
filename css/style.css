@@ -170,8 +170,18 @@ canvas#game{
 .hud-bottom{
   position:absolute; bottom:0; left:0; right:0;
   padding:10px 16px 12px;
-  display:flex; flex-direction:column; align-items:center; gap:6px;
-  background:linear-gradient(#0b0d1400, #0b0d14dd);
+  pointer-events:none;
+  background:linear-gradient(#0b0d1400, #0b0d14e8);
+}
+.hud-command{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  width:min(960px,100%);
+  margin:0 auto;
+  pointer-events:auto;
+}
+.cmd-center{
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  min-width:0; flex:1; text-align:center;
 }
 .status-bar{ display:flex; gap:5px; min-height:22px; align-items:center; flex-wrap:wrap; justify-content:center; }
 .status-chip{
@@ -182,20 +192,130 @@ canvas#game{
   text-shadow:0 1px 2px #000;
 }
 .weapon-bar{ display:flex; gap:6px; }
-.wslot{
-  width:46px; height:46px;
-  background:#1a1e2c99; border:2px solid var(--line);
-  border-radius:2px;
-  display:flex; align-items:center; justify-content:center;
+.skill-mod{
+  display:flex; align-items:center; gap:10px;
   position:relative;
+  background:linear-gradient(160deg,#171c2ef2 0%,#10131ff2 60%,#0d101bfa 100%);
+  border:1px solid #ffffff2a;
+  border-radius:9px;
+  padding:8px 14px 8px 9px;
+  box-shadow:0 10px 26px #000a, inset 0 0 0 1px #ffffff0a;
+  cursor:pointer;
+  transition:border-color .15s, box-shadow .15s, transform .1s;
 }
+.skill-mod:hover{ transform:translateY(-1px); border-color:#ffffff4a; }
+.skill-mod::before{
+  content:""; position:absolute; inset:0; border-radius:9px;
+  background:linear-gradient(90deg, var(--sk-c,#ffd24a), transparent 26%);
+  opacity:.08; pointer-events:none;
+}
+.skill-mod.ready{ box-shadow:0 0 22px #000c, 0 0 0 1px var(--sk-c,#ffd24a)66, inset 0 0 0 1px #ffffff12; }
+.skill-mod.ready::before{ opacity:.18; }
+.skill-core{
+  position:relative; width:54px; height:54px;
+  display:flex; align-items:center; justify-content:center;
+}
+.skill-core::before{
+  content:""; position:absolute; inset:-3px; border-radius:50%;
+  background:conic-gradient(from -90deg, var(--sk-c,#ffd24a) var(--fill,0deg), #ffffff14 var(--fill,0deg));
+  opacity:.9;
+  filter:drop-shadow(0 0 5px var(--sk-c,#ffd24a77));
+}
+.skill-glyph{
+  position:relative; z-index:2;
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:900; color:var(--sk-c,#ffd24a);
+  background:radial-gradient(circle at 35% 30%,#232a3d,#0e111b 70%);
+  border:2px solid var(--sk-c,#ffd24a);
+  text-shadow:0 0 10px var(--sk-c,#ffd24a88);
+  box-shadow:0 0 14px var(--sk-c,#ffd24a22), inset 0 0 12px #000c;
+}
+.skill-cooldown{
+  position:absolute; left:0; right:0; bottom:0; z-index:1;
+  background:linear-gradient(180deg,#0a0d14cc,#000c);
+  border-top:1px solid #ffffff14;
+  transition:height .08s linear, opacity .15s;
+}
+.skill-band{
+  position:absolute; inset:4px; z-index:2; border-radius:50%;
+  display:flex; align-items:flex-end; justify-content:center;
+  padding-bottom:2px;
+  font-size:12px; font-weight:800; color:var(--sk-c,#ffd24a);
+  text-shadow:0 1px 3px #000; pointer-events:none;
+}
+.skill-ready{
+  position:absolute; z-index:3; bottom:-9px; left:50%; transform:translateX(-50%);
+  font-size:9px; font-weight:800; letter-spacing:.5px; color:#9df0b0;
+  background:#122a18ee; border:1px solid #2f7a43; border-radius:6px;
+  padding:1px 7px; white-space:nowrap; opacity:0; transition:opacity .15s;
+}
+.skill-mod.ready .skill-ready{ opacity:1; }
+.skill-meta{ display:flex; flex-direction:column; gap:3px; min-width:74px; }
+.skill-name{
+  font-size:13px; font-weight:800; color:#eef1ff; letter-spacing:.5px;
+  white-space:nowrap;
+}
+.skill-key{ font-size:10px; color:var(--dim2); letter-spacing:1px; }
+.skill-mod:not(.ready) .skill-ready{ display:none; }
+
+.wslot{
+  width:52px; height:52px;
+  background:linear-gradient(180deg,#1d2236f2,#111422f2);
+  border:1px solid #ffffff2e; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+  box-shadow:0 5px 14px #000a, inset 0 2px 0 1px #ffffff0d;
+  transition:transform .1s, border-color .12s;
+}
+.wslot::before{
+  content:""; position:absolute; inset:0;
+  background:
+    linear-gradient(180deg,#ffffff16,transparent 42%),
+    linear-gradient(180deg, var(--rc,#333a52)00, var(--rc,#333a52)55 135%);
+  pointer-events:none;
+}
+.wslot::after{
+  content:""; position:absolute; inset:2px;
+  border:1px solid var(--rc,#333a52); border-radius:5px;
+  pointer-events:none;
+}
+.wslot:hover{ transform:translateY(-3px); border-color:var(--rc,#eef1ff); box-shadow:0 8px 18px #000c, inset 0 2px 0 1px #ffffff14; }
 .wslot canvas{ image-rendering:pixelated; }
+.wslot-num{
+  position:absolute; top:2px; left:4px; z-index:3;
+  font-size:9px; font-weight:800; color:#8a90a8;
+  text-shadow:0 1px 2px #000; letter-spacing:0;
+}
+.wslot-gem{
+  position:absolute; top:-1px; right:-1px; z-index:3;
+  width:9px; height:9px;
+  background:var(--rc,#333a52);
+  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+  box-shadow:0 0 5px var(--rc,#333a52aa);
+}
 .wslot .cd{
-  position:absolute; left:0; right:0; bottom:0;
-  background:#000000aa;
-  transition:height .05s linear;
+  position:absolute; left:0; right:0; bottom:0; z-index:2;
+  background:linear-gradient(180deg,#0a0d14cc,#000c);
+  border-top:1px solid #ffffff14;
+  transition:height .06s linear;
 }
 .hint{ font-size:11px; color:var(--dim2); letter-spacing:1px; }
+
+@media (max-width:760px){
+  .hud-bottom{ padding:8px 10px 10px; }
+  .hud-command{ gap:8px; width:100%; }
+  .skill-meta{ display:none; }
+  .skill-mod{ padding:7px 8px; }
+  .skill-core{ width:48px; height:48px; }
+  .skill-glyph{ width:38px; height:38px; font-size:17px; }
+  .skill-core::before{ inset:-2px; }
+  .skill-band{ font-size:10px; }
+  .wslot{ width:46px; height:46px; }
+  .wslot canvas{ width:44px !important; height:44px !important; }
+  .cmd-center{ display:none; }
+  .weapon-bar{ margin-left:auto; }
+}
 
 .boss-bar-wrap{ position:absolute; top:96px; left:50%; transform:translateX(-50%); width:min(560px,70vw); text-align:center; }
 .boss-name{ font-size:13px; font-weight:700; color:#ff8a8a; letter-spacing:4px; margin-bottom:4px; text-shadow:0 1px 4px #000; }

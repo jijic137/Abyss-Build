@@ -19,74 +19,74 @@
 
     /* ---------------- 普通敌人 ---------------- */
     { id: 'worm', name: '腐虫', sprite: 'e_worm', sc: 3, r: 15,
-      hp: 10, spd: 54, dmg: 5, armor: 0, mat: 1, danger: 1, ai: 'chase' },
+      hp: 18, spd: 54, dmg: 5, armor: 0, mat: 1, danger: 1, ai: 'chase' },
 
     { id: 'bat', name: '尖啸蝠', sprite: 'e_bat', sc: 3, r: 14,
-      hp: 7, spd: 120, dmg: 4, armor: 0, mat: 1, danger: 1.3, ai: 'zigzag', wob: 2.6 },
+      hp: 14, spd: 120, dmg: 4, armor: 0, mat: 1, danger: 1.3, ai: 'zigzag', wob: 2.6 },
 
     { id: 'slime', name: '裂胶怪', sprite: 'e_slime', sc: 3, r: 17,
-      hp: 17, spd: 56, dmg: 6, armor: 0, mat: 2, danger: 2.0, ai: 'splitter',
+      hp: 30, spd: 56, dmg: 6, armor: 0, mat: 2, danger: 2.0, ai: 'splitter',
       splitInto: 'slimelet', splitCount: 2 },
 
     { id: 'slimelet', name: '小裂胶', sprite: 'e_slime', sc: 3, r: 11,
-      hp: 6, spd: 84, dmg: 4, armor: 0, mat: 1, danger: 0, ai: 'chase', noSpawn: true },
+      hp: 11, spd: 84, dmg: 4, armor: 0, mat: 1, danger: 0, ai: 'chase', noSpawn: true },
 
     { id: 'skeleton', name: '枯骨兵', sprite: 'e_skeleton', sc: 3, r: 15,
-      hp: 19, spd: 76, dmg: 7, armor: 1, mat: 2, danger: 2.0, ai: 'chase' },
+      hp: 32, spd: 76, dmg: 7, armor: 1, mat: 2, danger: 2.0, ai: 'chase' },
 
     { id: 'beetle', name: '铁甲虫', sprite: 'e_beetle', sc: 3, r: 18,
-      hp: 28, spd: 46, dmg: 8, armor: 4, mat: 2, danger: 2.6, ai: 'chase' },
+      hp: 46, spd: 46, dmg: 8, armor: 4, mat: 2, danger: 2.6, ai: 'chase' },
 
     { id: 'eye', name: '窥视者', sprite: 'e_eye', sc: 3, r: 16,
-      hp: 13, spd: 44, dmg: 6, armor: 0, mat: 2, danger: 2.5, ai: 'shooter',
+      hp: 24, spd: 44, dmg: 6, armor: 0, mat: 2, danger: 2.5, ai: 'shooter',
       keep: 230, fireCd: 2.1, bspd: 250, bdmg: 7 },
 
     { id: 'spider', name: '跃蛛', sprite: 'e_spider', sc: 3, r: 15,
-      hp: 13, spd: 96, dmg: 5, armor: 0, mat: 1, danger: 2.0, ai: 'leaper',
+      hp: 24, spd: 96, dmg: 5, armor: 0, mat: 1, danger: 2.0, ai: 'leaper',
       leapCd: 2.2, leapSpd: 420, leapTime: 0.32 },
 
     { id: 'wraith', name: '游魂', sprite: 'e_wraith', sc: 3, r: 16,
-      hp: 15, spd: 94, dmg: 7, armor: 0, mat: 2, danger: 2.5, ai: 'chase', ghost: true },
+      hp: 28, spd: 94, dmg: 7, armor: 0, mat: 2, danger: 2.5, ai: 'chase', ghost: true },
 
     { id: 'bomber', name: '爆弹虫', sprite: 'e_bomber', sc: 3, r: 16,
-      hp: 15, spd: 98, dmg: 6, armor: 0, mat: 2, danger: 3.0, ai: 'bomber',
+      hp: 26, spd: 98, dmg: 6, armor: 0, mat: 2, danger: 3.0, ai: 'bomber',
       boomR: 92, boomDmg: 20, fuse: 0.55 },
 
     { id: 'warlock', name: '邪术师', sprite: 'e_warlock', sc: 3, r: 17,
-      hp: 24, spd: 40, dmg: 9, armor: 1, mat: 3, danger: 4.0, ai: 'shooter',
+      hp: 40, spd: 40, dmg: 9, armor: 1, mat: 3, danger: 4.0, ai: 'shooter',
       keep: 275, fireCd: 2.6, bspd: 230, bdmg: 9, salvo: 3, salvoArc: 0.42 },
 
     { id: 'stone', name: '石傀', sprite: 'e_stone', sc: 3, r: 21,
-      hp: 58, spd: 33, dmg: 12, armor: 7, mat: 4, danger: 4.2, ai: 'chase' },
+      hp: 80, spd: 33, dmg: 12, armor: 7, mat: 4, danger: 4.2, ai: 'chase' },
 
     { id: 'charger', name: '犀角兽', sprite: 'e_charger', sc: 3, r: 20,
-      hp: 40, spd: 58, dmg: 14, armor: 2, mat: 4, danger: 4.6, ai: 'charger',
+      hp: 58, spd: 58, dmg: 14, armor: 2, mat: 4, danger: 4.6, ai: 'charger',
       chargeCd: 3.0, windup: 0.7, chargeSpd: 480, chargeTime: 0.85 },
 
     /* ---------------- 新增普通敌人 ---------------- */
     { id: 'swarmling', name: '虫群', sprite: 'e_swarmling', sc: 3, r: 10,
-      hp: 5, spd: 140, dmg: 3, armor: 0, mat: 1, danger: 1.2, ai: 'chase' },
+      hp: 9, spd: 140, dmg: 3, armor: 0, mat: 1, danger: 1.2, ai: 'chase' },
     { id: 'mimic', name: '拟态箱', sprite: 'e_mimic', sc: 3, r: 16,
-      hp: 22, spd: 60, dmg: 9, armor: 2, mat: 8, danger: 2.4, ai: 'chase' },
+      hp: 36, spd: 60, dmg: 9, armor: 2, mat: 8, danger: 2.4, ai: 'chase' },
     { id: 'gargoyle', name: '石像鬼', sprite: 'e_gargoyle', sc: 3, r: 19,
-      hp: 34, spd: 44, dmg: 10, armor: 6, mat: 3, danger: 3.5, ai: 'chase' },
+      hp: 52, spd: 44, dmg: 10, armor: 6, mat: 3, danger: 3.5, ai: 'chase' },
     { id: 'hex_archer', name: '咒术弓手', sprite: 'e_hex_archer', sc: 3, r: 16,
-      hp: 14, spd: 50, dmg: 7, armor: 0, mat: 2, danger: 3.0, ai: 'shooter',
+      hp: 26, spd: 50, dmg: 7, armor: 0, mat: 2, danger: 3.0, ai: 'shooter',
       keep: 280, fireCd: 2.3, bspd: 300, bdmg: 8 },
     { id: 'void_horror', name: '虚空恐魔', sprite: 'e_void_horror', sc: 3, r: 16,
-      hp: 16, spd: 110, dmg: 8, armor: 0, mat: 2, danger: 3.2, ai: 'zigzag', wob: 3.0 },
+      hp: 29, spd: 110, dmg: 8, armor: 0, mat: 2, danger: 3.2, ai: 'zigzag', wob: 3.0 },
     { id: 'glutton', name: '贪食体', sprite: 'e_glutton', sc: 3, r: 18,
-      hp: 24, spd: 58, dmg: 7, armor: 1, mat: 2, danger: 2.8, ai: 'splitter',
+      hp: 40, spd: 58, dmg: 7, armor: 1, mat: 2, danger: 2.8, ai: 'splitter',
       splitInto: 'swarmling', splitCount: 3 },
 
     /* ---------------- 第二批新增普通敌人 ---------------- */
     { id: 'mite', name: '噬螨', sprite: 'e_mite', sc: 3, r: 10,
-      hp: 6, spd: 150, dmg: 3, armor: 0, mat: 1, danger: 1.1, ai: 'chase' },
+      hp: 11, spd: 150, dmg: 3, armor: 0, mat: 1, danger: 1.1, ai: 'chase' },
     { id: 'crystal', name: '寒晶', sprite: 'e_crystal', sc: 3, r: 16,
-      hp: 18, spd: 38, dmg: 6, armor: 2, mat: 2, danger: 2.8, ai: 'shooter',
+      hp: 30, spd: 38, dmg: 6, armor: 2, mat: 2, danger: 2.8, ai: 'shooter',
       keep: 260, fireCd: 2.6, bspd: 240, bdmg: 5, salvo: 3, salvoArc: 0.5 },
     { id: 'ogre', name: '石拳魔', sprite: 'e_ogre', sc: 3, r: 19,
-      hp: 70, spd: 34, dmg: 16, armor: 8, mat: 5, danger: 4.4, ai: 'chase' },
+      hp: 96, spd: 34, dmg: 16, armor: 8, mat: 5, danger: 4.4, ai: 'chase' },
 
     /* ---------------- 精英 ---------------- */
     { id: 'el_warden', name: '精英 · 守望者', sprite: 'el_warden', sc: 4, r: 25, elite: true,

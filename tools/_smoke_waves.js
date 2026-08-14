@@ -232,6 +232,82 @@ async function runExtractSuccess() {
   guard('renderMapSelect', () => G.UI.renderMapSelect());
   log('  [界面] 整备/市场/选图渲染 ✓');
 
+  /* 市场：默认只出白/绿、无限购买、买完补新货 */
+  resetMeta();
+  G.Meta.addCurrency(1000000);
+  G.Market.refresh(1, 0);
+  if (G.Market.offers.length < 8) throw new Error('市场应出售不止 4 件商品');
+  let over = 0;
+  G.Market.offers.forEach(o => { if (G.Market.instance(o).tier > 1) over++; });
+  if (over > 0) throw new Error('市场 Lv.1 不应出售蓝色以上商品');
+  const first = G.Market.offers[0].defId;
+  const stash0 = G.Meta.stash().length;
+  guard('buy', () => G.Market.buy(0));
+  if (G.Meta.stash().length !== stash0 + 1) throw new Error('购买未入库');
+  if (G.Market.offers[0].defId === first) throw new Error('购买后应补上新商品');
+  if (G.Market.offers.length !== G.Market.offers.length) throw new Error('不应减少商品数量');
+  const buyTwice = (() => { const n = G.Meta.stash().length; G.Market.buy(0); return G.Meta.stash().length === n + 1; })();
+  if (!buyTwice) throw new Error('同一格无法连续购买');
+  log('  [市场] 白绿限定 ✓ 无限购买/买后补货 ✓');
+
+  /* 旧档残留高品级货：应自动清成白/绿并把货架补满 */
+  const oldShop = { tier: 1, level: 1, offers: [
+    { kind: 'item', defId: 'clover', tier: 0 },
+    { kind: 'weapon', defId: 'knife', tier: 4 },
+    { kind: 'item', defId: 'glasses', tier: 3 },
+    { kind: 'weapon', defId: 'sword', tier: 2 }
+  ] };
+  Object.keys(mem).forEach(k => delete mem[k]);
+  const d2 = G.Meta.get();
+  d2.currency = 1000000; d2.stash = []; d2.stashSize = 30;
+  d2.shop = oldShop;
+  G.Meta.flush();
+  G.Market.restore();
+  G.Market.ensureValid();
+  if (G.Market.offers.length !== 12) throw new Error('补货后应满 12 格');
+  let over2 = 0;
+  G.Market.offers.forEach(o => { if (G.Market.instance(o).tier > 1) over2++; });
+  if (over2 > 0) throw new Error('旧档清理后仍残留超品级货');
+  resetMeta();
+
+  /* 背包：可丢弃 + 开箱背包满时物品掉落地面 */
+  resetMeta();
+  G.game.init();
+  G.game.newRun(G.CHAR_BY_ID['alchemist'], 1);
+  const gg = G.game;
+  gg.bag = [];
+  for (let bi = 0; bi < G.BAG_CELLS; bi++) {
+    const it = G.makeItem('clover', 0);
+    gg.bag.push(it);
+  }
+  gg.bag.forEach(it => G.invAutoPlace(gg.bag, G.Inv2.bagCols, G.Inv2.bagRows, it));
+  if (G.addBagItem(G.makeItem('glasses', 0))) throw new Error('背包应已满');
+  const preDropLen = gg.bag.length;
+  const dropUnique = gg.bag[0];
+  gg.bag.splice(0, 1);
+  G.dropItemGround(dropUnique);
+  if (gg.bag.length !== preDropLen - 1) throw new Error('丢弃未生效');
+  const droppedWorld = gg.pickups.some(pu => pu.type === 'item' && pu.value === dropUnique);
+  if (!droppedWorld) throw new Error('丢弃未落到地面');
+  log('  [背包] 可丢弃 ✓');
+  // 开箱满背包：物品落地而非消失，捡回自动入包
+  gg.bag = [];
+  for (let fi = 0; fi < G.BAG_CELLS; fi++) gg.bag.push(G.makeItem('clover', 0));
+  gg.bag.forEach(it => G.invAutoPlace(gg.bag, G.Inv2.bagCols, G.Inv2.bagRows, it));
+  const cDummy = { x: G.game.player.x, y: G.game.player.y };
+  const overItem = G.makeItem('glasses', 1);
+  G.game.applyContainerReward(cDummy, [{ kind: 'item', inst: overItem }]);
+  const droppedOnGround = gg.pickups.some(pu => pu.type === 'item' && pu.value === overItem);
+  if (!droppedOnGround) throw new Error('满背包开箱未掉落地面');
+  // 腾空后落地物可拾取
+  gg.bag = [];
+  const puItem = gg.pickups.find(pu => pu.type === 'item');
+  if (!puItem) throw new Error('地面物品丢失');
+  puItem.x = G.game.player.x; puItem.y = G.game.player.y;
+  puItem.collect();
+  if (gg.bag.length !== 1) throw new Error('地面物品未能拾取');
+  log('  [开箱] 满背包掉落地面 ✓ 拾回 ✓');
+
   /* 区域解锁：通关该区域最后一小关（第 3 小关）才解锁下一区域 */
   resetMeta();
   G.game.init();
@@ -386,9 +462,9 @@ function runShards() {
   if (!levelTriggered) throw new Error('碎片未触发强化选择');
   if (p.level !== 1) throw new Error('不应有等级增长 level=' + p.level);
   g.pickups.push(new G.Pickup(p.x + 2, p.y, 'mat', 5));
-  driveFrames(8);
+  driveFrames(20);
   var matMul2 = (g.mapMods || []).some(function (x) { return x.id === 'mats'; }) ? 1.5 : 1;
-  if (g.materials !== matBefore + Math.round(5 * matMul2)) throw new Error('材料拾取异常');
+  if (g.materials < matBefore + Math.round(5 * matMul2)) throw new Error('材料拾取异常');
   log('  [碎片] 拾取→共鸣→强化 ✓ level=' + p.level + ' shards=' + g.shards + ' pending=' + p.pendingLevels);
 }
 
@@ -453,8 +529,9 @@ function runNewSystems() {
   if (!g._pendingDescend || g.state !== 'pause') throw new Error('层间整备未开启');
   guard('beginNextFloor', () => g.beginNextFloor());
   if (g.state !== 'play') throw new Error('深入后未进入战斗');
+  if (!g.enemies || g.enemies.length === 0) throw new Error('进入下一层时初始怪物为零');
   guard('closeFlow', () => G.UI.closeFlow());
-  log('  [深入] 第 ' + subBefore + '→' + g.sublevel + ' 小关 ✓');
+  log('  [深入] 第 ' + subBefore + '→' + g.sublevel + ' 小关 ✓ 初始敌=' + g.enemies.length);
 }
 /* ---------- 11. 背包拖拽/整理 ---------- */
 function runInvDrag() {

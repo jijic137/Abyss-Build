@@ -175,10 +175,15 @@
     if (bar.childElementCount !== p.weapons.length || bar.dataset.sig !== sig) {
       bar.innerHTML = '';
       bar.dataset.sig = sig;
-      p.weapons.forEach(function (w) {
+      p.weapons.forEach(function (w, wi) {
         var s = el('div', 'wslot');
         s.style.borderColor = w.tier === 0 ? '#333a52' : G.rarityColor(w.tier);
+        s.style.setProperty('--rc', w.tier === 0 ? '#333a52' : G.rarityColor(w.tier));
+        s.className += ' ws' + (wi + 1);
         s.appendChild(G.PX.node(G.weaponIcon(w.def, w.tier, 3)));
+        var num = el('span', 'wslot-num', String(wi + 1));
+        s.appendChild(num);
+        var gem = el('span', 'wslot-gem'); s.appendChild(gem);
         var cd = el('div', 'cd'); s.appendChild(cd);
         s._cd = cd; s._w = w;
         s.addEventListener('mouseenter', function (e) {

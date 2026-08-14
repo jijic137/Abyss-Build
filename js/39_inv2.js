@@ -199,22 +199,14 @@
 
     /* 装备行 */
     var eqRow = G.el('div', 'inv2-equip');
-    var used = {};
     SLOTS.forEach(function (slot) {
-      var inst = null;
-      if (slot.t === 'weapon') {
-        var wi = slot.s === 'w1' ? 0 : 1;
-        if (p.weapons[wi]) inst = { uid: p.weapons[wi].uid, defId: p.weapons[wi].defId, def: p.weapons[wi].def, tier: p.weapons[wi].tier, type: 'weapon' };
-      } else {
-        for (var i = 0; i < p.items.length; i++) {
-          if (G.itemType(p.items[i]) === slot.t && !used[i]) { inst = { uid: p.items[i].id, defId: p.items[i].id, def: p.items[i], tier: G.clamp(p.items[i].r, 0, 4), type: slot.t }; used[i] = true; break; }
-        }
-      }
+      var inst = G.itemAtSlot ? G.itemAtSlot(p, slot.s) : null;
       var cell = G.el('div', 'inv2-slot' + (inst ? '' : ' empty'));
       cell.title = slot.name;
       if (inst) {
         cell.style.setProperty('--rc', rarityCol(inst.tier));
         cell.appendChild(tileEl(inst, 'equipped'));
+        bindTip(cell, inst);
         cell.addEventListener('click', function () { G.UI.bagUnequip(slot.s, inst); });
       } else {
         cell.appendChild(G.el('span', 'inv2-slot-name', slot.name));
@@ -258,6 +250,19 @@
       var tile = tileEl(inst, 'draggable');
       tile.style.gridColumn = (inst.ix + 1) + ' / span ' + (inst.size[0]);
       tile.style.gridRow = (inst.iy + 1) + ' / span ' + (inst.size[1]);
+      var drop = G.el('div', 'stash-sell bag-drop', '丢');
+      drop.title = '丢在地上';
+      drop.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var g = G.game;
+        var idx = g.bag.indexOf(inst);
+        if (idx < 0) return;
+        g.bag.splice(idx, 1);
+        G.dropItemGround(inst);
+        G.Audio.sfx('back');
+        G.UI.renderBag();
+      });
+      tile.appendChild(drop);
       bindDrag(tile, inst, g.bag, wrap, 'bag', function () { G.UI.renderBag(); });
       bindTip(tile, inst);
       tile.addEventListener('click', function () { G.UI.bagEquip(inst); });

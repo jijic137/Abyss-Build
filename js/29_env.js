@@ -62,7 +62,7 @@
               var hh = ((((tx + (m.salt || 0) * 131) | 0) * 374761393) ^
                         (((ty + (m.salt || 0) * 911) | 0) * 668265263)) >>> 0;
               var vr = th.floor.variants[hh % th.floor.variants.length];
-              var bright = ((hh >>> 7) % 21) / 100 - 0.10;   // -0.10 ~ +0.10 明暗斑驳（低对比，退为背景）
+              var bright = ((hh >>> 7) % 33) / 100 - 0.16;   // -0.16 ~ +0.16 明暗斑驳（收敛，不抢前景）
               var col2 = G.PX.shade(th.floor.col, bright);
               var vc = G.Art.floorTile ? G.Art.floorTile(vr, col2, 3) : G.PX.getTint(vr, col2, 3);
               if (vc) G.PX.draw(c, vc, tx, ty, { alpha: th.floor.tileAlpha || 0.9 });

@@ -60,11 +60,15 @@
   var WPN_BASE = [11, 21, 38, 65, 108];
   G.itemWorth = function (inst) {
     var b = inst.type === 'weapon' ? WPN_BASE[inst.tier] : ITEM_BASE[inst.tier];
-    return Math.max(1, Math.round(b * 1.25));
+    var cells = (inst.def && inst.def.size) ? inst.def.size[0] * inst.def.size[1] : 1;
+    var sizeMul = 1 + (cells - 1) * 0.22;
+    return Math.max(1, Math.round(b * 1.25 * sizeMul));
   };
   G.itemCost = function (inst) {
     var b = inst.type === 'weapon' ? WPN_BASE[inst.tier] : ITEM_BASE[inst.tier];
-    return Math.max(1, Math.round(b * 2.5));
+    var cells = (inst.def && inst.def.size) ? inst.def.size[0] * inst.def.size[1] : 1;
+    var sizeMul = 1 + (cells - 1) * 0.22;
+    return Math.max(1, Math.round(b * 2.5 * sizeMul));
   };
 
   /* ------------------------------------------------------------

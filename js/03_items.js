@@ -443,7 +443,9 @@
   var BASE_PRICE = [9, 18, 33, 58, 96];
 
   G.itemPrice = function (it, wave) {
-    var p = BASE_PRICE[it.r] * (1 + wave * 0.085);
+    var cells = (it.size ? it.size[0] * it.size[1] : 1);
+    var sizeMul = 1 + (cells - 1) * 0.22;
+    var p = BASE_PRICE[it.r] * (1 + wave * 0.085) * sizeMul;
     return Math.max(1, Math.round(p));
   };
   G.sellPrice = function (it, wave) {

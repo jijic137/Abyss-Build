@@ -113,30 +113,46 @@
         var rc = iv.rects[r];
         if (rc[2] < vx0 || rc[0] > vx1 || rc[3] < vy0 || rc[1] > vy1) continue;
         var w = rc[2] - rc[0], h = rc[3] - rc[1];
-        /* 底衬（略深于地面） */
-        c.fillStyle = 'rgba(9,11,17,0.55)';
+        var dark = G.PX.shade(col, -0.38);
+        /* 1) 投影（向右下偏移，强化凸起于地板之上） */
+        c.fillStyle = 'rgba(0,0,0,0.45)';
+        c.fillRect(rc[0] + 7, rc[1] + 9, w, h);
+        /* 2) 主体（比地板更暗的墙面色，拉开对比） */
+        c.fillStyle = dark;
         c.fillRect(rc[0], rc[1], w, h);
-        /* 平铺纹理 */
+        /* 3) 纹理平铺（材质细节） */
         if (spr) {
+          c.save();
+          c.globalAlpha = 0.72;
           for (var x = rc[0]; x < rc[2]; x += spr.width) {
             for (var y = rc[1]; y < rc[3]; y += spr.height) {
               c.drawImage(spr, x, y);
             }
           }
+          c.restore();
         }
-        /* 顶部高光 / 底部阴影 / 左侧描边（立体感） */
-        c.fillStyle = 'rgba(255,255,255,0.10)';
+        /* 4) 顶部受光面（墙体高于地板的证据） */
+        c.fillStyle = 'rgba(255,255,255,0.13)';
+        c.fillRect(rc[0], rc[1], w, 10);
+        c.fillStyle = 'rgba(255,255,255,0.34)';
         c.fillRect(rc[0], rc[1], w, 4);
+        /* 5) 右侧 / 下侧侧面暗带 */
         c.fillStyle = 'rgba(0,0,0,0.42)';
-        c.fillRect(rc[0], rc[3] - 5, w, 5);
-        c.fillStyle = 'rgba(255,255,255,0.06)';
-        c.fillRect(rc[0], rc[1], 3, h);
-        /* 柱帽 / 栏帽 */
+        c.fillRect(rc[0] + w - 6, rc[1], 6, h);
+        c.fillRect(rc[0], rc[1] + h - 6, w, 6);
+        /* 6) 轮廓描边（清晰边界） */
+        c.strokeStyle = 'rgba(0,0,0,0.62)';
+        c.lineWidth = 2.5;
+        c.strokeRect(rc[0] + 1, rc[1] + 1, w - 2, h - 2);
+        /* 柱帽 / 栏帽（跨出墙体上沿） */
         if (iv.kind === 'pillar' || iv.kind === 'alcove') {
-          c.fillStyle = 'rgba(255,255,255,0.12)';
-          c.fillRect(rc[0] - 4, rc[1] - 5, w + 8, 5);
-          c.fillStyle = 'rgba(0,0,0,0.35)';
-          c.fillRect(rc[0] - 4, rc[1] - 1, w + 8, 3);
+          c.fillStyle = dark;
+          c.fillRect(rc[0] - 5, rc[1] - 5, w + 10, 5);
+          c.fillStyle = 'rgba(255,255,255,0.20)';
+          c.fillRect(rc[0] - 5, rc[1] - 5, w + 10, 2);
+          c.strokeStyle = 'rgba(0,0,0,0.45)';
+          c.lineWidth = 1.5;
+          c.strokeRect(rc[0] - 5, rc[1] - 5, w + 10, 5);
         }
         if (iv.kind === 'ruins') {
           /* 顶面亮边，像石块顶 */

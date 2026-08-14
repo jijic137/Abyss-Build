@@ -64,6 +64,7 @@ const elCache = {};
 const docStub = {
   getElementById(id){ return elCache[id] || (elCache[id]=makeEl()); },
   createElement(){ return makeEl(); },
+  querySelectorAll(){ return []; },
   addEventListener(){},
   readyState:'complete',
   body: makeEl()

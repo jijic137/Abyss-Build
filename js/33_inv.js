@@ -21,6 +21,13 @@ G.discoverTreasure = function (inst) {
   if (!d.discovered) d.discovered = {};
   d.discovered[inst.defId || inst.def.id] = true;
   G.Meta.flush();
+  /* 收集里程碑成就 */
+  if (G.ACHIEVEMENTS && G.Save && G.Save.unlockAch) {
+    var total = G.ITEMS ? G.ITEMS.filter(function (i) { return i.type === 'treasure'; }).length : 0;
+    var got = Object.keys(d.discovered).length;
+    if (total && got >= Math.min(8, total)) G.Save.unlockAch('treasure_half');
+    if (total && got >= total) G.Save.unlockAch('treasure_all');
+  }
 };
 var _abi0 = G.addBagItem;
 G.addBagItem = function (inst) {

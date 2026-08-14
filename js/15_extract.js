@@ -712,7 +712,9 @@
     { id: 'ascetic', name: '苦行者', icon: '✠', desc: '不携带装备撤离成功' },
     { id: 'collector', name: '全职业撤离', icon: '⬡', desc: '用全部职业各撤离一次' },
     { id: 'speedrun', name: '速通', icon: '⟳', desc: '8 分钟内撤离成功' },
-    { id: 'tycoon', name: '暴富', icon: '❖', desc: '单局累计材料 ≥ 500' }
+    { id: 'tycoon', name: '暴富', icon: '❖', desc: '单局累计材料 ≥ 500' },
+    { id: 'treasure_half', name: '寻宝新手', icon: '❀', desc: '图鉴收集过半宝物' },
+    { id: 'treasure_all', name: '宝库收藏家', icon: '✥', desc: '点亮全部宝物图鉴' }
   ];
 
   G.UI.evaluateEnd = function (g, p, win) {

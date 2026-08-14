@@ -1139,7 +1139,7 @@
   G.Art.THEMES = {
     1: {
       id: 'fringe', name: '裂隙边缘', concept: '地表边缘 · 尚有生机',
-      floor: { sprite: 't_fm_a', variants: ['t_fm_a', 't_fm_b', 't_fm_c', 't_fm_d'], col: '#5f9a52', alpha: 0.42, tileAlpha: 0.92 },
+      floor: { sprite: 't_fm_a', variants: ['t_fm_a', 't_fm_b', 't_fm_c', 't_fm_d'], col: '#4c7a42', alpha: 0.42, tileAlpha: 0.78 },
       wall: { col: '#39493c' },
       void: ['#141c14', '#182218'],
       ground: { density: 0.16, elements: [
@@ -1163,7 +1163,7 @@
     },
     2: {
       id: 'corridor', name: '幽暗回廊', concept: '中层回廊 · 严肃荒凉',
-      floor: { sprite: 't_sc_a', variants: ['t_sc_a', 't_sc_b', 't_sc_c', 't_sc_d'], col: '#6a78a8', alpha: 0.46, tileAlpha: 0.92 },
+      floor: { sprite: 't_sc_a', variants: ['t_sc_a', 't_sc_b', 't_sc_c', 't_sc_d'], col: '#55618a', alpha: 0.46, tileAlpha: 0.78 },
       wall: { col: '#3a4160' },
       void: ['#12162a', '#161c36'],
       ground: { density: 0.14, elements: [
@@ -1184,7 +1184,7 @@
     },
     3: {
       id: 'mine', name: '深部矿坑', concept: '深部矿脉 · 黑暗破败',
-      floor: { sprite: 't_mn_a', variants: ['t_mn_a', 't_mn_b', 't_mn_c', 't_mn_d'], col: '#7a68a8', alpha: 0.44, tileAlpha: 0.92 },
+      floor: { sprite: 't_mn_a', variants: ['t_mn_a', 't_mn_b', 't_mn_c', 't_mn_d'], col: '#625493', alpha: 0.44, tileAlpha: 0.78 },
       wall: { col: '#4a3c5a' },
       void: ['#141020', '#181230'],
       ground: { density: 0.15, elements: [
@@ -1205,7 +1205,7 @@
     },
     4: {
       id: 'heart', name: '深渊腹地', concept: '阳光骗局 · 地面镜像',
-      floor: { sprite: 't_hm_a', variants: ['t_hm_a', 't_hm_b', 't_hm_c', 't_hm_d'], col: '#78c06a', alpha: 0.55, tileAlpha: 0.92 },
+      floor: { sprite: 't_hm_a', variants: ['t_hm_a', 't_hm_b', 't_hm_c', 't_hm_d'], col: '#609a54', alpha: 0.55, tileAlpha: 0.78 },
       wall: { col: '#b09a6a' },
       void: ['#242a16', '#2c341c'],
       ground: { density: 0.15, elements: [
@@ -1227,7 +1227,7 @@
     },
     5: {
       id: 'gate', name: '终焉之门', concept: '深渊之心 · 最黑暗破败',
-      floor: { sprite: 't_vd_a', variants: ['t_vd_a', 't_vd_b', 't_vd_c', 't_vd_d'], col: '#6a4458', alpha: 0.46, tileAlpha: 0.92 },
+      floor: { sprite: 't_vd_a', variants: ['t_vd_a', 't_vd_b', 't_vd_c', 't_vd_d'], col: '#553647', alpha: 0.46, tileAlpha: 0.78 },
       wall: { col: '#4a2a3a' },
       void: ['#120a10', '#160c14'],
       ground: { density: 0.15, elements: [
@@ -1401,7 +1401,7 @@
       out.push({
         spr: pick.spr, col: pick.col, x: x, y: y,
         sc: sc,
-        a: 0.72 + ((h2 >>> 11) % 26) / 100,
+        a: 0.55 + ((h2 >>> 11) % 22) / 100,
         flip: ((h2 >>> 13) % 3) === 0
       });
     }

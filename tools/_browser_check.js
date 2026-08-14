@@ -113,6 +113,18 @@ server.listen(8765, '127.0.0.1', async () => {
     });
     console.log('SPRITE ' + JSON.stringify(spr));
 
+    /* 碎片 HUD：经验条应显示碎片计数与填充比例 */
+    const shard = await page.evaluate(() => {
+      const g = G.game;
+      g.shards = 2;
+      G.UI.updateHud(g);
+      const txt = document.getElementById('xpText');
+      const fill = document.getElementById('xpFill');
+      return { txt: txt ? txt.textContent : null, w: fill ? fill.style.width : null };
+    });
+    console.log('SHARDHUD ' + JSON.stringify(shard));
+    if (shard.txt !== '碎片 2/3' || shard.w !== '66.6667%') throw new Error('碎片HUD显示异常');
+
     /* 新背包/仓库界面渲染 */
     await page.evaluate(() => { G.UI.renderBase(); G.UI.renderMarket(); G.UI.renderBag(); });
     await page.waitForTimeout(400);    /* 全屏布局体检：逐屏开启，检测越界元素 */

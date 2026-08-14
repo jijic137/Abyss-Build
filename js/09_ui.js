@@ -238,8 +238,10 @@
     tipEl.innerHTML = html;
     tipEl.classList.remove('hidden');
     var w = tipEl.offsetWidth, h = tipEl.offsetHeight;
-    var px = G.clamp(x + 16, 6, window.innerWidth - w - 6);
-    var py = G.clamp(y - h - 12, 6, window.innerHeight - h - 6);
+    var mx = Math.max(6, window.innerWidth - w - 8);
+    var my = Math.max(6, window.innerHeight - h - 8);
+    var px = G.clamp(x + 16, 6, mx);
+    var py = G.clamp(y - h - 12, 6, my);
     tipEl.style.left = px + 'px';
     tipEl.style.top = py + 'px';
   };

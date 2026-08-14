@@ -195,78 +195,97 @@ canvas#game{
 .skill-mod{
   display:flex; align-items:center; gap:10px;
   position:relative;
-  background:linear-gradient(160deg,#171c2ef2 0%,#10131ff2 60%,#0d101bfa 100%);
-  border:1px solid #ffffff2a;
-  border-radius:9px;
-  padding:8px 14px 8px 9px;
-  box-shadow:0 10px 26px #000a, inset 0 0 0 1px #ffffff0a;
+  background:
+    linear-gradient(180deg,#ffffff10,transparent 30%),
+    linear-gradient(160deg,var(--sk-c,#ffd24a)0a 0%,#161b2afa 22%,#0d101bfa 100%);
+  border:1px solid color-mix(in srgb, var(--sk-c,#ffd24a) 45%, #2a3050);
+  border-radius:7px;
+  padding:10px 16px 10px 11px;
+  box-shadow:0 12px 30px #000c, inset 0 0 0 1px #ffffff0a;
   cursor:pointer;
   transition:border-color .15s, box-shadow .15s, transform .1s;
+  isolation:isolate;
 }
 .skill-mod:hover{ transform:translateY(-1px); border-color:#ffffff4a; }
 .skill-mod::before{
-  content:""; position:absolute; inset:0; border-radius:9px;
-  background:linear-gradient(90deg, var(--sk-c,#ffd24a), transparent 26%);
-  opacity:.08; pointer-events:none;
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:linear-gradient(135deg, var(--sk-c,#ffd24a)22, transparent 30%);
 }
-.skill-mod.ready{ box-shadow:0 0 22px #000c, 0 0 0 1px var(--sk-c,#ffd24a)66, inset 0 0 0 1px #ffffff12; }
-.skill-mod.ready::before{ opacity:.18; }
+.skill-mod::after{
+  content:""; position:absolute; top:5px; left:5px; z-index:3; pointer-events:none;
+  width:9px; height:9px; opacity:.75;
+  border-top:2px solid var(--sk-c,#ffd24a); border-left:2px solid var(--sk-c,#ffd24a);
+  border-radius:3px 0 0 0; filter:drop-shadow(0 0 4px var(--sk-c,#ffd24a88));
+}
+.skill-mod.ready{ box-shadow:0 0 26px #000d, 0 0 0 1px var(--sk-c,#ffd24a)88, inset 0 0 0 1px #ffffff14; }
+.skill-mod.ready::before{ background:linear-gradient(135deg, var(--sk-c,#ffd24a)44, transparent 42%); }
 .skill-core{
   position:relative; width:54px; height:54px;
   display:flex; align-items:center; justify-content:center;
 }
 .skill-core::before{
-  content:""; position:absolute; inset:-3px; border-radius:50%;
-  background:conic-gradient(from -90deg, var(--sk-c,#ffd24a) var(--fill,0deg), #ffffff14 var(--fill,0deg));
-  opacity:.9;
-  filter:drop-shadow(0 0 5px var(--sk-c,#ffd24a77));
+  content:""; position:absolute; inset:-3px; border-radius:8px;
+  background:linear-gradient(135deg, var(--sk-c,#ffd24a), transparent 46%);
+  opacity:.5; filter:drop-shadow(0 0 2px var(--sk-c,#ffd24a66));
+}
+.skill-core::after{
+  content:""; position:absolute; inset:2px; z-index:3;
+  background:conic-gradient(from -90deg, var(--sk-c,#ffd24a) var(--fill,0deg), #ffffff12 var(--fill,0deg));
+  opacity:.92; border-radius:6px;
+  -webkit-mask:radial-gradient(circle, #000 52%, transparent 60%);
+          mask:radial-gradient(circle, #000 52%, transparent 60%);
 }
 .skill-glyph{
-  position:relative; z-index:2;
+  position:relative; z-index:4;
   width:44px; height:44px; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
   font-size:20px; font-weight:900; color:var(--sk-c,#ffd24a);
-  background:radial-gradient(circle at 35% 30%,#232a3d,#0e111b 70%);
-  border:2px solid var(--sk-c,#ffd24a);
+  background:
+    linear-gradient(180deg,#3a4a86,#1c2a52 60%,#0e1426),
+    radial-gradient(circle at 35% 30%,#232a3d,#0e111b 70%);
+  border:2px solid color-mix(in srgb, var(--sk-c,#ffd24a) 78%, #ffffffa0);
   text-shadow:0 0 10px var(--sk-c,#ffd24a88);
   box-shadow:0 0 14px var(--sk-c,#ffd24a22), inset 0 0 12px #000c;
 }
 .skill-cooldown{
-  position:absolute; left:0; right:0; bottom:0; z-index:1;
-  background:linear-gradient(180deg,#0a0d14cc,#000c);
-  border-top:1px solid #ffffff14;
+  position:absolute; left:0; right:0; bottom:0; z-index:2;
+  background:linear-gradient(180deg,color-mix(in srgb, var(--sk-c,#ffd24a) 26%, #000d),#000f);
+  border-top:1px solid var(--sk-c,#ffd24a)44;
   transition:height .08s linear, opacity .15s;
 }
 .skill-band{
-  position:absolute; inset:4px; z-index:2; border-radius:50%;
+  position:absolute; inset:3px; z-index:3; border-radius:6px;
   display:flex; align-items:flex-end; justify-content:center;
   padding-bottom:2px;
   font-size:12px; font-weight:800; color:var(--sk-c,#ffd24a);
   text-shadow:0 1px 3px #000; pointer-events:none;
 }
 .skill-ready{
-  position:absolute; z-index:3; bottom:-9px; left:50%; transform:translateX(-50%);
-  font-size:9px; font-weight:800; letter-spacing:.5px; color:#9df0b0;
-  background:#122a18ee; border:1px solid #2f7a43; border-radius:6px;
-  padding:1px 7px; white-space:nowrap; opacity:0; transition:opacity .15s;
+  position:absolute; z-index:5; bottom:-10px; left:50%; transform:translateX(-50%);
+  font-size:9.5px; font-weight:800; letter-spacing:.5px; color:#b7ffc8;
+  background:#0f2415; border:1px solid #3f9a58; border-radius:6px;
+  padding:2px 10px 3px; white-space:nowrap; opacity:0; transition:opacity .15s;
 }
 .skill-mod.ready .skill-ready{ opacity:1; }
-.skill-meta{ display:flex; flex-direction:column; gap:3px; min-width:74px; }
+.skill-meta{ display:flex; flex-direction:column; gap:2px; min-width:76px; }
 .skill-name{
-  font-size:13px; font-weight:800; color:#eef1ff; letter-spacing:.5px;
-  white-space:nowrap;
+  font-size:12.5px; font-weight:800; color:#eef1ff; letter-spacing:2.5px;
+  white-space:nowrap; text-shadow:0 1px 2px #000;
 }
 .skill-key{ font-size:10px; color:var(--dim2); letter-spacing:1px; }
 .skill-mod:not(.ready) .skill-ready{ display:none; }
 
 .wslot{
-  width:52px; height:52px;
-  background:linear-gradient(180deg,#1d2236f2,#111422f2);
-  border:1px solid #ffffff2e; border-radius:7px;
+  width:56px; height:56px;
+  background:
+    linear-gradient(180deg,#ffffff12,transparent 46%),
+    linear-gradient(180deg,#20263cf2,#10131ff2 74%,#0b0e17fa);
+  border:1px solid #ffffff2a; border-radius:5px;
   display:flex; align-items:center; justify-content:center;
   position:relative; overflow:hidden;
-  box-shadow:0 5px 14px #000a, inset 0 2px 0 1px #ffffff0d;
-  transition:transform .1s, border-color .12s;
+  box-shadow:0 6px 18px #000b, inset 0 0 0 1px #ffffff0a;
+  transition:transform .12s, filter .15s;
+  filter:drop-shadow(0 0 2px var(--rc,#333a52)55);
 }
 .wslot::before{
   content:""; position:absolute; inset:0;
@@ -276,11 +295,11 @@ canvas#game{
   pointer-events:none;
 }
 .wslot::after{
-  content:""; position:absolute; inset:2px;
-  border:1px solid var(--rc,#333a52); border-radius:5px;
+  content:""; position:absolute; inset:2px; z-index:4;
+  border:1px solid var(--rc,#333a52); border-radius:3px;
   pointer-events:none;
 }
-.wslot:hover{ transform:translateY(-3px); border-color:var(--rc,#eef1ff); box-shadow:0 8px 18px #000c, inset 0 2px 0 1px #ffffff14; }
+.wslot:hover{ transform:translateY(-3px); filter:brightness(1.15); box-shadow:0 8px 18px #000c, inset 0 0 0 1px #ffffff14; }
 .wslot canvas{ image-rendering:pixelated; }
 .wslot-num{
   position:absolute; top:2px; left:4px; z-index:3;
@@ -288,16 +307,16 @@ canvas#game{
   text-shadow:0 1px 2px #000; letter-spacing:0;
 }
 .wslot-gem{
-  position:absolute; top:-1px; right:-1px; z-index:3;
-  width:9px; height:9px;
+  position:absolute; top:-4px; right:-4px; z-index:5;
+  width:14px; height:14px;
   background:var(--rc,#333a52);
-  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
-  box-shadow:0 0 5px var(--rc,#333a52aa);
+  clip-path:polygon(50% 0,100% 38%,50% 100%,0 38%);
+  filter:drop-shadow(0 0 6px var(--rc,#333a52aa));
 }
 .wslot .cd{
   position:absolute; left:0; right:0; bottom:0; z-index:2;
-  background:linear-gradient(180deg,#0a0d14cc,#000c);
-  border-top:1px solid #ffffff14;
+  background:linear-gradient(180deg,color-mix(in srgb, var(--rc,#333a52) 24%, #000c),#000f);
+  border-top:1px solid var(--rc,#333a52)40;
   transition:height .06s linear;
 }
 .hint{ font-size:11px; color:var(--dim2); letter-spacing:1px; }
@@ -584,9 +603,10 @@ canvas#game{
 .tooltip{
   position:absolute; z-index:60; pointer-events:none;
   max-width:250px;
-  background:#0d1018f5; border:2px solid var(--line); border-radius:3px;
-  padding:9px 11px; font-size:12px; line-height:1.65;
-  box-shadow:0 8px 30px #000a;
+  background:#0d1018f5; border:1px solid var(--line2);
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+  padding:10px 13px; font-size:12px; line-height:1.6;
+  box-shadow:0 12px 36px #000d, inset 0 0 0 1px #ffffff0a;
 }
 .tooltip .tt-name{ font-weight:800; font-size:13.5px; margin-bottom:4px; }
 .tooltip .p{ color:var(--good); }
@@ -887,6 +907,7 @@ canvas#game{
   width:min(760px,66vw); height:min(700px,74vh);
   margin:6px 0;
   touch-action:none;
+  overflow:hidden;
 }
 /* 角色形象背景：随选中角色切换；边缘径向渐隐（无硬边界/无方形衬底） */
 .wheel-hero{

@@ -86,6 +86,7 @@ G.now = function () { return performance.now() / 1000; };
 G.Save = (function () {
   var KEY = 'abyss_hunter_best_v1';
   var LEGACY_KEY = 'abyss_build_best_v1';   // 旧名存档：读到即迁移到新 key
+  var BAK_KEY = KEY + '.bak';               // 双槽冗余备份：主 key 损坏可回滚
   var mem = null;
   function defaults() {
     return {
@@ -108,12 +109,20 @@ G.Save = (function () {
     try {
       if (typeof localStorage !== 'undefined') {
         var raw = localStorage.getItem(KEY);
+        var bak = localStorage.getItem(BAK_KEY);
+        if (!raw && bak) raw = bak;                       // 主丢失：用备份恢复
+        var corrupt = false;
         if (!raw && LEGACY_KEY) {                    // 旧名存档迁移
           var legacy = localStorage.getItem(LEGACY_KEY);
           if (legacy) { raw = legacy; localStorage.setItem(KEY, legacy); localStorage.removeItem(LEGACY_KEY); }
         }
         if (raw) {
-          var d = JSON.parse(raw);
+          var d = null;
+          try { d = JSON.parse(raw); }
+          catch (e) {
+            corrupt = true;
+            if (bak) { try { d = JSON.parse(bak); } catch (e2) { d = null; } }
+          }
           if (d && typeof d === 'object') {
             if (d.settings) {
               mem.settings.volume = num(d.settings.volume, mem.settings.volume);
@@ -131,6 +140,7 @@ G.Save = (function () {
             mem.run = d.run || null;
           }
         }
+        if (corrupt) persist();   // 用备份恢复后回写主 key
       }
     } catch (e) { /* 隐私模式 / 无 localStorage：用内存档 */ }
     return mem;
@@ -138,7 +148,11 @@ G.Save = (function () {
   function persist() {
     try {
       mem.updatedAt = Date.now();
-      if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, JSON.stringify(mem));
+      var raw = JSON.stringify(mem);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(KEY, raw);
+        localStorage.setItem(BAK_KEY, raw);
+      }
     }
     catch (e) { /* 忽略 */ }
   }

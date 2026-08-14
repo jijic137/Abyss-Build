@@ -89,6 +89,7 @@
      局外元存档 G.Meta
      ------------------------------------------------------------ */
   var KEY = 'abyss_hunter_meta_v1';
+  var BAK_KEY = KEY + '.bak';               // 双槽冗余备份：主 key 损坏可回滚
 
   function defaults() {
     return {
@@ -111,8 +112,16 @@
     try {
       if (typeof localStorage !== 'undefined') {
         var raw = localStorage.getItem(KEY);
+        var bak = localStorage.getItem(BAK_KEY);
+        if (!raw && bak) raw = bak;                       // 主丢失：用备份恢复
+        var corrupt = false;
         if (raw) {
-          var d = JSON.parse(raw);
+          var d = null;
+          try { d = JSON.parse(raw); }
+          catch (e) {
+            corrupt = true;
+            if (bak) { try { d = JSON.parse(bak); } catch (e2) { d = null; } }
+          }
           if (d && typeof d === 'object') {
             mem.currency = (d.currency == null) ? 60 : +d.currency;
             mem.stash = Array.isArray(d.stash) ? d.stash : [];
@@ -126,6 +135,7 @@
             mem.shop = d.shop || null;
           }
         }
+        if (corrupt) persist();   // 用备份恢复后回写主 key
       }
     } catch (e) { /* 隐私模式降级内存 */ }
     return mem;
@@ -133,7 +143,11 @@
   function persist() {
     try {
       mem.updatedAt = Date.now();
-      if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, JSON.stringify(mem));
+      var raw = JSON.stringify(mem);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(KEY, raw);
+        localStorage.setItem(BAK_KEY, raw);
+      }
     }
     catch (e) { /* 忽略 */ }
   }

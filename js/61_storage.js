@@ -299,6 +299,34 @@
       };
     },
 
+    /** 存储环境说明（数据页展示：数据在哪、会不会丢） */
+    originInfo: function () {
+      var proto = '';
+      var href = '';
+      try {
+        proto = window.location.protocol;
+        href = window.location.href;
+      } catch (e) { /* 无 window */ }
+      var lsOk = false;
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('__abyss_probe', '1');
+          localStorage.removeItem('__abyss_probe');
+          lsOk = true;
+        }
+      } catch (e) { lsOk = false; }
+      return {
+        protocol: proto || 'unknown',
+        isFile: proto === 'file:',
+        isHttp: proto === 'http:' || proto === 'https:',
+        href: href,
+        localStorageOk: lsOk,
+        note: proto === 'file:'
+          ? '当前是直接打开 index.html（file://）。数据保存在这个浏览器的本地存储中（绑定 file:// 来源）。只要固定用同一个浏览器、同一个文件路径打开，不清除浏览数据、不用无痕模式，数据就不会丢。'
+          : '当前通过 ' + (proto || '?') + ' 打开，数据保存在该来源的浏览器本地存储中。注意：文件方式与本地服务器方式是两套独立存储，互不共享。'
+      };
+    },
+
     mergeProfiles: mergeProfiles,
     migrate: migrate
   };

@@ -32,13 +32,18 @@
     var s;
     try { s = G.Storage.summary(); }
     catch (e) { s = null; }
+    var oi = null;
+    try { oi = G.Storage.originInfo(); }
+    catch (e) { oi = null; }
     body.innerHTML = '';
-    if (!s) {
+    if (!s || !oi) {
       body.appendChild(G.el('div', 'data-tip', '存储模块初始化失败。'));
       return;
     }
     var rows = [
       ['设备标识', '<b>' + s.device + '</b>'],
+      ['存储位置', '<b>' + (oi.isFile ? '本地文件模式 (file://)' : (oi.protocol || '未知')) + '</b>'],
+      ['本地存储可用', oi.localStorageOk ? '<b style="color:#6ee787">可用</b>' : '<b style="color:#ff7a7a">不可用（数据不会持久）</b>'],
       ['深渊币', '<b>' + s.currency + '</b>'],
       ['仓库物品', '<b>' + s.stash + ' / ' + s.stashSize + '</b>'],
       ['战役进度', '<b>第 ' + Math.min(16, s.bestSublevel + 1) + ' / 16 小关</b>（已通过 ' + s.bestSublevel + '）'],
@@ -56,9 +61,10 @@
     });
     body.appendChild(grid);
     body.appendChild(G.el('div', 'data-tip',
-      '导出档案：把完整进度（仓库/货币/装备/战局/设置）保存为 JSON 文件，可用于备份或迁移到其他设备。' +
-      '导入档案：选择之前导出的文件即可恢复；若当前已有进度，可选择「合并」策略，' +
-      '成就/解锁/统计取并集，仓库与战局以较新者为准。'));
+      oi.note +
+      '<br><br>你的游戏数据保存在浏览器的本地存储里（不是项目文件），每次打开 index.html 会自动读取。' +
+      '为了万无一失，建议定期点「导出档案」把数据保存成 JSON 文件（这才是真正落盘的文件备份），' +
+      '以后换电脑/重装浏览器时用「导入档案」即可恢复。'));
     var msgEl = G.el('div', 'data-msg', '');
     msgEl.id = 'dataMsg';
     body.appendChild(msgEl);

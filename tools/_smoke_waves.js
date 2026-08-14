@@ -740,10 +740,20 @@ function runLockSafety() {
       const info = lockBfs(m, lockedSet, m.startRoom);
       if (!info.reach) { bad++; log('  ✗ T' + t + ' iter' + iter + ' 撤离房被锁死'); continue; }
       if (lds.length && !info.keys) { bad++; log('  ✗ T' + t + ' iter' + iter + ' 出生侧无钥匙来源'); }
+      /* 出生房所有出口门不得上锁（玩家开局 0 钥匙，必须能自由离开） */
+      const sc = m.startRoom % m.cols, sr = Math.floor(m.startRoom / m.cols);
+      const adj = [];
+      if (sc > 0 && m.doorsH[sc - 1][sr]) adj.push('H:' + (sc - 1) + ':' + sr);
+      if (sc < m.cols - 1 && m.doorsH[sc][sr]) adj.push('H:' + sc + ':' + sr);
+      if (sr > 0 && m.doorsV[sc][sr - 1]) adj.push('V:' + sc + ':' + (sr - 1));
+      if (sr < m.rows - 1 && m.doorsV[sc][sr]) adj.push('V:' + sc + ':' + sr);
+      for (const dk of adj) {
+        if (lockedSet[dk]) { bad++; log('  ✗ T' + t + ' iter' + iter + ' 出生房出口被锁 ' + dk); }
+      }
     }
   }
   if (bad) throw new Error('锁门安全失败 ' + bad + '/' + total);
-  log('  [锁门] ' + total + ' 张地图全通过：撤离恒可达 + 出生侧保留钥匙来源');
+  log('  [锁门] ' + total + ' 张地图全通过：出生房出口不锁 + 撤离恒可达 + 出生侧保留钥匙来源');
 }
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {

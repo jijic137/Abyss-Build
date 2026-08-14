@@ -91,10 +91,19 @@
         cands.push({ c: c, r: r, dir: 'V', w: w2 });
       }
     }
-    /* 不要锁出生房/撤离房的门 */
+    /* 硬约束：出生房 / 撤离房的相邻门永不锁（玩家开局 0 钥匙，必须能自由出入出生房） */
+    function adjacentTo(ld, idx) {
+      var a = ld.c + ld.r * map.cols;
+      var b = (ld.dir === 'H' ? ld.c + 1 : ld.c) +
+              (ld.dir === 'H' ? ld.r : ld.r + 1) * map.cols;
+      return a === idx || b === idx;
+    }
     cands = cands.filter(function (ld) {
       var tA = roomType(ld.c, ld.r), tB = roomType(ld.dir === 'H' ? ld.c + 1 : ld.c, ld.dir === 'H' ? ld.r : ld.r + 1);
-      return tA !== 'spawn' && tB !== 'spawn' && tA !== 'extract' && tB !== 'extract';
+      return tA !== 'spawn' && tB !== 'spawn' &&
+             tA !== 'extract' && tB !== 'extract' &&
+             !adjacentTo(ld, map.startRoom) &&
+             !adjacentTo(ld, map.extractRoom);
     });
     var want = map.tierId === 1 ? 1 : 2;
     var locked = [];
@@ -105,6 +114,7 @@
       /* 过滤：加上该门后，撤离房必须仍无需钥匙可达 */
       var pool = [], poolAB = [];
       for (i = 0; i < source.length; i++) {
+        if (adjacentTo(source[i], map.startRoom) || adjacentTo(source[i], map.extractRoom)) continue;  // 双保险
         var trial = {};
         for (var k in lockedSet) trial[k] = true;
         trial[doorKey(source[i])] = true;

@@ -204,10 +204,27 @@
           }));
         }
         if (!g._poisonClouds) g._poisonClouds = [];
-        g._poisonClouds.push({
-          x: this.x, y: this.y, r: sr, t: 5,
-          tick: 0, dmg: 6 + st.elementalDamage * 1.1
-        });
+g._poisonClouds.push({
+x: this.x, y: this.y, r: sr, t: 5,
+tick: 0, dmg: 6 + st.elementalDamage * 1.1,
+draw: function (c, t) {
+var cloudR = this.r;
+var wob = 1 + Math.sin(t * 9 + this.x) * 0.06;
+for (var ci = 0; ci < 2; ci++) {
+var lr = cloudR * (0.45 + 0.28 * ci) * wob;
+var lx = this.x + Math.cos(t * 5 + ci * 2.1) * cloudR * 0.18;
+var ly = this.y + Math.sin(t * 6 + ci * 1.7) * cloudR * 0.18;
+c.globalAlpha = (0.10 - ci * 0.03) * (0.6 + 0.4 * Math.sin(t * 8));
+c.fillStyle = '#6ab04c';
+c.beginPath(); c.arc(lx, ly, lr, 0, Math.PI * 2); c.fill();
+}
+c.globalAlpha = 0.16;
+c.strokeStyle = '#6ab04c';
+c.lineWidth = 2;
+c.beginPath(); c.arc(this.x, this.y, cloudR, 0, Math.PI * 2); c.stroke();
+c.globalAlpha = 1;
+}
+});
         break;
       }
       case 'bulwark': {

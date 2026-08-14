@@ -194,7 +194,7 @@
       c.globalAlpha = (1 - t) * 0.9;
       c.fillStyle = o.col || '#fff';
       c.beginPath(); c.arc(o.x, o.y, (o.r || 40) * (0.4 + t * 0.8), 0, Math.PI * 2); c.fill();
-      } else if (this.type === 'bolt') {
+} else if (this.type === 'bolt') {
         // 连锁闪电：彩色外晕 + 白色内芯，更亮更精细
         var pts = o.pts;
         c.lineCap = 'round'; c.lineJoin = 'round';
@@ -208,8 +208,8 @@
         c.globalAlpha = (1 - t);
         c.strokeStyle = '#ffffff';
         c.lineWidth = Math.max(1.2, (o.w || 3) * 0.6);
-        c.stroke();
-      } else if (this.type === 'arc') {
+c.stroke();
+} else if (this.type === 'arc') {
         // 近战挥砍弧（彩色外层 + 白色内芯，更精细）
         var aR = o.r * (0.86 + t * 0.2), a0 = o.a0 + t * 0.5, a1 = o.a1 + t * 0.5;
         c.lineCap = 'round';

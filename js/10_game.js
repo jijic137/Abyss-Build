@@ -945,10 +945,11 @@
 
     this.player.draw(c);
 
-    for (i = 0; i < this.bullets.length; i++) this.bullets[i].draw(c);
-    for (i = 0; i < this.ebullets.length; i++) this.ebullets[i].draw(c);
-    for (i = 0; i < this.particles.length; i++) this.particles[i].draw(c);
-    for (i = 0; i < this.effects.length; i++) this.effects[i].draw(c);
+for (i = 0; i < this.bullets.length; i++) this.bullets[i].draw(c);
+for (i = 0; i < this.ebullets.length; i++) this.ebullets[i].draw(c);
+for (i = 0; i < this.particles.length; i++) this.particles[i].draw(c);
+for (i = 0; i < (this._poisonClouds || []).length; i++) this._poisonClouds[i].draw(c, this.runTime || 0);
+for (i = 0; i < this.effects.length; i++) this.effects[i].draw(c);
     for (i = 0; i < this.texts.length; i++) this.texts[i].draw(c);
 
     G.Extract.draw(c);

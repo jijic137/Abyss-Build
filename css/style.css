@@ -737,7 +737,7 @@ canvas#game{
 
 /* 功能入口：HUD 角标按钮行（与游戏内一致），收紧 */
 .cover-menu{
-  position:absolute; left:50%; top:90%; transform:translate(-50%,0);
+  position:absolute; left:50%; bottom:8%; transform:translateX(-50%);
   z-index:3; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
 }
 .cover-menu .btn{ font-size:12.5px; padding:7px 16px; letter-spacing:2px; }

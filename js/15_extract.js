@@ -751,13 +751,14 @@
   /* ------------------------------------------------------------
      记录（搜打撤统计）
      ------------------------------------------------------------ */
-  G.UI.renderSubRecords = function () {
-    var st = G.Meta.stats();
-    var rows = [
-      ['深渊币', G.Meta.currency()],
-      ['仓库', G.Meta.stash().length + ' / ' + G.Meta.get().stashSize],
-      ['撤离次数', st.extracts || 0],
-      ['死亡次数', st.deaths || 0],
+G.UI.renderSubRecords = function () {
+var st = G.Meta.stats();
+var rows = [
+['深渊币', G.Meta.currency()],
+['仓库', G.Meta.stash().length + ' / ' + G.Meta.get().stashSize],
+['宝物图鉴', (function(){ var d=G.Meta.get(); return Object.keys(d.discovered||{}).length + ' / ' + G.ITEMS.filter(function(i){return i.type==='treasure';}).length; })()],
+['撤离次数', st.extracts || 0],
+['死亡次数', st.deaths || 0],
       ['带出物品', st.itemsExtracted || 0],
       ['损失物品', st.itemsLost || 0],
       ['最高区域', (st.bestTier || 0) + ' / 5 层'],
@@ -765,16 +766,40 @@
       ['累计花费', (st.totalSpent || 0) + ' 币'],
       ['历史最多击杀', G.Save.get().bestKills]
     ];
-    var host = $('recBody');
-    if (!host) return;
-    host.innerHTML = '';
-    rows.forEach(function (r) {
-      var row = el('div', 'rec-row');
-      row.appendChild(el('span', 'rec-k', r[0]));
-      row.appendChild(el('span', 'rec-v', String(r[1])));
-      host.appendChild(row);
-    });
-  };
+var host = $('recBody');
+if (!host) return;
+host.innerHTML = '';
+rows.forEach(function (r) {
+var row = el('div', 'rec-row');
+row.appendChild(el('span', 'rec-k', r[0]));
+row.appendChild(el('span', 'rec-v', String(r[1])));
+host.appendChild(row);
+});
+/* 宝物图鉴卡片：已见宝物点亮，未见的以剪影呈现 */
+var disc = G.Meta.get().discovered || {};
+var grid = el('div', 'treasure-grid');
+G.ITEMS.filter(function (i) { return i.type === 'treasure'; }).forEach(function (it) {
+var seen = !!disc[it.id];
+var card = el('div', 'treasure-cell' + (seen ? ' seen' : ' unseen'));
+card.style.setProperty('--rc', it.col);
+if (seen) {
+var cv = G.PX.get(it.icon, 2);
+if (cv) card.appendChild(G.PX.node(cv));
+} else {
+card.appendChild(el('span', 'treasure-q', '?'));
+}
+var name = el('div', 'treasure-name', seen ? it.name : '未发现');
+var sub = el('div', 'treasure-size', seen ? (it.fl || '') : (it.size[0] + 'x' + it.size[1]));
+card.appendChild(name);
+card.appendChild(sub);
+card.title = seen ? (it.name + ' · ' + G.rarityName(it.r) + (it.fl ? ' · ' + it.fl : '')) : '尚未发现';
+grid.appendChild(card);
+});
+var box = el('div', 'treasure-box');
+box.appendChild(el('div', 'treasure-head', '宝物图鉴 · 搜刮即点亮'));
+box.appendChild(grid);
+host.appendChild(box);
+};
 
   /* 存档子页（搜打撤快照） */
   G.UI.renderSubSave = function () {

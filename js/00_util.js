@@ -94,6 +94,7 @@ G.Save = (function () {
       settings: { volume: 0.22, shake: 0.4, bgm: true, music: 0.5 },   // 与 12_audio / 10_game 默认值对齐
       bestWave: 0, bestKills: 0, lastWin: false,
       achievements: {},            // { [id]: { t: 解锁时间戳 } }
+      discovered: {},              // { [itemDefId]: true }  已见宝物图鉴
       stats: {                     // 扩展记录（累计 / 最高）
         totalRuns: 0, wins: 0, totalKills: 0,
         bestCombo: 0, bestDps: 0, fastestWin: 0,
@@ -134,6 +135,7 @@ G.Save = (function () {
             mem.bestKills = d.bestKills || 0;
             mem.lastWin = !!d.lastWin;
             if (d.achievements && typeof d.achievements === 'object') mem.achievements = d.achievements;
+            if (d.discovered && typeof d.discovered === 'object') mem.discovered = d.discovered;
             if (d.stats && typeof d.stats === 'object') {
               for (var sk in d.stats) { if (d.stats.hasOwnProperty(sk)) mem.stats[sk] = d.stats[sk]; }
             }

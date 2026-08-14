@@ -9,10 +9,33 @@
 
   var $ = G.$;
 
-  G.ITEM_SIZE = { weapon: [2, 1], armor: [2, 1], trinket: [1, 1], relic: [2, 2], key: [1, 1], treasure: [1, 1] };
-  G.BAG_COLS = 5;
-  G.BAG_CELLS = 20;
-  G.STASH_COLS = 8;
+G.ITEM_SIZE = { weapon: [2, 1], armor: [2, 1], trinket: [1, 1], relic: [2, 2], key: [1, 1], treasure: [1, 1] };
+G.BAG_COLS = 5;
+G.BAG_CELLS = 20;
+G.STASH_COLS = 8;
+
+/* 宝物图鉴：记录已见过的宝物（局内仓库入包 / 抽取时登记） */
+G.discoverTreasure = function (inst) {
+  if (!G.Meta || !inst || !inst.def || inst.type !== 'treasure') return;
+  var d = G.Meta.get();
+  if (!d.discovered) d.discovered = {};
+  d.discovered[inst.defId || inst.def.id] = true;
+  G.Meta.flush();
+};
+var _abi0 = G.addBagItem;
+G.addBagItem = function (inst) {
+  var ok = typeof _abi0 === 'function' ? _abi0.call(this, inst) : false;
+  if (ok) G.discoverTreasure(inst);
+  return ok;
+};
+if (G.Meta && G.Meta.addToStash) {
+  var _ats0 = G.Meta.addToStash;
+  G.Meta.addToStash = function (inst) {
+    var ok = _ats0.call(this, inst);
+    if (ok) G.discoverTreasure(inst);
+    return ok;
+  };
+}
   G.BAG_ROWS = Math.ceil(G.BAG_CELLS / G.BAG_COLS);
 
   /* 实例挂载占格 */

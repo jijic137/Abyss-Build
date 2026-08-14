@@ -185,6 +185,7 @@
       desc: '厚实的前排。用护甲和血量硬扛，代价是慢。',
       mods: { maxHp: 25, armor: 6, attackSpeed: -12, speed: -6 },
       startWeapon: 'spear', startMat: 15,
+      affinity: ['maxHp', 'armor', 'thorns', 'lifesteal'],
       skill: {
         id: 'shield_wall', name: '地裂', sym: '地', col: '#7d8aa8',
         cd: 10, desc: '挥出地裂，将周围敌人击退并造成伤害，同时短暂提升护甲。',
@@ -196,6 +197,7 @@
       desc: '稳健的远程手。射程与攻速都不错，但很脆。',
       mods: { maxHp: -12, rangedDamage: 3, attackSpeed: 10, range: 15 },
       startWeapon: 'pistol', startMat: 12,
+      affinity: ['rangedDamage', 'attackSpeed', 'critChance', 'speed'],
       skill: {
         id: 'volley', name: '箭雨突袭', sym: '箭', col: '#4fa86b',
         cd: 9, desc: '向周围方向齐射一轮箭矢，每支箭锁定一名敌人。',
@@ -207,6 +209,7 @@
       desc: '元素专精。灼烧、闪电、冰霜都为他而生。',
       mods: { maxHp: -18, elementalDamage: 6, range: 18, armor: -2, critChance: -3 },
       startWeapon: 'wand', startMat: 12,
+      affinity: ['elementalDamage', 'range', 'critChance', 'critDamage'],
       skill: {
         id: 'nova', name: '元素星爆', sym: '星', col: '#8b5cf6',
         cd: 9, desc: '在身体四周炸开一圈元素星爆，对一圈敌人造成元素伤害。',
@@ -218,6 +221,7 @@
       desc: '贴脸打。伤害极高，但必须冲进敌群里去拿。',
       mods: { maxHp: 10, meleeDamage: 5, damage: 15, armor: -4, range: -20 },
       startWeapon: 'hammer', startMat: 10,
+      affinity: ['meleeDamage', 'damage', 'critChance', 'maxHp'],
       skill: {
         id: 'rage', name: '狂暴', sym: '狂', col: '#c0392b',
         cd: 14, desc: '期间暴击和攻击速度大幅提升。',
@@ -229,6 +233,7 @@
       desc: '让炮台替你开火。前期弱，成型后是坐着赢。',
       mods: { engineering: 14, harvesting: 3, damage: -18, speed: -4 },
       startWeapon: 'turret', startMat: 20,
+      affinity: ['engineering', 'damage', 'attackSpeed', 'critChance'],
       skill: {
         id: 'overcharge', name: '爆能过载', sym: '能', col: '#e0902a',
         cd: 12, desc: '所有炮台和机器仆人全部恢复并附赠一段短暂爆发。',
@@ -240,6 +245,7 @@
       desc: '靠暴击和闪避活着。血很薄，容错极低。',
       mods: { maxHp: -25, critChance: 12, critDamage: 25, dodge: 8, speed: 12 },
       startWeapon: 'knife', startMat: 12,
+      affinity: ['critChance', 'critDamage', 'dodge', 'meleeDamage'],
       skill: {
         id: 'ambush', name: '影袭', sym: '影', col: '#3d4a6b',
         cd: 9, desc: '移动到周围最近的敌人并划出影弧，对一圈目标造成伤害。',
@@ -251,6 +257,7 @@
       desc: '毒与元素的操盘手。持续伤害把敌人磨死，但自己很脆。',
       mods: { maxHp: -12, elementalDamage: 6, harvesting: 2, armor: -2, critChance: -3 },
       startWeapon: 'dart', startMat: 12,
+      affinity: ['elementalDamage', 'damage', 'attackSpeed', 'range'],
       skill: {
         id: 'smoke', name: '毒雾遮蔽', sym: '毒', col: '#4f8a3a',
         cd: 11, desc: '布置一片毒雾屏障，对其中敌人持续造成伤害并附加中毒。',
@@ -262,6 +269,7 @@
       desc: '让炮台与护甲替你扛线。成型极稳，但输出迟滞。',
       mods: { engineering: 12, armor: 4, damage: -14, speed: -3, hpRegen: 0.3 },
       startWeapon: 'turret', startMat: 20,
+      affinity: ['armor', 'engineering', 'maxHp', 'hpRegen'],
       skill: {
         id: 'bulwark', name: '守护圆舞', sym: '守', col: '#5a7d9c',
         cd: 13, desc: '打开守护圆舞，短暂隔绝伤害并震慑周围敌人。',
@@ -319,22 +327,48 @@
     { w: 5, pos: { key: 'lifesteal',      amt: [2, 3],   w: 6  }, neg: { key: 'maxHp',       amt: [4, 7] } }
   ];
 
-  /** 抽 n 个不重复的升级选项（约 1/4 为带负面权衡卡） */
-  G.rollLevelOptions = function (n, level) {
-    var pure = G.LEVEL_POOL.slice();
-    var trade = G.TRADEOFF_POOL.slice();
-    var out = [];
+/** 抽 n 个不重复的升级选项（约 1/4 为带负面权衡卡） */
+G.rollLevelOptions = function (n, level) {
+var pure = G.LEVEL_POOL.slice();
+var trade = G.TRADEOFF_POOL.slice();
+var affinity = null;
+if (G.game && G.game.player && G.game.player.char) {
+var ch = G.game.player.char;
+if (ch.affinity && ch.affinity.length) affinity = ch.affinity.slice();
+}
+var out = [];
     var used = {};   // 已展示的主/副属性 key，避免重复
     var scale = 1 + level * 0.035;
     function amtOf(def) {
       var raw = G.rand(def.amt[0], def.amt[1]) * scale;
-      var dec = def.dec || 0;
-      var val = dec ? Math.round(raw * 10) / 10 : Math.round(raw);
-      return Math.max(dec ? 0.1 : 1, val);
+  var dec = def.dec || 0;
+  var val = dec ? Math.round(raw * 10) / 10 : Math.round(raw);
+  return Math.max(dec ? 0.1 : 1, val);
+}
+/* 亲合属性：本角色核心词条在升级池里更常见（约 1/3 概率优先抽它） */
+function forceAffinity() {
+  if (!affinity) return null;
+  for (var i = 0; i < affinity.length; i++) {
+    var k = affinity[i];
+    if (used[k]) continue;
+    for (var pi = 0; pi < pure.length; pi++) {
+      if (pure[pi].key === k) {
+        var p = pure.splice(pure.indexOf(pure[pi]), 1)[0];
+        used[k] = 1;
+        return p;
+      }
     }
-    while (out.length < n) {
-      var isTrade = Math.random() < 0.27;   // ≈ 1/4
-      if (isTrade && trade.length) {
+  }
+  return null;
+}
+while (out.length < n) {
+ var isTrade = Math.random() < 0.27;   // ≈ 1/4
+ var forced = isTrade ? null : (!out.length || Math.random() < 0.5 ? forceAffinity() : null);
+ if (forced) {
+   out.push({ key: forced.key, val: amtOf(forced) });
+   continue;
+ }
+ if (isTrade && trade.length) {
         var tws = trade.map(function (p) { return p.w; });
         var t = G.weightedPick(trade, tws);
         trade.splice(trade.indexOf(t), 1);

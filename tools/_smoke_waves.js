@@ -584,11 +584,15 @@ function runTierDensity() {
     const trapRooms = g.map.rooms.filter(rm => rm.type === 'trap').length;
     const itemRooms = g.map.rooms.filter(rm => rm.type === 'item').length;
     const itemChests = g.containers.filter(c => c.forceItem).length;
-    counts.push({ tier, chests, traps, trapRooms, itemRooms, itemChests });
+    const rareChests = g.containers.filter(c => c.type === 'chest_gold' || c.type === 'chest_abyss').length;
+    const combatTraps = g.containers.filter(c => { const rm = g.map.rooms[c.room]; return rm && (rm.type === 'combat' || rm.type === 'trap') && rm.guards && rm.guards.length; }).length;
+    counts.push({ tier, chests, traps, trapRooms, itemRooms, itemChests, rareChests, combatTraps });
   }
-  log('  ' + counts.map(c => 'T' + c.tier + ' 箱' + c.chests + ' 陷' + c.traps + ' 陷阱房' + c.trapRooms + ' 道具房' + c.itemRooms).join(' | '));
+  log('  ' + counts.map(c => 'T' + c.tier + ' chests' + c.chests + ' rare' + c.rareChests + ' guard' + c.combatTraps + ' traps' + c.traps).join(' | '));
   const c1 = counts[0], c5 = counts[4];
   if (c5.chests <= c1.chests * 1.5) throw new Error('深层宝箱未显著增多 T1=' + c1.chests + ' T5=' + c5.chests);
+  if (c5.rareChests <= c1.rareChests) throw new Error('deep rare chest not up T1=' + c1.rareChests + ' T5=' + c5.rareChests);
+  if (c5.combatTraps <= c1.combatTraps) throw new Error('deep guard chest not up T1=' + c1.combatTraps + ' T5=' + c5.combatTraps);
   if (counts[1].trapRooms < 1 || counts[2].trapRooms < 1) throw new Error('T2/T3 应有陷阱房');
   if (counts[0].itemRooms < 1) throw new Error('T1 应有道具房');
   if (counts[4].trapRooms < 2) throw new Error('T5 陷阱房应 >= 2');

@@ -351,6 +351,85 @@
     ]);
   }
 
+  /* ================= 可收集宝物（不参与战斗，占格 1x1 ~ 3x3） ================= */
+  var TREASURE = [
+    { id: 'tre_ashtray',  name: '黄铜烟灰缸', r: 0, type: 'treasure', icon: 'ic_tre_art', col: '#c9a86b', size: [1, 1], fl: '一件老派的小摆件，能换个好价。' },
+    { id: 'tre_suit',     name: '定制西装', r: 1, type: 'treasure', icon: 'ic_tre_fashion', col: '#3d4a6b', size: [2, 2], fl: '裁剪讲究得连深渊都在意体面。' },
+    { id: 'tre_battery',  name: '高能燃料罐', r: 1, type: 'treasure', icon: 'ic_tre_fuel', col: '#e0902a', size: [2, 1], fl: '浓缩能源，工业区的心跳。' },
+    { id: 'tre_cpu',      name: '量子核心', r: 3, type: 'treasure', icon: 'ic_tre_elect', col: '#5ad1ff', size: [1, 1], fl: '一块还在发热的电子核心，数据像活的一样。' },
+    { id: 'tre_clock',    name: '金怀表', r: 2, type: 'treasure', icon: 'ic_tre_art', col: '#ffd24a', size: [1, 1], fl: '指针仍在走，仿佛时间在这里还有意义。' },
+    { id: 'tre_painting',name: '深渊仕女图', r: 4, type: 'treasure', icon: 'ic_tre_art', col: '#b45cff', size: [3, 3], fl: '名画级古物，画中人似在凝视每一个拾起它的人。' },
+    { id: 'tre_crystal',  name: '蚀刻水晶', r: 2, type: 'treasure', icon: 'ic_tre_crystal', col: '#7fd8ff', size: [2, 2], fl: '能折射光源的贵价标本。' },
+    { id: 'tre_router',   name: '古董收音机', r: 1, type: 'treasure', icon: 'ic_tre_elect', col: '#8a6f4e', size: [2, 2], fl: '能收到深渊的杂音，收藏价值很高。' },
+    { id: 'tre_ingot',    name: '秘银锭', r: 3, type: 'treasure', icon: 'ic_tre_ingot', col: '#c0c8d8', size: [1, 1], fl: '一整块沉淀的贵金属。' }
+  ];
+  TREASURE.forEach(function (t) { ITEMS.push(t); });
+
+  /* 宝物专属像素图标（可染色，A 主色 / B 暗 / C 亮） */
+  if (!G.PX.has('ic_tre_art')) {
+    G.PX.tint('ic_tre_art', [
+      'ooooooo..',
+      'oAAAABBo.',
+      'oACCCABo.',
+      'oAAAAABD.',
+      'oABBBBAo.',
+      'oAAAAAo..',
+      '.ooooo...'
+    ]);
+  }
+  if (!G.PX.has('ic_tre_fashion')) {
+    G.PX.tint('ic_tre_fashion', [
+      '.ooooooo.',
+      'oAAACCCAo',
+      'oAAAACCBo',
+      '.ooAAAoo.',
+      '..ooAoo..',
+      '.ooAAAoo.',
+      'ooAAAAAoo'
+    ]);
+  }
+  if (!G.PX.has('ic_tre_fuel')) {
+    G.PX.tint('ic_tre_fuel', [
+      '..oooo..',
+      '.oAAAAB.',
+      '.oACCCB.',
+      '.oAAAAB.',
+      '.oAAAAB.',
+      '.oABBBB.',
+      '..oooo..'
+    ]);
+  }
+  if (!G.PX.has('ic_tre_elect')) {
+    G.PX.tint('ic_tre_elect', [
+      '.oooooo.',
+      'oABBBBBo',
+      'oAoooooB',
+      'oAoooooB',
+      'oAoooooB',
+      'oABBBBBB',
+      '.oooooo.'
+    ]);
+  }
+  if (!G.PX.has('ic_tre_crystal')) {
+    G.PX.tint('ic_tre_crystal', [
+      '..oo..',
+      '.oAAo.',
+      'oACCCo',
+      'oAAAo.',
+      'oAABo.',
+      '.oo...'
+    ]);
+  }
+  if (!G.PX.has('ic_tre_ingot')) {
+    G.PX.tint('ic_tre_ingot', [
+      '..ooooo.',
+      '.oAAAACo',
+      'oAAAACC.',
+      '.oAAABo.',
+      '..ooo...'
+    ]);
+  }
+
   G.ITEMS = ITEMS;
   G.ITEM_MAP = {};
   ITEMS.forEach(function (it) { G.ITEM_MAP[it.id] = it; });

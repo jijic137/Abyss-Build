@@ -58,6 +58,42 @@
       var ir = combats.shift();
       setGroupType(ir, 'item');
     }
+    /* 保底：如果战斗房不够转换，把已存在的普通房间补成陷阱/道具房 */
+    function countType(mm, type) {
+      var n = 0;
+      mm.rooms.forEach(function (x) { if (x.type === type) n++; });
+      return n;
+    }
+    if ((trapN || itemN) && !combats.length) {
+      var fallback = m.rooms.filter(function (rm) {
+        return rm.active && rm.type !== 'spawn' && rm.type !== 'extract' &&
+               rm.type !== 'shrine' && rm.type !== 'altar' && rm.type !== 'trap' && rm.type !== 'item';
+      });
+      for (var fi = 0; fi < fallback.length; fi++) {
+        var room = fallback[fi];
+        if (trapN > countType(m, 'trap')) setGroupType(room, 'trap');
+        else if (itemN > countType(m, 'item')) setGroupType(room, 'item');
+      }
+    }
+    /* 保底：确保陷阱房/道具房数量达标（即使战斗房被合并房占用） */
+    if (countType(m, 'trap') < trapN) {
+      var extraTrap = m.rooms.filter(function (rm) {
+        return rm.active && rm.type !== 'spawn' && rm.type !== 'extract' &&
+               rm.type !== 'shrine' && rm.type !== 'altar' && rm.type !== 'trap' && rm.type !== 'item';
+      });
+      for (var eti = 0; eti < extraTrap.length && countType(m, 'trap') < trapN; eti++) {
+        setGroupType(extraTrap[eti], 'trap');
+      }
+    }
+    if (countType(m, 'item') < itemN) {
+      var extraItem = m.rooms.filter(function (rm) {
+        return rm.active && rm.type !== 'spawn' && rm.type !== 'extract' &&
+               rm.type !== 'shrine' && rm.type !== 'altar' && rm.type !== 'trap' && rm.type !== 'item';
+      });
+      for (var eii = 0; eii < extraItem.length && countType(m, 'item') < itemN; eii++) {
+        setGroupType(extraItem[eii], 'item');
+      }
+    }
 
     /* 2) 容器重排 */
     var byRoom = {};
@@ -136,34 +172,95 @@
       }
     });
 
-    g.containers = out;
-    m.containers = out.map(function (c) {
-      return { cid: c.cid, x: c.x, y: c.y, room: c.room, type: c.type, opened: c.opened, used: c.used, ch: c.ch, started: c.started, pulse: c.pulse };
+    /* 2b) 守护宝箱：为部分战斗/陷阱房宝箱安排驻守怪物 */
+    var guardRoll = [0.28, 0.5, 0.68, 0.82, 1.0][T] + (lootMod ? 0.12 : 0);
+    m.rooms.forEach(function (rm) { rm.guards = []; });
+    out.forEach(function (c) {
+      var rm = m.rooms[c.room];
+      if (!rm || (rm.type !== 'combat' && rm.type !== 'trap')) return;
+      if (Math.random() >= guardRoll) return;
+      var id = g.rollMapEnemy ? g.rollMapEnemy() : null;
+      if (!id) return;
+      var n2 = (rm.type === 'trap' ? 2 : 1 + (tier >= 3 ? 1 : 0));
+      if (n2 > 2) n2 = 2;
+      var guard = [];
+      for (var gi = 0; gi < n2; gi++) {
+        var a = Math.PI * 2 * (gi / n2) + 0.6;
+        guard.push({
+          id: id === 'boss_abyss' || id === 'boss_behemoth' ? 'el_warden' : id,
+          x: Math.round(c.x + Math.cos(a) * 70),
+          y: Math.round(c.y + Math.sin(a) * 70),
+          cid: c.cid
+        });
+      }
+      rm.guards = (rm.guards || []).concat(guard);
+      c.guarded = true;
     });
 
-    /* 3) 陷阱 / 爆炸桶（随层数增强） */
+    g.containers = out;
+    m.containers = out.map(function (c) {
+      return { cid: c.cid, x: c.x, y: c.y, room: c.room, type: c.type, opened: c.opened, used: c.used, ch: c.ch, started: c.started, pulse: c.pulse, guarded: !!c.guarded };
+    });
+
+    /* 3) 陷阱 / 爆炸桶（随层数增强，定点阵型而非纯随机） */
     g.traps = [];
     g.barrels = [];
-    m.rooms.forEach(function (rm) {
+    function trapPositions(rm) {
       var rc = G.Map.roomRect(rm.c, rm.r);
+      var cx = rc.x0 + G.Map.ROOM / 2, cy = rc.y0 + G.Map.ROOM / 2;
       var h = (rm.idx * 668265263) & 0xffff;
+      var pts = [];
+      if (rm.type === 'trap') {
+        /* 陷阱房：宝箱外三环+十字，形成守卫网 */
+        var ring = [0.5, 0.9, 1.3, 1.7, 2.1, 2.5];
+        for (var k = 0; k < 6; k++) {
+          var a = ring[k] + (h & 3) * 0.1;
+          var rr0 = 120 + ((h >>> 2) % 40);
+          pts.push([cx + Math.cos(a) * rr0, cy + Math.sin(a) * rr0]);
+        }
+        pts.push([cx - 62, cy - 86 + ((h >>> 3) % 30)]);
+        pts.push([cx - 30, cy + 96 + ((h >>> 1) % 24)]);
+      } else if (rm.group != null) {
+        /* 合并大房：沿门-心两条走廊布设 */
+        var dir = (h & 1) ? [1, 0] : [0, 1];
+        for (var m0 = 0; m0 < 3; m0++) {
+          var off = 40 + m0 * 54 + (h >>> 2) % 20;
+          pts.push([cx - dir[0] * off, cy - dir[1] * off]);
+          pts.push([cx + dir[0] * off, cy + dir[1] * off]);
+        }
+      } else {
+        /* 单格战斗房：V 形伏兵线 */
+        for (var q = 0; q < 4; q++) {
+          var ax = -150 + q * 76 + (h % 30);
+          var ay = -90 + (q % 2) * 120 + ((h >>> 3) % 34);
+          pts.push([cx + ax, cy + ay]);
+        }
+      }
+      return pts;
+    }
+    m.rooms.forEach(function (rm) {
       var trapN2 = 0, barrelN = 0;
       if (rm.type === 'trap') { trapN2 = 6; barrelN = 3; }
       else if (rm.type === 'combat') { trapN2 = [1, 1, 1, 2, 2][T]; barrelN = [1, 1, 2, 2, 3][T]; }
       else if (rm.type === 'item') { trapN2 = 1; barrelN = 1; }
       else if (rm.type === 'treasure') { barrelN = T >= 3 ? 1 : 0; }
-      var i;
-      for (i = 0; i < trapN2; i++) {
+      if (!trapN2 && !barrelN) return;
+      var pts = trapPositions(rm);
+      var rx = G.Map.roomRect(rm.c, rm.r);
+      var perm = (rm.idx * 3571) & 0xffff;
+      for (var i = 0; i < trapN2; i++) {
+        var p = pts[i % Math.max(1, pts.length)];
         g.traps.push(new G.Trap(
-          rc.x0 + G.Map.ROOM / 2 - 120 + ((h + i * 101) % 240),
-          rc.y0 + G.Map.ROOM / 2 - 120 + (((h >>> 5) + i * 67) % 240),
+          G.clamp(p[0], rx.x0 + 40, rx.x1 - 40),
+          G.clamp(p[1], rx.y0 + 40, rx.y1 - 40),
           rm.idx
         ));
       }
       for (i = 0; i < barrelN; i++) {
+        var bp = pts[(Math.min(pts.length - 1, trapN2) + i) % Math.max(1, pts.length)];
         g.barrels.push(new G.Barrel(
-          rc.x0 + G.Map.ROOM / 2 - 130 + ((h + i * 43) % 260),
-          rc.y0 + G.Map.ROOM / 2 - 130 + (((h >>> 3) + i * 29) % 260),
+          G.clamp(bp[0] + ((perm >>> 2) % 20) - 10, rx.x0 + 40, rx.x1 - 40),
+          G.clamp(bp[1] + ((perm >>> 4) % 20) - 10, rx.y0 + 40, rx.y1 - 40),
           rm.idx
         ));
       }
@@ -174,6 +271,20 @@
   var _cOpen = G.Container.prototype.open;
   G.Container.prototype.open = function () {
     var out = _cOpen.call(this);
+    var g = G.game;
+    var rm = g && g.map ? g.map.rooms[this.room] : null;
+    /* 宝库房：大概率从宝库里带出一件大件宝物 */
+    if (rm && rm.type === 'treasure' && g && typeof G.rollLootTreasure === 'function') {
+      var tier = g.map.tierId || 1;
+      var hasTreasure = false;
+      for (var ti = 0; ti < out.length; ti++) {
+        if (out[ti].inst && out[ti].inst.def && G.itemType(out[ti].inst.def) === 'treasure') { hasTreasure = true; break; }
+      }
+      if (!hasTreasure && Math.random() < (0.55 + tier * 0.06)) {
+        var tr = G.rollLootTreasure(tier);
+        if (tr) out.push({ kind: 'item', inst: tr });
+      }
+    }
     if (this.forceItem && out) {
       var has = false;
       for (var i = 0; i < out.length; i++) if (out[i].inst) { has = true; break; }

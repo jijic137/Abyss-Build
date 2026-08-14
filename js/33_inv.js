@@ -9,7 +9,7 @@
 
   var $ = G.$;
 
-  G.ITEM_SIZE = { weapon: [2, 1], armor: [2, 1], trinket: [1, 1], relic: [2, 2], key: [1, 1] };
+  G.ITEM_SIZE = { weapon: [2, 1], armor: [2, 1], trinket: [1, 1], relic: [2, 2], key: [1, 1], treasure: [1, 1] };
   G.BAG_COLS = 5;
   G.BAG_CELLS = 20;
   G.STASH_COLS = 8;
@@ -25,7 +25,9 @@
   var _mkI3 = G.makeItem;
   G.makeItem = function (defId, tier) {
     var it = _mkI3.call(this, defId, tier);
-    if (it) it.size = G.ITEM_SIZE[it.type] || [1, 1];
+    if (it) {
+      it.size = (it.def && it.def.size) ? it.def.size.slice() : (G.ITEM_SIZE[it.type] || [1, 1]);
+    }
     return it;
   };
 
@@ -68,6 +70,40 @@
     return n;
   };
 
+  /* 将某项材料与槽位说明汇总为装备实例（悬停提示用） */
+  function instFor(inst) {
+    return inst ? { uid: inst.id, defId: inst.id, def: inst, tier: G.clamp(inst.r, 0, 4), type: G.itemType(inst) } : null;
+  }
+
+  /* 读取指定槽位上当前装备的物品实例 */
+  G.itemAtSlot = function (p, slot) {
+    var t = G.Meta.slotType(slot);
+    if (t === 'weapon') {
+      var wi = slot === 'w1' ? 0 : 1;
+      var w = p.weapons[wi];
+      return w ? { uid: w.uid, defId: w.defId, def: w.def, tier: w.tier, type: 'weapon' } : null;
+    }
+    var n = 0;
+    for (var i = 0; i < p.items.length; i++) {
+      if (G.itemType(p.items[i]) !== t) continue;
+      if (t === 'trinket') {
+        if (slot === 'trinket2' && n < 1) { n++; continue; }
+        if (slot === 'trinket1' && n > 0) { n++; continue; }
+      }
+      return instFor(p.items[i]);
+    }
+    return null;
+  };
+
+  /* 将玩家携带物品按槽位整理（trinket 两个槽） */
+  G.slotInstances = function (p) {
+    var out = {};
+    G.Meta.SLOT_ORDER.forEach(function (slot) {
+      out[slot] = G.itemAtSlot(p, slot);
+    });
+    return out;
+  };
+
   /* 入包：按格数检查容量 */
   var _abi2 = G.addBagItem;
   G.addBagItem = function (inst) {
@@ -86,26 +122,13 @@
     if (!grid) return;
     grid.innerHTML = '';
     var i;
-    var used = {};
     var slotNames = { w1: '武器①', w2: '武器②', armor: '防具', trinket1: '饰品①', trinket2: '饰品②', relic: '遗物' };
 
     /* 装备栏行（紧凑，不占格） */
     var eqRow = G.el('div', 'bag-equip-row');
     G.Meta.SLOT_ORDER.forEach(function (slot) {
       var t = G.Meta.slotType(slot);
-      var inst = null;
-      if (t === 'weapon') {
-        var wi = slot === 'w1' ? 0 : 1;
-        if (p.weapons[wi]) inst = { uid: p.weapons[wi].uid, defId: p.weapons[wi].defId, def: p.weapons[wi].def, tier: p.weapons[wi].tier, type: 'weapon' };
-      } else {
-        for (i = 0; i < p.items.length; i++) {
-          if (G.itemType(p.items[i]) === t && !used[i]) {
-            inst = { uid: p.items[i].id, defId: p.items[i].id, def: p.items[i], tier: G.clamp(p.items[i].r, 0, 4), type: t };
-            used[i] = true;
-            break;
-          }
-        }
-      }
+      var inst = G.itemAtSlot(p, slot);
       var cell = G.el('div', 'bag-cell equip-slot');
       if (inst) {
         cell.style.borderColor = inst.tier === 0 ? '#333a52' : G.rarityColor(inst.tier);
@@ -158,16 +181,22 @@
       p.removeWeapon(idx);
       G.Audio.sfx('back');
     } else {
+      var n = 0;
+      var picked = null;
       for (var i = 0; i < p.items.length; i++) {
-        if (G.itemType(p.items[i]) === t) {
-          var def = p.items[i];
-          var back2 = G.makeItem(def.id, G.clamp(def.r, 0, 4));
-          if (!G.addBagItem(back2)) { G.UI.flashText(null, '背包放不下这件装备'); return; }
-          p.removeItem(i);
-          G.Audio.sfx('back');
-          break;
+        if (G.itemType(p.items[i]) !== t) continue;
+        if (t === 'trinket') {
+          if (slot === 'trinket2' && n < 1) { n++; continue; }
+          if (slot === 'trinket1' && n > 0) { n++; continue; }
         }
+        picked = p.items[i];
+        break;
       }
+      if (!picked) return;
+      var back2 = G.makeItem(picked.id, G.clamp(picked.r, 0, 4));
+      if (!G.addBagItem(back2)) { G.UI.flashText(null, '背包放不下这件装备'); return; }
+      p.removeItem(i);
+      G.Audio.sfx('back');
     }
     G.UI.renderBag();
   };
@@ -176,6 +205,17 @@
   G.UI.bagEquip = function (inst) {
     var g = G.game, p = g.player;
     var t = inst.type;
+    if (t === 'treasure') {
+      // 宝物不参与装备：卖出回血，腾出背包
+      var val = G.sellPrice(inst.def, g.map ? g.map.tierId : 1);
+      g.addMaterials(val);
+      removeFromBag(inst);
+      G.Audio.sfx('coin');
+      G.popText(g.player.x, g.player.y - 24, '宝物出售 +' + val + ' 材料', { col: '#ffd24a', size: 13, life: 1.2 });
+      G.UI.renderBag();
+      G.UI.updateHud(g);
+      return;
+    }
     if (t === 'weapon') {
       if (p.weapons.length >= p.maxWeapons) {
         var old = p.weapons[0];
@@ -187,14 +227,18 @@
       removeFromBag(inst);
       G.Audio.sfx('buy');
     } else {
+      var n = 0;
       for (var i = 0; i < p.items.length; i++) {
-        if (G.itemType(p.items[i]) === t) {
-          var def = p.items[i];
-          var back2 = G.makeItem(def.id, G.clamp(def.r, 0, 4));
-          if (!G.addBagItem(back2)) { G.UI.flashText(null, '背包放不下换下的装备'); return; }
-          p.removeItem(i);
-          break;
+        if (G.itemType(p.items[i]) !== t) continue;
+        if (t === 'trinket') {
+          n++;
+          if (n < 2) continue;
         }
+        var def = p.items[i];
+        var back2 = G.makeItem(def.id, G.clamp(def.r, 0, 4));
+        if (!G.addBagItem(back2)) { G.UI.flashText(null, '背包放不下换下的装备'); return; }
+        p.removeItem(i);
+        break;
       }
       p.addItem(inst.def);
       removeFromBag(inst);
@@ -268,6 +312,13 @@
       cell.addEventListener('mouseleave', G.UI.hideTip);
       cell.addEventListener('click', function () {
         var t = inst.type;
+        if (t === 'treasure') {
+          G.Meta.removeFromStash(inst.uid);
+          G.Meta.addCurrency(G.itemWorth(inst));
+          G.Audio.sfx('coin');
+          G.UI.renderBase();
+          return;
+        }
         var slot = null;
         if (t === 'weapon') {
           slot = meta.loadout.w1 ? (meta.loadout.w2 ? null : 'w2') : 'w1';
@@ -334,6 +385,8 @@
       G.Meta.addCurrency(Math.round(cost * 0.5));
       return { ok: false, msg: '仓库空间不足' };
     }
+    this.offers[idx] = this.rollOffer(0);   // 买完补新商品，可无限购买
+    this.saveOffers();
     return { ok: true, cost: cost };
   };
 

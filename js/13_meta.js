@@ -101,7 +101,7 @@
       tiers: { 1: true },
       stats: { extracts: 0, deaths: 0, itemsExtracted: 0, itemsLost: 0, bestTier: 0, totalEarned: 0, totalSpent: 0 },
       expansions: 0,
-      shop: null                 // 市场缓存 {tier:1, offers:[...]}
+      shop: null                 // 市场缓存 {tier:1, level:1, tokens:n, offers:[...]}
     };
   }
 
@@ -259,13 +259,16 @@
   G.Market = {
     offers: [],
     tier: 1,
+    level: 1,
     refreshCost: function () { return 12; },
     refresh: function (tier, luck) {
       this.tier = tier || 1;
+      this.level = G.Market.levelOf();
       this.offers = [];
-      for (var i = 0; i < 4; i++) this.offers.push(this.rollOffer(luck));
+      var n = 12;
+      for (var i = 0; i < n; i++) this.offers.push(this.rollOffer(luck));
       var d = load();
-      d.shop = { tier: this.tier, offers: this.offers.map(function (o) {
+      d.shop = { tier: this.tier, level: this.level, tokens: G.Market.tokenCount(), offers: this.offers.map(function (o) {
         return { kind: o.kind, defId: o.defId, tier: o.tier };
       }) };
       persist();
@@ -273,6 +276,7 @@
     },
     rollOffer: function (luck) {
       var r = rollRarityForMarket(this.tier, luck);
+      r = Math.min(r, G.Market.maxRarity());
       var wantWeapon = Math.random() < 0.34;
       if (wantWeapon) {
         var w = G.pick(G.WEAPONS);
@@ -299,18 +303,83 @@
         return { ok: false, msg: '仓库已满' };
       }
       Meta.addToStash(inst);
+      this.offers[idx] = this.rollOffer(0);   // 买完补新商品，可无限购买
+      G.Market.saveOffers();
       return { ok: true, cost: cost };
     },
     restore: function () {
       var d = load();
       if (d.shop && d.shop.offers) {
         this.tier = d.shop.tier || 1;
+        this.level = d.shop.level || 1;
         this.offers = d.shop.offers.map(function (o) {
-          var inst = G.makeWeapon(o.defId, o.tier);
+          var inst = (o.kind === 'weapon') ? G.makeWeapon(o.defId, o.tier) : G.makeItem(o.defId, o.tier);
           if (!inst) inst = G.makeItem(o.defId, o.tier);
           return { kind: o.kind, defId: o.defId, def: inst ? inst.def : null, tier: o.tier };
         });
       }
+    },
+    /* 确保货架始终铺满当前等级允许的稀有度（清理旧档超品质存货） */
+    ensureValid: function () {
+      var lv = G.Market.levelOf();
+      var valid = [], i;
+      for (i = 0; i < this.offers.length; i++) {
+        var o = this.offers[i];
+        var inst = o ? this.instance(o) : null;
+        if (inst && inst.tier <= lv) valid.push(o);
+      }
+      var changed = valid.length !== this.offers.length;
+      while (valid.length < 12) { valid.push(this.rollOffer(0)); changed = true; }
+      if (changed) {
+        this.offers = valid;
+        this.saveOffers();
+      }
+      return valid;
+    },
+    /* ---------- 市场等级 / 贸易代币 ---------- */
+    maxRarity: function () { return G.Market.levelOf(); },
+    levelOf: function () {
+      var d = load();
+      return Math.max(1, Math.min(4, (d.shop && d.shop.level) || 1));
+    },
+    tokenCount: function () {
+      var d = load();
+      return (d.shop && d.shop.tokens) || 0;
+    },
+    addToken: function (v) {
+      var d = load();
+      if (!d.shop) d.shop = { tier: 1, level: 1, tokens: 0, offers: [] };
+      d.shop.tokens = (d.shop.tokens || 0) + (v || 1);
+      persist();
+      return d.shop.tokens;
+    },
+    nextUpgrade: function () {
+      var lv = G.Market.levelOf();
+      var cost = [0, 0, 3, 6, 10][lv] || 0;
+      return cost;
+    },
+    upgrade: function () {
+      var lv = G.Market.levelOf();
+      if (lv >= 4) return { ok: false, msg: '已满级' };
+      var cost = G.Market.nextUpgrade();
+      var d = load();
+      if (!d.shop) d.shop = { tier: 1, level: 1, tokens: 0, offers: [] };
+      if ((d.shop.tokens || 0) < cost) return { ok: false, msg: '贸易代币不足' };
+      d.shop.tokens -= cost;
+      d.shop.level = lv + 1;
+      persist();
+      this.level = lv + 1;
+      var tier = Math.max(1, (G.Meta.stats && G.Meta.stats().bestTier) || 1);
+      this.refresh(tier, 0);
+      return { ok: true, cost: cost, level: lv + 1 };
+    },
+    saveOffers: function () {
+      var d = load();
+      if (!d.shop) d.shop = { tier: 1, level: 1, tokens: 0, offers: [] };
+      d.shop.offers = this.offers.map(function (o) {
+        return { kind: o.kind, defId: o.defId, tier: o.tier };
+      });
+      persist();
     }
   };
   G.Market.restore();
@@ -348,6 +417,23 @@
     return G.makeWeapon(w.id, r);
   };
 
+  /* 抽一件可收集宝物（占格 1x1 ~ 3x3，不参与战斗） */
+  G.rollLootTreasure = function (mapTier) {
+    var list = G.ITEMS.filter(function (it) { return it.type === 'treasure'; });
+    if (!list.length) return null;
+    var t = G.clamp(mapTier, 1, 5);
+    var ws = list.map(function (it) {
+      var weight = 1 + Math.max(0, it.r - 1) * 0.5;
+      weight *= (it.size[0] * it.size[1] >= 4) ? 0.5 : 1;
+      // deeper floors favor rare/big pieces
+      if (t >= 4) weight *= 1.6;
+      if (t >= 2 && it.r >= 2) weight *= 1.4;
+      return weight;
+    });
+    var it = G.weightedPick(list, ws);
+    return it ? G.makeItem(it.id, it.r) : null;
+  };
+
   /* 敌人掉落：返回实例数组（普通小概率、精英必掉、BOSS 多件） */
   G.rollEnemyLoot = function (def, mapTier, luck) {
     var out = [];
@@ -357,14 +443,29 @@
       out.push(G.rollLootItem(mapTier, luck));
       out.push(G.rollLootItem(mapTier, luck + 10));
       out.push(G.rollLootWeapon(mapTier, luck + 15));
+      var bt = G.rollLootTreasure(mapTier);
+      if (bt) out.push(bt);
     } else if (def.elite) {
       out.push(G.rollLootItem(mapTier, luck));
       if (Math.random() < 0.45) out.push(G.rollLootWeapon(mapTier, luck));
+      if (Math.random() < 0.5) {
+        var et = G.rollLootTreasure(mapTier);
+        if (et) out.push(et);
+      }
     } else {
       var chance = (0.045 + mapTier * 0.011) * dropMul;
       if (Math.random() < chance) out.push(G.rollLootItem(mapTier, luck));
     }
     return out.filter(Boolean);
+  };
+
+  /* 贸易代币掉落：精英 / BOSS 概率掉落，用于升级市场 */
+  G.Market.dropTokenChance = function (def, luck) {
+    var p = 0;
+    if (def && def.boss) p = 0.6;
+    else if (def && def.elite) p = 0.22 + Math.min(0.2, luck / 500);
+    if (def && def.boss) G.Market.addToken(1);
+    else if (def && def.elite && Math.random() < p) G.Market.addToken(1);
   };
 
 })();

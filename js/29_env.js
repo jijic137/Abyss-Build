@@ -53,6 +53,23 @@
             c.drawImage(gcv, rc.x0, rc.y0, G.Map.ROOM, G.Map.ROOM);
           }
         }
+        /* 2a) 手绘材质 tile 平铺：4 变体混用 + 按位置染色明暗（泰拉瑞亚式斑驳拼块） */
+        if (th && th.floor.variants && th.floor.variants.length) {
+          c.save();
+          var vstep = 48;
+          for (var tx = rc.x0 + 24; tx <= rc.x1 - 24; tx += vstep) {
+            for (var ty = rc.y0 + 24; ty <= rc.y1 - 24; ty += vstep) {
+              var hh = ((((tx + (m.salt || 0) * 131) | 0) * 374761393) ^
+                        (((ty + (m.salt || 0) * 911) | 0) * 668265263)) >>> 0;
+              var vr = th.floor.variants[hh % th.floor.variants.length];
+              var bright = ((hh >>> 7) % 45) / 100 - 0.22;   // -0.22 ~ +0.22 明暗斑驳
+              var col2 = G.PX.shade(th.floor.col, bright);
+              var vc = G.Art.floorTile ? G.Art.floorTile(vr, col2, 3) : G.PX.getTint(vr, col2, 3);
+              if (vc) G.PX.draw(c, vc, tx, ty, { alpha: th.floor.tileAlpha || 0.9 });
+            }
+          }
+          c.restore();
+        }
         /* 2b) 地面材质元素散布（草丛/石板/岩块/焦土…，让地面读得出材质） */
         if (G.Art && G.Art.groundElements) {
           var els = G.Art.groundElements(m, rm.idx);

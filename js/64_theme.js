@@ -551,6 +551,405 @@
   ]);
 
   /* ------------------------------------------------------------
+     泰拉瑞亚式手绘 tile 集（v7）：每块 16×16 手绘材质纹理。
+     渲染用 G.Art.floorTile（浅描边自定义调色板），避免深色网格线。
+     ------------------------------------------------------------ */
+  G.Art.TILE_ROWS = G.Art.TILE_ROWS || {};
+  function T7(name, rows) {
+    G.Art.TILE_ROWS[name] = rows;
+    PX.tint(name, rows);
+  }
+  /* 裂隙边缘 · 草地 */
+  T7('t_fm_a', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACAACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACAACo',
+    'oAAAAAAAAAAAAAo',
+    'oAABACACAACABAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACAACo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACAACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAABACACAACABAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_fm_b', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAACAAAACAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAABAAAAAAABo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAACAAAACAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_fm_c', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAABBBAAAAAo',
+    'oAAAAABBBBAAAAAo',
+    'oAAAAAABBBAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_fm_d', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAABAAAAAAAAAABo',
+    'oAABAAAAAAAAAABo',
+    'oAAAAACAAAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAABAAAAAAAAAABo',
+    'oAABAAAAAAAAAABo',
+    'oAAAAACAAAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  /* 幽暗回廊 · 石板 */
+  T7('t_sc_a', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oBBBBBBBBBBBBBBo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oBBBBBBBBBBBBBBo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_sc_b', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oBBBBBBBBBBBBBBo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oBBBBBBBBBBBBBBo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAACAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_sc_c', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAAAAAAAo',
+    'oAAAAkAAAAAAAkAo',
+    'oAAAAkAAAAAAkAo',
+    'oBBBBBBBBBBBBBBo',
+    'oAAAAkAAAAkAAAAo',
+    'oAAAAkAAkAAAAAAo',
+    'oAAAAkAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oBBBBBBBBBBBBBBo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_sc_d', [
+    'oooooooooooooooo',
+    'oAAAAAACAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oBBBBBBBBBBBBBBo',
+    'oAAAABBBBBBAAAAo',
+    'oAAAABBBBBBAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oBBBBBBBBBBBBBBo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAACAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  /* 深部矿坑 · 矿岩 */
+  T7('t_mn_a', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAADAAAAAAkAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAADAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAAAAAAkAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAADAAAAAAkAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAADAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAAAAAAkAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_mn_b', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAkAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAAkAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAAAAAkAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAkAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAAAkAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAAkAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_mn_c', [
+    'oooooooooooooooo',
+    'oAAAAADAAAAADAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAADAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAADAAAAAAADAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAADAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAADAAAAAAADAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAADAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAADAAAAADAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_mn_d', [
+    'oooooooooooooooo',
+    'oAAAAkAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAkAAAAAAo',
+    'oAAADAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAAAkAAAo.',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAkAAAAAAo',
+    'oAAADAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAAAkAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAkAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  /* 深渊腹地 · 花园草地 */
+  T7('t_hm_a', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAADAAAAAAADAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAADAAAAAAADAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_hm_b', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAADAAAAAAADo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAADAAAAAAADo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAADAAAAAAADo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_hm_c', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAABBBBBBAAAAo',
+    'oAAAAABBBBBBAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAADAAAAAAADo',
+    'oAAAAAAAAAAAAAo',
+    'oAACACACACACACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_hm_d', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAACAAAAACAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAADAAAAAAADo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAACAAAAACAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAADAAAAAAADo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAACAAAAACAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAADAAAAAAADo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  /* 终焉之门 · 焦土 */
+  T7('t_vd_a', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAAAkAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAAAkAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAAAkAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_vd_b', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAkAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAkAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAkAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAkAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAkAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAkAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_vd_c', [
+    'oooooooooooooooo',
+    'oAAAAACAAAAACAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAAAkAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAAAkAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAAAkAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAACAAAAACAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  T7('t_vd_d', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAkAAAkAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAkAAkAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAkAAAkAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAkAAkAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAkAAAAkAAAkAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAkAAkAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+
+  /* ------------------------------------------------------------
+     手绘 tile 渲染：浅描边自定义调色板（避免深色网格线）
+     ------------------------------------------------------------ */
+  G.Art.floorTile = function (name, col, scale) {
+    scale = scale || 3;
+    var key = 'ft|' + name + '|' + col + '|' + scale;
+    if (G._ftCache && G._ftCache[key]) return G._ftCache[key];
+    var rows = G.Art.TILE_ROWS[name];
+    if (!rows) return null;
+    var pal = {
+      o: G.PX.shade(col, -0.38),
+      A: col,
+      B: G.PX.shade(col, -0.28),
+      C: G.PX.shade(col, 0.42),
+      D: G.PX.shade(col, 0.72),
+      w: '#f2f4ff',
+      k: '#10121a'
+    };
+    PX.def('__ft_' + name + '_' + key.length, pal, rows);
+    var cv = PX.get('__ft_' + name + '_' + key.length, scale);
+    G._ftCache = G._ftCache || {};
+    return (G._ftCache[key] = cv);
+  };
+
+  /* ------------------------------------------------------------
      像素风地板纹理（无边框、图案连续、平铺无缝）——v5 覆盖版
      ------------------------------------------------------------ */
   PX.tint('t_floor_moss', [
@@ -740,7 +1139,7 @@
   G.Art.THEMES = {
     1: {
       id: 'fringe', name: '裂隙边缘', concept: '地表边缘 · 尚有生机',
-      floor: { sprite: 't_floor_moss', variants: ['t_floor_moss', 't_floor_moss_v2'], col: '#5f9a52', alpha: 0.42, tileAlpha: 0.62 },
+      floor: { sprite: 't_fm_a', variants: ['t_fm_a', 't_fm_b', 't_fm_c', 't_fm_d'], col: '#5f9a52', alpha: 0.42, tileAlpha: 0.92 },
       wall: { col: '#39493c' },
       void: ['#141c14', '#182218'],
       ground: { density: 0.16, elements: [
@@ -764,7 +1163,7 @@
     },
     2: {
       id: 'corridor', name: '幽暗回廊', concept: '中层回廊 · 严肃荒凉',
-      floor: { sprite: 't_floor_stone', variants: ['t_floor_stone', 't_floor_stone_v2'], col: '#6a78a8', alpha: 0.46, tileAlpha: 0.62 },
+      floor: { sprite: 't_sc_a', variants: ['t_sc_a', 't_sc_b', 't_sc_c', 't_sc_d'], col: '#6a78a8', alpha: 0.46, tileAlpha: 0.92 },
       wall: { col: '#3a4160' },
       void: ['#12162a', '#161c36'],
       ground: { density: 0.14, elements: [
@@ -785,7 +1184,7 @@
     },
     3: {
       id: 'mine', name: '深部矿坑', concept: '深部矿脉 · 黑暗破败',
-      floor: { sprite: 't_floor_mine', variants: ['t_floor_mine', 't_floor_mine_v2'], col: '#7a68a8', alpha: 0.44, tileAlpha: 0.58 },
+      floor: { sprite: 't_mn_a', variants: ['t_mn_a', 't_mn_b', 't_mn_c', 't_mn_d'], col: '#7a68a8', alpha: 0.44, tileAlpha: 0.92 },
       wall: { col: '#4a3c5a' },
       void: ['#141020', '#181230'],
       ground: { density: 0.15, elements: [
@@ -806,7 +1205,7 @@
     },
     4: {
       id: 'heart', name: '深渊腹地', concept: '阳光骗局 · 地面镜像',
-      floor: { sprite: 't_floor_meadow', variants: ['t_floor_meadow', 't_floor_meadow_v2'], col: '#78c06a', alpha: 0.55, tileAlpha: 0.66 },
+      floor: { sprite: 't_hm_a', variants: ['t_hm_a', 't_hm_b', 't_hm_c', 't_hm_d'], col: '#78c06a', alpha: 0.55, tileAlpha: 0.92 },
       wall: { col: '#b09a6a' },
       void: ['#242a16', '#2c341c'],
       ground: { density: 0.15, elements: [
@@ -828,7 +1227,7 @@
     },
     5: {
       id: 'gate', name: '终焉之门', concept: '深渊之心 · 最黑暗破败',
-      floor: { sprite: 't_floor_void', variants: ['t_floor_void', 't_floor_void_v2'], col: '#6a4458', alpha: 0.46, tileAlpha: 0.6 },
+      floor: { sprite: 't_vd_a', variants: ['t_vd_a', 't_vd_b', 't_vd_c', 't_vd_d'], col: '#6a4458', alpha: 0.46, tileAlpha: 0.92 },
       wall: { col: '#4a2a3a' },
       void: ['#120a10', '#160c14'],
       ground: { density: 0.15, elements: [

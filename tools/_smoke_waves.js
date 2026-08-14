@@ -681,8 +681,10 @@ function runBalance() {
   /* ---- 武器品质 DPS 与怪物 TTK 平衡断言 ---- */
   const knife = G.WEAPON_MAP['knife'];
   const sp = p.st;
-  /* 固定暴击为 0，使 DPS 计算确定化（weaponDamage 内部会用 Math.random 掷暴击） */
+  /* 固定暴击 0 且注入确定性随机，使 DPS 计算确定化（weaponDamage 内部会掷暴击与 ±8% 浮动） */
   const spNoCrit = Object.assign({}, sp, { critChance: 0 });
+  const _origRandom = Math.random;
+  Math.random = function () { return 0.5; };
   function knifeDps(tier) {
     const w = G.makeWeapon('knife', tier);
     const dmg = G.F.weaponDamage(spNoCrit, { base: G.wDamage(w), tags: knife.tags }).dmg;
@@ -692,12 +694,13 @@ function runBalance() {
   const dps0 = knifeDps(0);
   const dps1 = knifeDps(1);
   const gain = dps1 / dps0 - 1;
-  if (gain < 0.45) throw new Error('白→绿武器 DPS 提升不足 ' + Math.round(gain * 100) + '%');
-  /* 白装打初始小怪应需多刀，而非秒杀 */
+  /* 白装打初始小怪应需多刀，而非秒杀；同时锁定随机以消除浮动 */
   const wormDef = G.ENEMY_MAP['worm'];
   const w0 = G.makeWeapon('knife', 0);
-  const dmg0 = G.F.weaponDamage(sp, { base: G.wDamage(w0), tags: knife.tags }).dmg;
+  const dmg0 = G.F.weaponDamage(spNoCrit, { base: G.wDamage(w0), tags: knife.tags }).dmg;
+  Math.random = _origRandom;
   const hits = Math.ceil((wormDef.hp * G.waveScale(1).hp) / Math.max(0.5, dmg0));
+  if (gain < 0.45) throw new Error('白→绿武器 DPS 提升不足 ' + Math.round(gain * 100) + '%');
   if (hits < 3) throw new Error('白装仍可秒杀小怪 hits=' + hits);
   log('  [平衡] 白→绿DPS +' + Math.round(gain * 100) + '% 白装小怪 ' + hits + ' 刀 ✓ 小怪↑ 精英↓ BOSS不变 ✓ 整备栏显隐 ✓');
 }

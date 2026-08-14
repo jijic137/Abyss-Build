@@ -150,7 +150,7 @@
     head.appendChild(el('div', 'save-ch', ch ? ch.name : run.charId));
     head.appendChild(el('div', 'save-wave',
       '第 ' + run.wave + ' / ' + G.MAX_WAVE + ' 波 · ' + fmtTime(run.runTime || 0) +
-      (run.pendingLevels ? ' · 待升级 ×' + run.pendingLevels : '')));
+      (run.pendingLevels ? ' · 待强化 ×' + run.pendingLevels : '')));
     slot.appendChild(head);
 
     // 波次进度条
@@ -163,7 +163,7 @@
     // 战局摘要
     var grid = el('div', 'save-grid');
     grid.appendChild(saveStat('击杀', st.kills || 0));
-    grid.appendChild(saveStat('等级', run.level || 1));
+    grid.appendChild(saveStat('强化次数', (run.pendingLevels || 0)));
     grid.appendChild(saveStat('材料', run.materials || 0));
     grid.appendChild(saveStat('精英', st.eliteKills || 0));
     grid.appendChild(saveStat('构筑', (run.weapons || []).length + ' 武 · ' + (run.items || []).length + ' 物'));
@@ -718,7 +718,7 @@
     $('matText').textContent = g.materials;
     var xr = G.clamp(p.xp / p.xpNeed, 0, 1);
     $('xpFill').style.width = (xr * 100) + '%';
-    $('xpText').textContent = 'Lv.' + p.level;
+    $('xpText').textContent = '碎片 ' + ((g && g.shards)||0) + '/' + G.SHARD_NEED;
 
     // 武器栏
     var bar = $('weaponBar');
@@ -956,7 +956,7 @@
      ------------------------------------------------------------ */
   UI.renderLevelUp = function (g, opts, onPick) {
     var p = g.player;
-    $('lvSub').textContent = 'Lv.' + p.level + '　剩余 ' + p.pendingLevels + ' 次选择';
+    $('lvSub').textContent = '属性碎片共鸣 · 剩余 ' + p.pendingLevels + ' 次强化选择';
     var box = $('lvOptions');
     box.innerHTML = '';
     opts.forEach(function (o) {
@@ -1065,7 +1065,7 @@
     var rows = [
       ['角色', p.char.name],
       ['抵达波次', g.wave + ' / ' + G.MAX_WAVE + star(rec.newWave)],
-      ['等级', 'Lv.' + p.level],
+      ['强化次数', String(p.pendingLevels || 0)],
       ['存活时间', fmtTime(t)],
       ['击杀数', p.stats.kills + star(rec.newKills)],
       ['精英击杀', p.stats.eliteKills],

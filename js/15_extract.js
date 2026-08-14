@@ -167,7 +167,7 @@
     $('matText').textContent = g.materials;
     var xr = G.clamp(p.xp / p.xpNeed, 0, 1);
     $('xpFill').style.width = (xr * 100) + '%';
-    $('xpText').textContent = 'Lv.' + p.level;
+    $('xpText').textContent = '碎片 ' + ((g && g.shards)||0) + '/' + G.SHARD_NEED;
 
     /* 武器栏 */
     var bar = $('weaponBar');
@@ -821,10 +821,10 @@ host.appendChild(box);
     head.appendChild(el('div', 'save-ch', ch ? ch.name : run.charId));
     head.appendChild(el('div', 'save-wave',
       (tier ? tier.name : '第 ' + run.tierId + ' 层') + ' · 第 ' + (run.sublevel || 1) + ' / 16 小关 · ' + fmtTime(run.runTime || 0) +
-      (run.pendingLevels ? ' · 待升级 ×' + run.pendingLevels : '')));
+      (run.pendingLevels ? ' · 待强化 ×' + run.pendingLevels : '')));
     slot.appendChild(head);
     var grid = el('div', 'save-grid');
-    grid.appendChild(saveStat('等级', run.level || 1));
+    grid.appendChild(saveStat('强化次数', (run.pendingLevels || 0)));
     grid.appendChild(saveStat('材料', run.materials || 0));
     grid.appendChild(saveStat('击杀', (run.stats && run.stats.kills) || 0));
     grid.appendChild(saveStat('构筑', (run.carried && run.carried.weapons.length) + ' 武 · ' +

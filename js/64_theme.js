@@ -115,6 +115,102 @@
     'oooooooooooooooo'
   ]);
 
+  /* ---- 变体纹理（与主纹混用，打破整齐平铺） ---- */
+  PX.tint('t_floor_moss_v2', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAABAAAAAAAABAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAACAAACAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAABAAAAAAAABAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAACAAACAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAABAAAAAAAABAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAACAAACAAACAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+
+  PX.tint('t_floor_stone_v2', [
+    'oooooooooooooooo',
+    'oAAABAAABAAABAAo',
+    'oAAABAAABAAABAAo',
+    'oAAABAAABAAABAAo',
+    'oABBBABBBABBBABo',
+    'oBAAABAAABAAABAo',
+    'oBAAABAAABAAABAo',
+    'oBAAABAAABAAABAo',
+    'oAAABAAABAAABAAo',
+    'oAAABAAABAAABAAo',
+    'oAAABAAABAAABAAo',
+    'oABBBABBBABBBABo',
+    'oBAAABAAABAAABAo',
+    'oBAAABAAABAAABAo',
+    'oBAAABAAABAAABAo',
+    'oooooooooooooooo'
+  ]);
+
+  PX.tint('t_floor_mine_v2', [
+    'oooooooooooooooo',
+    'oAAAAAAAkAAAAAAo',
+    'oAAADAAAAAAADAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAAAAAo',
+    'oAAAkAAAAAAAkAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAADAAAAAAkAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAAAAAo',
+    'oAAADAAAAAAADAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAAkAAAAAAo',
+    'oAAAkAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+
+  PX.tint('t_floor_meadow_v2', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oACCAACCAACCAACo',
+    'oAAAAAAADAAAAAo',
+    'oACCAACCAACCAACo',
+    'oAADAAAAAAAADAAo',
+    'oACCAACCAACCAACo',
+    'oAAAAAABAAAAAAo',
+    'oACCAACCAACCAACo',
+    'oAAAAAAADAAAAAo',
+    'oACCAACCAACCAACo',
+    'oAADAAAAAAAAAAo',
+    'oACCAACCAACCAACo',
+    'oAAAAAAAABAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+
+  PX.tint('t_floor_void_v2', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAo',
+    'oAAkAAkAAkAAkAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAAAAAo',
+    'oAAkAAAAAAAAkAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAkAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAAAkAAAAAAo.',
+    'oAAkAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAo',
+    'oAAAAkAAAAAAAko.',
+    'oAAAAAAAAAAAAAo',
+    'oAAkAAkAAkAAkAAo',
+    'oooooooooooooooo'
+  ]);
+
   /* ------------------------------------------------------------
      装饰素材（可染色）
      ------------------------------------------------------------ */
@@ -278,7 +374,7 @@
   G.Art.THEMES = {
     1: {
       id: 'fringe', name: '裂隙边缘', concept: '地表边缘 · 尚有生机',
-      floor: { sprite: 't_floor_moss', col: '#4f7a44', alpha: 0.42 },
+      floor: { sprite: 't_floor_moss', variants: ['t_floor_moss', 't_floor_moss_v2'], col: '#4f7a44', alpha: 0.42 },
       wall: { col: '#39493c' },
       void: ['#0b0f0b', '#0d120d'],
       decor: [
@@ -293,7 +389,7 @@
     },
     2: {
       id: 'corridor', name: '幽暗回廊', concept: '中层回廊 · 严肃荒凉',
-      floor: { sprite: 't_floor_stone', col: '#3c4460', alpha: 0.46 },
+      floor: { sprite: 't_floor_stone', variants: ['t_floor_stone', 't_floor_stone_v2'], col: '#3c4460', alpha: 0.46 },
       wall: { col: '#3a4160' },
       void: ['#0a0c14', '#0c0f18'],
       decor: [
@@ -307,7 +403,7 @@
     },
     3: {
       id: 'mine', name: '深部矿坑', concept: '深部矿脉 · 黑暗破败',
-      floor: { sprite: 't_floor_mine', col: '#5a4a6a', alpha: 0.44 },
+      floor: { sprite: 't_floor_mine', variants: ['t_floor_mine', 't_floor_mine_v2'], col: '#5a4a6a', alpha: 0.44 },
       wall: { col: '#4a3c5a' },
       void: ['#0a0810', '#0c0a14'],
       decor: [
@@ -321,7 +417,7 @@
     },
     4: {
       id: 'heart', name: '深渊腹地', concept: '阳光骗局 · 地面镜像',
-      floor: { sprite: 't_floor_meadow', col: '#6fae5f', alpha: 0.55 },
+      floor: { sprite: 't_floor_meadow', variants: ['t_floor_meadow', 't_floor_meadow_v2'], col: '#6fae5f', alpha: 0.55 },
       wall: { col: '#b09a6a' },
       void: ['#1a1c10', '#202414'],
       decor: [
@@ -336,7 +432,7 @@
     },
     5: {
       id: 'gate', name: '终焉之门', concept: '深渊之心 · 最黑暗破败',
-      floor: { sprite: 't_floor_void', col: '#4a2a3a', alpha: 0.46 },
+      floor: { sprite: 't_floor_void', variants: ['t_floor_void', 't_floor_void_v2'], col: '#4a2a3a', alpha: 0.46 },
       wall: { col: '#4a2a3a' },
       void: ['#0a0608', '#0c070a'],
       decor: [

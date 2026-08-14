@@ -33,18 +33,66 @@
         if (!rm.explored) continue;
         var rc = G.Map.roomRect(cc, r);
 
-        /* 地板纹理 */
-        if (tileSpr) {
+        /* ---------- 地板：明暗色斑 + 变体纹理错位平铺 + 噪点 + 墙脚阴影 ---------- */
+        var roomSeed = (rm.idx * 73856093 + (m.salt || 0) * 19349663) >>> 0;
+        /* 1) 大尺度明暗色斑（每房 1-2 处，打破均匀） */
+        c.save();
+        for (var sp = 0; sp < 2; sp++) {
+          var spotX = rc.x0 + 120 + ((roomSeed + sp * 104729) % Math.max(1, rc.x1 - rc.x0 - 240));
+          var spotY = rc.y0 + 120 + (((roomSeed >>> 5) + sp * 7919) % Math.max(1, rc.y1 - rc.y0 - 240));
+          var spotR = 120 + ((roomSeed >>> 11) + sp * 271) % 100;
+          var sg = c.createRadialGradient(spotX, spotY, 6, spotX, spotY, spotR);
+          sg.addColorStop(0, sp ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)');
+          sg.addColorStop(1, 'rgba(0,0,0,0)');
+          c.fillStyle = sg;
+          c.fillRect(rc.x0, rc.y0, rc.x1 - rc.x0, rc.y1 - rc.y0);
+        }
+        c.restore();
+        /* 2) 变体纹理平铺（错位 ±5px + 亮度抖动，消除整齐网格感） */
+        if (th && th.floor.variants) {
+          var vstep = 48;
+          var startX = rc.x0 + 24, startY = rc.y0 + 24;
+          c.save();
+          for (var tx = startX; tx <= rc.x1 - 24; tx += vstep) {
+            for (var ty = startY; ty <= rc.y1 - 24; ty += vstep) {
+              var hh = ((((tx + (m.salt || 0) * 131) | 0) * 374761393) ^
+                        (((ty + (m.salt || 0) * 911) | 0) * 668265263)) >>> 0;
+              var vr = th.floor.variants[hh % th.floor.variants.length];
+              var vc = G.PX.getTint(vr, th.floor.col, 3);
+              var ox = (hh % 15) - 7, oy = ((hh >>> 4) % 15) - 7;
+              var va = tileA * (0.76 + ((hh >>> 7) % 48) / 100);
+              if (vc) G.PX.draw(c, vc, tx + ox, ty + oy, { alpha: va });
+            }
+          }
+          c.restore();
+        } else if (tileSpr) {
           c.save();
           c.globalAlpha = tileA;
           var step = 48;
-          for (var tx = rc.x0 + 8; tx < rc.x1 - 8; tx += step) {
-            for (var ty = rc.y0 + 8; ty < rc.y1 - 8; ty += step) {
-              G.PX.draw(c, tileSpr, tx, ty);
+          for (var tx2 = rc.x0 + 8; tx2 < rc.x1 - 8; tx2 += step) {
+            for (var ty2 = rc.y0 + 8; ty2 < rc.y1 - 8; ty2 += step) {
+              G.PX.draw(c, tileSpr, tx2, ty2);
             }
           }
           c.restore();
         }
+        /* 3) 微噪点（亮/暗颗粒） */
+        c.save();
+        for (var np = 0; np < 22; np++) {
+          var nx = rc.x0 + ((roomSeed + np * 104729) % Math.max(1, rc.x1 - rc.x0));
+          var ny = rc.y0 + (((roomSeed >>> 3) + np * 7919) % Math.max(1, rc.y1 - rc.y0));
+          c.fillStyle = (np % 2) ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.035)';
+          c.fillRect(nx, ny, 2, 2);
+        }
+        c.restore();
+        /* 4) 墙脚阴影（房间内缘暗带，立体感） */
+        c.save();
+        c.fillStyle = 'rgba(0,0,0,0.20)';
+        c.fillRect(rc.x0, rc.y0, rc.x1 - rc.x0, 13);
+        c.fillRect(rc.x0, rc.y1 - 13, rc.x1 - rc.x0, 13);
+        c.fillRect(rc.x0, rc.y0, 13, rc.y1 - rc.y0);
+        c.fillRect(rc.x1 - 13, rc.y0, 13, rc.y1 - rc.y0);
+        c.restore();
 
         /* 环境装饰（主题驱动：苔藓/枯骨/晶簇/花朵/焦土…，确定性种子，避开中心与房内结构） */
         if (th && th.decor && th.decor.length && rm.type !== 'extract' && rm.type !== 'spawn') {

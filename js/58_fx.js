@@ -58,14 +58,6 @@
   /* ------------------------------------------------------------
      4. 区域氛围粒子
      ------------------------------------------------------------ */
-  var ZONE_MOTES = {
-    1: { col: '#7fbf7f' },
-    2: { col: '#7fa8ff' },
-    3: { col: '#c07fff' },
-    4: { col: '#ff9a5a' },
-    5: { col: '#ff4a6b' }
-  };
-
   var _upd = G.game.update;
   G.game.update = function (dt) {
     var g = this;
@@ -77,7 +69,13 @@
     var r = _upd.call(this, dt);
     if (g.state === 'play' && g.map && g.player && g.particles.length < 480) {
       g._moteT = (g._moteT || 0) + dt;
-      var z = ZONE_MOTES[g.map.zoneId || g.map.tierId || 1];
+      var z = null;
+      if (G.Art && G.Art.themeOf) {
+        try {
+          var th = G.Art.themeOf(g.map.tierId || 1);
+          z = th && th.particles ? { col: th.particles.col } : null;
+        } catch (e) { z = null; }
+      }
       if (z && g._moteT > 0.22) {
         g._moteT = 0;
         var px = g.camX + G.rand(0, g.vw);

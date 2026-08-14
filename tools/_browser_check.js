@@ -188,12 +188,12 @@ server.listen(8765, '127.0.0.1', async () => {
       return {
         bagCols: G.Inv2.bagCols,
         cols: grid ? grid.style.gridTemplateColumns : null,
-        base: probe('scrBase'), bag: probe('scrBag')
+        base: probe('scrBase'), bag: probe('scrBag'), result: probe('scrResult')
       };
     });
     await page.setViewportSize({ width: 1280, height: 720 });
     console.log('NARROW ' + JSON.stringify(narrow));
-    if (narrow.bagCols !== 5 || !/repeat\(5/.test(narrow.cols || '') || narrow.base.length || narrow.bag.length)
+    if (narrow.bagCols !== 5 || !/repeat\(5/.test(narrow.cols || '') || narrow.base.length || narrow.bag.length || narrow.result.length)
       throw new Error('窄屏仓库/背包溢出未修复');
 if (layout.length) throw new Error('布局越界 ' + JSON.stringify(layout));    /* 关键界面截图（供人工审阅） */
     await page.evaluate(() => { document.getElementById('scrBase').classList.add('on'); });

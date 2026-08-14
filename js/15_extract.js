@@ -783,7 +783,7 @@ var seen = !!disc[it.id];
 var card = el('div', 'treasure-cell' + (seen ? ' seen' : ' unseen'));
 card.style.setProperty('--rc', it.col);
 if (seen) {
-var cv = G.PX.get(it.icon, 2);
+var cv = G.PX.getTint(it.icon, it.col, 2);
 if (cv) card.appendChild(G.PX.node(cv));
 } else {
 card.appendChild(el('span', 'treasure-q', '?'));

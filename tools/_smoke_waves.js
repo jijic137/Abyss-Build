@@ -681,10 +681,12 @@ function runBalance() {
   /* ---- 武器品质 DPS 与怪物 TTK 平衡断言 ---- */
   const knife = G.WEAPON_MAP['knife'];
   const sp = p.st;
+  /* 固定暴击为 0，使 DPS 计算确定化（weaponDamage 内部会用 Math.random 掷暴击） */
+  const spNoCrit = Object.assign({}, sp, { critChance: 0 });
   function knifeDps(tier) {
     const w = G.makeWeapon('knife', tier);
-    const dmg = G.F.weaponDamage(sp, { base: G.wDamage(w), tags: knife.tags }).dmg;
-    const cd = G.wCooldown(w) * G.F.cdMul(sp.attackSpeed);
+    const dmg = G.F.weaponDamage(spNoCrit, { base: G.wDamage(w), tags: knife.tags }).dmg;
+    const cd = G.wCooldown(w) * G.F.cdMul(spNoCrit.attackSpeed);
     return dmg / Math.max(0.05, cd);
   }
   const dps0 = knifeDps(0);

@@ -167,6 +167,34 @@ server.listen(8765, '127.0.0.1', async () => {
     await page.evaluate(() => { document.getElementById('scrMarket').classList.remove('on'); });
     console.log('MKTLAYOUT ' + JSON.stringify(mktFit));
     if (!mktFit.overflowCapped || mktFit.count < 8) throw new Error('市场网格溢出未修复');
+    /* 窄屏回归：仓库/背包网格必须位于视口内（不横向溢出） */
+    await page.setViewportSize({ width: 400, height: 720 });
+    await page.evaluate(() => { G.UI.renderBase(); G.UI.renderBag(); });
+    await page.waitForTimeout(200);
+    const narrow = await page.evaluate(() => {
+      function probe(scr) {
+        const el = document.getElementById(scr); if (!el) return [];
+        el.classList.add('on');
+        const bad = [];
+        el.querySelectorAll('*').forEach(n => {
+          const r = n.getBoundingClientRect();
+          if (r.width < 2 && r.height < 2) return;
+          if (r.left < -4 || r.right > 404) bad.push((n.id || n.className || n.tagName));
+        });
+        el.classList.remove('on');
+        return bad.slice(0, 5);
+      }
+      const grid = document.querySelector('#bagGrid .inv2-grid');
+      return {
+        bagCols: G.Inv2.bagCols,
+        cols: grid ? grid.style.gridTemplateColumns : null,
+        base: probe('scrBase'), bag: probe('scrBag')
+      };
+    });
+    await page.setViewportSize({ width: 1280, height: 720 });
+    console.log('NARROW ' + JSON.stringify(narrow));
+    if (narrow.bagCols !== 5 || !/repeat\(5/.test(narrow.cols || '') || narrow.base.length || narrow.bag.length)
+      throw new Error('窄屏仓库/背包溢出未修复');
 if (layout.length) throw new Error('布局越界 ' + JSON.stringify(layout));    /* 关键界面截图（供人工审阅） */
     await page.evaluate(() => { document.getElementById('scrBase').classList.add('on'); });
     await page.waitForTimeout(300);

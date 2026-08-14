@@ -179,6 +179,18 @@ server.listen(8765, '127.0.0.1', async () => {
     await page.evaluate(() => { G.UI.toggleBag(); });
     await page.waitForTimeout(300);
     await page.screenshot({ path: path.join(OUT, '13_bag.png') });
+    /* 已装备悬停详情：装备在玩家身上时鼠标悬停应弹出完整提示 */
+    const equipTip = await page.evaluate(() => {
+      G.UI.renderBag();
+      const slot = document.querySelector('.inv2-slot:not(.empty)');
+      if (!slot) return { ok: false, reason: 'no-equipped-slot' };
+      slot.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, clientX: 220, clientY: 220 }));
+      const tip = document.getElementById('tooltip');
+      const visible = !!tip && !tip.classList.contains('hidden') && tip.textContent.trim().length > 0;
+      return { ok: visible, reason: visible ? '' : 'tooltip-hidden', text: visible ? tip.textContent.slice(0, 40) : '' };
+    });
+    console.log('EQUIPTIP ' + JSON.stringify(equipTip));
+    if (!equipTip.ok) throw new Error('已装备悬停无详情');
     /* 背包真实点击交互验证 */
     const bagClick = await page.evaluate(() => {
       const panel = document.getElementById('scrBag');

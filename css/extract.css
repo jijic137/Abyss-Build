@@ -358,3 +358,16 @@
 .btn-danger{ border-color:#7a2a2a; color:#ff8a8a; }
 .btn-danger:hover{ border-color:#ff5a5a; box-shadow:0 0 14px #ff5a5a33; }
 
+/* ===== 三槽位存档 ===== */
+.slot-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:780px; margin:12px auto; }
+.slot-card{ border:1px solid #2a3048; border-radius:10px; padding:12px; background:linear-gradient(180deg,#171b28,#12141f); display:flex; flex-direction:column; }
+.slot-card.current{ border-color:#6ee787; box-shadow:0 0 16px #6ee78722; }
+.slot-head{ font-size:14px; font-weight:900; color:#dce2f0; letter-spacing:2px; display:flex; justify-content:space-between; align-items:center; }
+.slot-cur{ font-size:10px; color:#6ee787; border:1px solid #6ee78766; border-radius:4px; padding:1px 7px; }
+.slot-sub{ font-size:11px; color:#8a90a8; margin:6px 0 8px; min-height:16px; }
+.slot-stats{ font-size:11px; color:#aab; line-height:1.7; margin-bottom:10px; flex:1; }
+.slot-stats .ok{ color:#6ee787; }
+.slot-btns{ display:flex; gap:8px; }
+.slot-btns .btn{ flex:1; font-size:11px; padding:6px 4px; }
+.slot-empty{ color:#5f6580; font-style:italic; }
+

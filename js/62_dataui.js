@@ -1,6 +1,8 @@
 /* ============================================================
-   62_dataui.js —— 数据管理页
-   档案摘要 / 导出 / 导入 / 重置（为未来账号云同步预留入口）
+   62_dataui.js —— 数据管理页（三槽位自动存档）
+   - 三个独立存档槽：切换 / 手动覆盖保存
+   - 自动快照：结算、开新局、深入、手动保存时更新当前槽位
+   - 导出 JSON 文件（落盘备份）/ 导入 / 重置当前槽位
    ============================================================ */
 'use strict';
 
@@ -26,45 +28,96 @@
     return d.toLocaleString();
   }
 
+  /* ---------- 槽位卡片 ---------- */
+  function renderSlots() {
+    var host = $('slotGrid');
+    if (!host) return;
+    host.innerHTML = '';
+    var cur = G.Storage.currentSlot();
+    for (var i = 1; i <= G.Storage.slotCount; i++) {
+      var card = G.el('div', 'slot-card' + (i === cur ? ' current' : ''));
+      var head = G.el('div', 'slot-head');
+      head.appendChild(G.el('span', '', '槽位 ' + i));
+      if (i === cur) head.appendChild(G.el('span', 'slot-cur', '使用中'));
+      card.appendChild(head);
+
+      var s = G.Storage.slotSummary(i);
+      var sub;
+      if (!s) {
+        sub = G.el('div', 'slot-sub', '<span class="slot-empty">空存档</span>');
+        var st = G.el('div', 'slot-stats', '保存后这里会记录你的完整进度。');
+        card.appendChild(sub);
+        card.appendChild(st);
+      } else {
+        sub = G.el('div', 'slot-sub', '最后保存：' + fmtTime(s.savedAt));
+        var st = G.el('div', 'slot-stats',
+          '深渊币 <b>' + s.currency + '</b> · 仓库 <b>' + s.stash + '</b> 件<br>' +
+          '战役 <b>第 ' + Math.min(16, s.bestSublevel + 1) + ' / 16 小关</b> · 撤离 <b>' + s.extracts + '</b> 次<br>' +
+          (s.running ? '<span class="ok">进行中战局（可继续）</span>' : '无进行中战局'));
+        card.appendChild(sub);
+        card.appendChild(st);
+      }
+
+      var btns = G.el('div', 'slot-btns');
+      var bSwitch = G.el('button', 'btn btn-sm', i === cur ? '当前槽位' : '切换到此槽位');
+      if (i !== cur) {
+        bSwitch.addEventListener('click', function (slot) {
+          return function () {
+            var r = G.Storage.loadSlot(slot);
+            if (!r.ok) { msg('切换失败：' + r.msg, true); return; }
+            msg('已切换到槽位 ' + slot + '。');
+            G.Audio.sfx('confirm');
+            renderData();
+          };
+        }(i));
+      } else {
+        bSwitch.disabled = true;
+      }
+      var bSave = G.el('button', 'btn btn-sm btn-primary', '保存到此槽位');
+      bSave.addEventListener('click', function (slot) {
+        return function () {
+          var r = G.Storage.saveSlot(slot);
+          if (r.ok) {
+            msg('已保存到槽位 ' + slot + '（' + fmtTime(r.savedAt) + '）。');
+            G.Audio.sfx('confirm');
+          } else {
+            msg('保存失败：' + r.msg, true);
+            G.Audio.sfx('back');
+          }
+          renderData();
+        };
+      }(i));
+      btns.appendChild(bSwitch);
+      btns.appendChild(bSave);
+      card.appendChild(btns);
+      host.appendChild(card);
+    }
+  }
+
   function renderData() {
     var body = $('dataBody');
     if (!body) return;
-    var s;
-    try { s = G.Storage.summary(); }
-    catch (e) { s = null; }
     var oi = null;
     try { oi = G.Storage.originInfo(); }
     catch (e) { oi = null; }
     body.innerHTML = '';
-    if (!s || !oi) {
+    if (!oi) {
       body.appendChild(G.el('div', 'data-tip', '存储模块初始化失败。'));
       return;
     }
-    var rows = [
-      ['设备标识', '<b>' + s.device + '</b>'],
-      ['存储位置', '<b>' + (oi.isFile ? '本地文件模式 (file://)' : (oi.protocol || '未知')) + '</b>'],
-      ['本地存储可用', oi.localStorageOk ? '<b style="color:#6ee787">可用</b>' : '<b style="color:#ff7a7a">不可用（数据不会持久）</b>'],
-      ['深渊币', '<b>' + s.currency + '</b>'],
-      ['仓库物品', '<b>' + s.stash + ' / ' + s.stashSize + '</b>'],
-      ['战役进度', '<b>第 ' + Math.min(16, s.bestSublevel + 1) + ' / 16 小关</b>（已通过 ' + s.bestSublevel + '）'],
-      ['撤离 / 阵亡', '<b>' + s.extracts + ' / ' + s.deaths + '</b>'],
-      ['累计收入', '<b>' + s.totalEarned + '</b> 深渊币'],
-      ['进行中战局', s.running ? '<b style="color:#6ee787">有（可继续）</b>' : '无'],
-      ['最后保存', '<b>' + fmtTime(s.lastSave) + '</b>']
-    ];
-    var grid = G.el('div', 'data-summary');
-    rows.forEach(function (r) {
-      var row = G.el('div', 'ds-row');
-      row.appendChild(G.el('span', '', r[0]));
-      row.appendChild(G.el('span', '', r[1]));
-      grid.appendChild(row);
-    });
+    body.appendChild(G.el('div', 'data-tip',
+      '游戏会自动把进度保存到<b>当前槽位</b>（结算、开新局、深入下一小关、手动保存时更新）。' +
+      '三个槽位相互独立：想开新档就切到空槽位；想回滚就切回旧槽位。'));
+
+    var grid = G.el('div', 'slot-grid');
+    grid.id = 'slotGrid';
     body.appendChild(grid);
+    renderSlots();
+
     body.appendChild(G.el('div', 'data-tip',
       oi.note +
-      '<br><br>你的游戏数据保存在浏览器的本地存储里（不是项目文件），每次打开 index.html 会自动读取。' +
-      '为了万无一失，建议定期点「导出档案」把数据保存成 JSON 文件（这才是真正落盘的文件备份），' +
-      '以后换电脑/重装浏览器时用「导入档案」即可恢复。'));
+      '<br><br>「导出档案」会把当前槽位保存成 JSON 文件（真正落盘的备份，可跨电脑恢复）；' +
+      '「导入档案」会覆盖当前槽位并立即生效；「重置档案」清空当前槽位与当前进度（其余槽位保留）。'));
     var msgEl = G.el('div', 'data-msg', '');
     msgEl.id = 'dataMsg';
     body.appendChild(msgEl);
@@ -78,15 +131,14 @@
 
   /* ---------- 下载 ---------- */
   function downloadExport() {
-    var json;
     try {
-      json = G.Storage.exportProfile();
+      var json = G.Storage.exportProfile();
       var blob = new Blob([json], { type: 'application/json' });
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       var stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
       a.href = url;
-      a.download = 'abyss-hunter-' + stamp + '.json';
+      a.download = 'abyss-hunter-slot' + G.Storage.currentSlot() + '-' + stamp + '.json';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -98,26 +150,17 @@
     }
   }
 
-  /* ---------- 导入（读文件 → 覆盖/合并） ---------- */
-  function pickImport(strategy) {
-    var input = $('dataFileInput');
-    if (!input) return;
-    input.value = '';
-    input.setAttribute('data-strategy', strategy);
-    input.click();
-  }
-
+  /* ---------- 导入（读文件 → 覆盖当前槽位） ---------- */
   function onFile() {
     var input = $('dataFileInput');
     var f = input && input.files && input.files[0];
     if (!f) return;
-    var strategy = input.getAttribute('data-strategy') || 'replace';
     var reader = new FileReader();
     reader.onload = function () {
-      var res = G.Storage.importProfile(String(reader.result), { merge: strategy });
+      var res = G.Storage.importProfile(String(reader.result), { merge: 'replace' });
       renderData();
       if (res.ok) {
-        msg(strategy === 'replace' ? '档案已覆盖导入。' : '档案已合并导入。');
+        msg('档案已导入到当前槽位。');
         G.Audio.sfx('item_get');
       } else {
         msg('导入失败：' + res.msg, true);
@@ -128,14 +171,15 @@
     reader.readAsText(f);
   }
 
-  /* ---------- 重置 ---------- */
+  /* ---------- 重置当前槽位 ---------- */
   function resetProfile() {
-    var ok = confirm('确定要重置全部游戏数据吗？\n（深渊币 / 仓库 / 装备 / 战役进度 / 成就将全部清空，且不可恢复）\n\n建议先「导出档案」备份。');
+    var ok = confirm('确定要清空当前槽位（槽位 ' + G.Storage.currentSlot() + '）的全部数据吗？\n' +
+      '（深渊币 / 仓库 / 装备 / 战役进度 / 成就 / 进行中战局将清空）\n\n其余槽位不受影响，仍可切换回去。');
     if (!ok) return;
     var res = G.Storage.resetProfile({ keepSettings: true });
     if (res.ok) {
       renderData();
-      msg('档案已重置（设置已保留）。');
+      msg('当前槽位已重置（设置已保留）。');
       G.Audio.sfx('back');
     }
   }
@@ -162,7 +206,8 @@
   if (btnImport) {
     btnImport.addEventListener('click', function () {
       G.Audio.sfx('select');
-      pickImport('replace');
+      var input = $('dataFileInput');
+      if (input) { input.value = ''; input.click(); }
     });
   }
   var input = $('dataFileInput');
@@ -170,5 +215,12 @@
 
   var btnReset = $('btnDataReset');
   if (btnReset) btnReset.addEventListener('click', resetProfile);
+
+  /* 槽位切换 / 外部写入后自动刷新 */
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('abyss-profile-changed', function () {
+      if (G.UI && G.UI._dataShown) renderData();
+    });
+  }
 
 })();

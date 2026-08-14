@@ -660,6 +660,49 @@ function runStorage() {
   if (!(merged.best.achievements || {}).ach_a) throw new Error('合并成就失败');
   log('  [存储] 导出→重置→导入✓ 战局恢复✓ 合并策略✓');
 }
+/* ---------- 17. 三槽位存档 ---------- */
+function runSlots() {
+  log('\n===== 档案Q：三槽位自动存档 =====');
+  resetMeta();
+  G.Save.reload();
+  G.Meta.reload();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['knight'], 1));
+  const g = G.game;
+  g.player.maxHp = g.player.hp = 1e9;
+
+  /* 槽位1：A 数据 */
+  G.Meta.addCurrency(111);
+  let r = G.Storage.saveSlot(1);
+  if (!r.ok) throw new Error('槽位1保存失败');
+  const s1 = G.Storage.slotSummary(1);
+  if (!s1 || s1.currency !== 171) throw new Error('槽位1摘要错误 ' + JSON.stringify(s1));
+
+  /* 槽位2：B 数据（独立） */
+  G.Meta.addCurrency(222);
+  r = G.Storage.saveSlot(2);
+  if (!r.ok) throw new Error('槽位2保存失败');
+  const s2 = G.Storage.slotSummary(2);
+  if (!s2 || s2.currency !== 393) throw new Error('槽位2摘要错误 ' + JSON.stringify(s2));
+
+  /* 切换回槽位1：应恢复 A 数据（171） */
+  r = G.Storage.loadSlot(1);
+  if (!r.ok) throw new Error('切换槽位1失败');
+  if (G.Meta.currency() !== 171) throw new Error('切换后货币未恢复 ' + G.Meta.currency());
+  if (G.Storage.currentSlot() !== 1) throw new Error('当前槽位索引错误');
+
+  /* 切换槽位2：应恢复 B 数据（393） */
+  r = G.Storage.loadSlot(2);
+  if (!r.ok) throw new Error('切换槽位2失败');
+  if (G.Meta.currency() !== 393) throw new Error('槽位2数据未恢复 ' + G.Meta.currency());
+
+  /* 自动快照：手动保存/结算时更新当前槽位 */
+  G.Meta.addCurrency(50);
+  guard('autoSave', () => G.Storage.autoSave());
+  const s2b = G.Storage.slotSummary(2);
+  if (!s2b || s2b.currency !== 443) throw new Error('自动快照未更新 ' + JSON.stringify(s2b));
+  log('  [槽位] 双槽独立✓ 切换恢复✓ 自动快照✓');
+}
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {
   log('\n===== 档案I：物品占格 (ranger / t1) =====');
@@ -731,8 +774,9 @@ function runModsPortal() {
     runBalance();
     runCampaign16();
     runStorage();
+    runSlots();
     runInvDrag();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 平衡✓ 16关✓ 存储✓ 错误数=${ERR}`);
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 平衡✓ 16关✓ 存储✓ 槽位✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

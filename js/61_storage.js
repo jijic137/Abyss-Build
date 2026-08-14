@@ -257,6 +257,7 @@
       /* 清空缓存，下次读取直接反映导入结果 */
       G.Save.reload();
       G.Meta.reload();
+      saveSlot(currentSlot());   // 导入结果同步到当前槽位快照
       return { ok: true, strategy: strategy, device: doc.device };
     },
 
@@ -275,6 +276,7 @@
       writeProfile({ meta: meta, best: {}, settings: settings || {}, run: null });
       G.Save.reload();
       G.Meta.reload();
+      try { LS.removeItem(slotKey(currentSlot())); } catch (e) { /* 忽略 */ }
       return { ok: true, keepSettings: keepSettings };
     },
 
@@ -381,5 +383,132 @@
       }
     });
   }
+
+  /* ------------------------------------------------------------
+     9. 三槽位自动存档
+     每个槽位是一份完整档案快照（meta + best + settings + run）。
+     自动更新时机：结算（撤离/死亡）、开新局、深入下一小关、
+     手动保存（saveRun）。切换槽位时会先把当前槽位快照保存。
+     ------------------------------------------------------------ */
+  var SLOT_KEY = 'abyss_hunter_slot_';
+  var CUR_KEY = 'abyss_hunter_slot_current';
+  var SLOT_COUNT = 3;
+
+  function slotKey(i) { return SLOT_KEY + i; }
+
+  function currentSlot() {
+    var n = 1;
+    try { n = parseInt(LS.getItem(CUR_KEY), 10) || 1; } catch (e) { n = 1; }
+    return G.clamp(n, 1, SLOT_COUNT);
+  }
+
+  function setCurrentSlot(i) {
+    i = G.clamp(i, 1, SLOT_COUNT);
+    try { LS.setItem(CUR_KEY, String(i)); } catch (e) { /* 忽略 */ }
+    return i;
+  }
+
+  function slotData(i) {
+    try {
+      var raw = LS.getItem(slotKey(i));
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function saveSlot(i) {
+    i = G.clamp(i == null ? currentSlot() : i, 1, SLOT_COUNT);
+    var entry = {
+      savedAt: Date.now(),
+      profile: currentProfile()
+    };
+    try {
+      LS.setItem(slotKey(i), JSON.stringify(entry));
+    } catch (e) {
+      return { ok: false, msg: '本地存储空间不足或不可用' };
+    }
+    return { ok: true, slot: i, savedAt: entry.savedAt };
+  }
+
+  function loadSlot(i) {
+    i = G.clamp(i, 1, SLOT_COUNT);
+    var entry = slotData(i);
+    if (!entry || !entry.profile) return { ok: false, msg: '该槽位没有存档' };
+    /* 切换前先把当前槽位快照保存，避免丢失未结算的进行中战局 */
+    saveSlot(currentSlot());
+    writeProfile(entry.profile);
+    G.Save.reload();
+    G.Meta.reload();
+    setCurrentSlot(i);
+    emitProfileChange();
+    return { ok: true, slot: i, savedAt: entry.savedAt };
+  }
+
+  function slotSummary(i) {
+    var entry = slotData(i);
+    if (!entry || !entry.profile) return null;
+    var m = entry.profile.meta || {};
+    var r = entry.profile.run;
+    return {
+      savedAt: entry.savedAt,
+      currency: m.currency || 0,
+      stash: Array.isArray(m.stash) ? m.stash.length : 0,
+      bestSublevel: m.stats ? (m.stats.bestSublevel || 0) : 0,
+      extracts: m.stats ? (m.stats.extracts || 0) : 0,
+      running: !!r
+    };
+  }
+
+  function emitProfileChange() {
+    try {
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new Event('abyss-profile-changed'));
+      }
+    } catch (e) { /* 忽略 */ }
+  }
+
+  function autoSave() {
+    return saveSlot(currentSlot());
+  }
+
+  G.Storage.slotCount = SLOT_COUNT;
+  G.Storage.currentSlot = currentSlot;
+  G.Storage.slotData = slotData;
+  G.Storage.slotSummary = slotSummary;
+  G.Storage.saveSlot = saveSlot;
+  G.Storage.loadSlot = loadSlot;
+  G.Storage.autoSave = autoSave;
+
+  /* ---------- 自动快照钩子（低频生命周期事件） ---------- */
+  var _os1 = G.game.onExtractSuccess;
+  G.game.onExtractSuccess = function () {
+    var r = _os1.apply(this, arguments);
+    autoSave();
+    return r;
+  };
+  var _od1 = G.game.onPlayerDeath;
+  G.game.onPlayerDeath = function () {
+    var r = _od1.apply(this, arguments);
+    autoSave();
+    return r;
+  };
+  var _nr1 = G.game.newRun;
+  G.game.newRun = function (c, t) {
+    var r = _nr1.apply(this, arguments);
+    autoSave();
+    return r;
+  };
+  var _dc1 = G.game.descend;
+  G.game.descend = function () {
+    var r = _dc1.apply(this, arguments);
+    autoSave();
+    return r;
+  };
+  /* 手动保存（ESC 保存进度 / 各生命周期内的 saveRun）也触发快照 */
+  var _sr1 = G.game.saveRun;
+  G.game.saveRun = function () {
+    var r = _sr1.apply(this, arguments);
+    autoSave();
+    return r;
+  };
 
 })();

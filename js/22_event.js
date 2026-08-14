@@ -32,12 +32,12 @@
       { id: 'weapon', name: '军械残骸', icon: '≋', col: '#9ad0ff', desc: '获得一把本层武器',
         apply: function () {
           var w = G.rollLootWeapon(map.tierId, p.st.luck);
-          if (w && G.addBagItem(w)) G.UI.showLootCard(w);
+          if (G.grantItemOrDrop(w, p.x, p.y)) G.UI.showLootCard(w);
         } },
       { id: 'trinket', name: '遗物祭坛', icon: '❖', col: '#ffd24a', desc: '获得一件本层物品',
         apply: function () {
           var it = G.rollLootItem(map.tierId, p.st.luck + 8);
-          if (it && G.addBagItem(it)) G.UI.showLootCard(it);
+          if (G.grantItemOrDrop(it, p.x, p.y)) G.UI.showLootCard(it);
         } },
       { id: 'key', name: '流浪者遗物', icon: '⚿', col: '#e0c860', desc: '获得 1 把深渊钥匙',
         apply: function () { G.game.depthKeys = (G.game.depthKeys || 0) + 1; } }

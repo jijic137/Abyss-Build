@@ -732,7 +732,7 @@
     var loot = G.rollEnemyLoot(e.def, this.map ? this.map.tierId : 1, p.st.luck);
     for (var li = 0; li < loot.length; li++) {
       var inst = loot[li];
-      if (G.addBagItem(inst)) {
+      if (G.grantItemOrDrop(inst, e.x, e.y)) {
         if (e.def.elite || e.def.boss) {
           G.Audio.sfx('item_get');
           G.UI.showLootCard(inst);

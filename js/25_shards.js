@@ -32,6 +32,23 @@
     var py = y == null ? g.player.y : y;
     g.pickups.push(new G.Pickup(px + G.rand(-14, 14), py + G.rand(-14, 14), 'item', inst));
   };
+  /* 统一授予：先入包，背包满则掉落地面：背包放不下时直接掉落地面而不消失 */
+  G.grantItemOrDrop = function (inst, x, y) {
+    var g = G.game;
+    if (!inst) return false;
+    if (G.addBagItem(inst)) {
+      if (G.discoverTreasure) G.discoverTreasure(inst);
+      return true;
+    }
+    var px = (x == null) ? g.player.x : x;
+    var py = (y == null) ? g.player.y : y;
+    G.dropItemGround(inst, px, py);
+    G.popText(px, py - 36, '背包已满 · 物品掉落地面', { col: '#ffd24a', size: 13, life: 1.4 });
+    G.burst(px, py, 10, '#ffd24a', 150, { size: 3 });
+    if (G.Audio && G.Audio.sfx) G.Audio.sfx('pickup');
+    return false;
+  };
+
 
   /* 掉落：普通 12%（+幸运修正） / 精英 100% / BOSS 2 颗 */
   var _drop = G.game.dropLoot;

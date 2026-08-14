@@ -653,13 +653,9 @@
         g.player.heal(o.value);
         g.popText(this.x, this.y - 28, '+' + o.value + ' 生命', { col: '#6ee787', size: 12 });
       } else if (o.inst) {
-        var ok = G.addBagItem(o.inst);
-        if (ok) {
+        if (G.grantItemOrDrop(o.inst, this.x, this.y)) {
           G.Audio.sfx('item_get');
           g.popText(this.x, this.y - 34, (o.inst.type === 'weapon' ? '武器 ' : '') + o.inst.def.name, { col: G.rarityColor(o.inst.tier), size: 14, life: 1.2 });
-        } else {
-          G.popText(this.x, this.y - 34, '背包已满', { col: '#ff6b6b', size: 13, life: 1 });
-          G.burst(this.x, this.y, 8, '#ff6b6b', 120, { size: 2.5 });
         }
       }
     }

@@ -306,7 +306,37 @@ async function runExtractSuccess() {
   puItem.x = G.game.player.x; puItem.y = G.game.player.y;
   puItem.collect();
   if (gg.bag.length !== 1) throw new Error('地面物品未能拾取');
-  log('  [开箱] 满背包掉落地面 ✓ 拾回 ✓');
+  log('  [开箱] 满背包掉落地面 ✓ 拾回 ✓')
+  /* 满背包击杀精英：掉落的物品落地而非消失（与开箱一致） */
+  resetMeta();
+  G.game.init();
+  G.game.newRun(G.CHAR_BY_ID['alchemist'], 1);
+  const gk = G.game;
+  gk.bag = [];
+  for (let ki = 0; ki < G.BAG_CELLS; ki++) gk.bag.push(G.makeItem('clover', 0));
+  gk.bag.forEach(it => G.invAutoPlace(gk.bag, G.Inv2.bagCols, G.Inv2.bagRows, it));
+  if (G.addBagItem(G.makeItem('glasses', 0))) throw new Error('精英满包前置失败');
+  const el = gk.spawnEnemy('el_warden', gk.player.x + 60, gk.player.y);
+  gk.killEnemy(el);
+  const itemDropped = gk.pickups.some(pu => pu.type === 'item');
+  if (!itemDropped) throw new Error('满背包击杀精英物品消失');
+  log('  [击杀] 满背包精英掉落落地 ✓');
+  /* 统一授予接口：满背包时掉落地面，不满时入包 */
+  resetMeta();
+  G.game.init();
+  G.game.newRun(G.CHAR_BY_ID['alchemist'], 1);
+  const gu = G.game;
+  gu.bag = [];
+  for (let ui = 0; ui < G.BAG_CELLS; ui++) gu.bag.push(G.makeItem('clover', 0));
+  gu.bag.forEach(it => G.invAutoPlace(gu.bag, G.Inv2.bagCols, G.Inv2.bagRows, it));
+  if (G.grantItemOrDrop(G.makeItem('glasses', 0))) throw new Error('授予接口满包时应落地');
+  if (!gu.pickups.some(pu => pu.type === 'item')) throw new Error('授予接口满包未落地');
+  gu.pickups = []; gu.bag = [];
+  const gIn = G.makeItem('glasses', 0);
+  if (!G.grantItemOrDrop(gIn)) throw new Error('授予接口空背包应入包');
+  if (gu.bag.indexOf(gIn) < 0) throw new Error('授予接口未入包');
+  log('  [授予] 统一落地/入包 ✓');
+
 
   /* 区域解锁：通关该区域最后一小关（第 3 小关）才解锁下一区域 */
   resetMeta();

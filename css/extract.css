@@ -402,5 +402,28 @@
   .bag-grid > .inv2-grid-head, .bag-grid > .inv2-grid{ grid-column:1; grid-row:auto; }
   .inv2-grid{ grid-template-columns:none; }
   #bagGrid .inv2-grid, #bagGrid .inv2-grid-head, #bagGrid .inv2-equip{ max-width:100%; min-width:0; }
+}
+
+/* 窄屏 HUD 顶栏：左右区块收窄，小地图不超出视口 */
+@media (max-width:820px){
+  .hud-top{ padding:10px 12px; }
+  .hud-left{ width:220px; }
+  .hud-right{ width:190px; }
+  .wave-timer{ font-size:30px; }
+}
+@media (max-width:640px){
+  .hud-top{ padding:8px 10px; }
+  .hud-left{ width:150px; }
+  .hud-right{ width:150px; }
+  .hud-left .mini-stats{ flex-wrap:wrap; gap:4px; }
+  .hud-left .chip{ font-size:10px; padding:2px 5px; }
+  .hpbar{ height:20px; }
+  .hpbar-text{ font-size:11px; line-height:16px; }
+  .wave-label{ font-size:11px; }
+  .wave-timer{ font-size:26px; }
+  .wave-prog{ width:110px; }
+  #minimap{ width:110px; height:82px; margin-top:6px; }
+  .mat-row{ font-size:14px; }
+  .xpbar{ height:13px; }
 
 }

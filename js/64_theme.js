@@ -451,6 +451,67 @@
     return G.Art.THEMES[tierId] || G.Art.THEMES[1];
   };
 
+  /* ------------------------------------------------------------
+     噪声渐变地面：每房间烘焙 350×350 离屏画布（双线性插值逐像素），
+     绘制时拉伸到房间尺寸。无缝、平滑、无重复图案、无平铺缝隙。
+     ------------------------------------------------------------ */
+  G.Art.groundOf = function (map, roomIdx) {
+    map._grounds = map._grounds || {};
+    if (map._grounds[roomIdx]) return map._grounds[roomIdx];
+    var th = G.Art.themeOf(map.tierId);
+    var base = G.PX.hex2rgb(th.floor.col);
+    var S = 9;
+    var W = 350, H = 350;
+    function hs(x, y) {
+      var n = ((x * 374761393 + y * 668265263 + roomIdx * 73856093 + (map.salt || 0) * 19349663) >>> 0);
+      n = ((n ^ (n >>> 13)) * 1274126177) >>> 0;
+      return n;
+    }
+    var pts = [];
+    for (var sy = 0; sy < S; sy++) {
+      pts.push([]);
+      for (var sx = 0; sx < S; sx++) {
+        var h = hs(sx, sy);
+        var v = (h % 1000) / 1000 - 0.5;
+        var br = 1 + v * 0.30;
+        var r = base[0] * br + ((h % 13) - 6) * 0.5;
+        var g2 = base[1] * br + (((h >>> 4) % 13) - 6) * 0.5;
+        var b2 = base[2] * br + (((h >>> 8) % 13) - 6) * 0.5;
+        pts[sy].push([G.clamp(r, 0, 255), G.clamp(g2, 0, 255), G.clamp(b2, 0, 255)]);
+      }
+    }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function sample(fx, fy) {
+      var x0 = Math.min(S - 2, Math.floor(fx)), y0 = Math.min(S - 2, Math.floor(fy));
+      var tx = fx - x0, ty = fy - y0;
+      var p00 = pts[y0][x0], p10 = pts[y0][x0 + 1], p01 = pts[y0 + 1][x0], p11 = pts[y0 + 1][x0 + 1];
+      return [
+        lerp(lerp(p00[0], p10[0], tx), lerp(p01[0], p11[0], tx), ty),
+        lerp(lerp(p00[1], p10[1], tx), lerp(p01[1], p11[1], tx), ty),
+        lerp(lerp(p00[2], p10[2], tx), lerp(p01[2], p11[2], tx), ty)
+      ];
+    }
+    var cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    var ctx = cv.getContext('2d');
+    var img = ctx.createImageData(W, H);
+    var data = img.data;
+    var idx = 0;
+    for (var py = 0; py < H; py++) {
+      var fy = py / (H - 1) * (S - 1);
+      for (var px = 0; px < W; px++) {
+        var fx = px / (W - 1) * (S - 1);
+        var cc = sample(fx, fy);
+        data[idx++] = cc[0];
+        data[idx++] = cc[1];
+        data[idx++] = cc[2];
+        data[idx++] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return (map._grounds[roomIdx] = cv);
+  };
+
   /* 兼容旧接口：biome（地板/墙 tile 与配色）从主题派生 */
   G.Art.getBiome = function (tierId) {
     var th = G.Art.themeOf(tierId);

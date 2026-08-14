@@ -24,8 +24,6 @@
     if (G.Art && G.Art.themeOf) {
       try { th = G.Art.themeOf(m.tierId); } catch (e) { th = null; }
     }
-    var tileSpr = th && G.PX.getTint(th.floor.sprite, th.floor.col, 3);
-    var tileA = th ? th.floor.alpha : 0.28;
 
     for (var r = r0; r <= r1; r++) {
       for (var cc = c0; cc <= c1; cc++) {
@@ -48,33 +46,12 @@
           c.fillRect(rc.x0, rc.y0, rc.x1 - rc.x0, rc.y1 - rc.y0);
         }
         c.restore();
-        /* 2) 变体纹理平铺（错位 ±5px + 亮度抖动，消除整齐网格感） */
-        if (th && th.floor.variants) {
-          var vstep = 48;
-          var startX = rc.x0 + 24, startY = rc.y0 + 24;
-          c.save();
-          for (var tx = startX; tx <= rc.x1 - 24; tx += vstep) {
-            for (var ty = startY; ty <= rc.y1 - 24; ty += vstep) {
-              var hh = ((((tx + (m.salt || 0) * 131) | 0) * 374761393) ^
-                        (((ty + (m.salt || 0) * 911) | 0) * 668265263)) >>> 0;
-              var vr = th.floor.variants[hh % th.floor.variants.length];
-              var vc = G.PX.getTint(vr, th.floor.col, 3);
-              var ox = (hh % 15) - 7, oy = ((hh >>> 4) % 15) - 7;
-              var va = tileA * (0.76 + ((hh >>> 7) % 48) / 100);
-              if (vc) G.PX.draw(c, vc, tx + ox, ty + oy, { alpha: va });
-            }
+        /* 2) 噪声渐变地面：逐像素双线性插值，拉伸绘制——无缝、平滑、无重复图案 */
+        if (G.Art && G.Art.groundOf) {
+          var gcv = G.Art.groundOf(m, rm.idx);
+          if (gcv && gcv.width) {
+            c.drawImage(gcv, rc.x0, rc.y0, G.Map.ROOM, G.Map.ROOM);
           }
-          c.restore();
-        } else if (tileSpr) {
-          c.save();
-          c.globalAlpha = tileA;
-          var step = 48;
-          for (var tx2 = rc.x0 + 8; tx2 < rc.x1 - 8; tx2 += step) {
-            for (var ty2 = rc.y0 + 8; ty2 < rc.y1 - 8; ty2 += step) {
-              G.PX.draw(c, tileSpr, tx2, ty2);
-            }
-          }
-          c.restore();
         }
         /* 3) 微噪点（亮/暗颗粒） */
         c.save();

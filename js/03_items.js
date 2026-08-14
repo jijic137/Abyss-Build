@@ -366,7 +366,21 @@
     { id: 'tre_boots',    name: '限量战靴', r: 1, type: 'treasure', icon: 'ic_tre_fashion', col: '#6a8f4e', size: [2, 1], fl: '旧年代的限量款，鞋底仍残留深渊的灰。' },
     { id: 'tre_disk',     name: '深渊数据盘', r: 2, type: 'treasure', icon: 'ic_tre_elect', col: '#4e9fc8', size: [1, 1], fl: '加密过的资料，行家愿意出大价钱。' },
     { id: 'tre_crown',    name: '失落王冠', r: 3, type: 'treasure', icon: 'ic_tre_art', col: '#ffd24a', size: [2, 2], fl: '曾有王座之物，如今是深渊里的展品。' },
-    { id: 'tre_solar',    name: '聚变电池芯', r: 2, type: 'treasure', icon: 'ic_tre_fuel', col: '#7fd5ff', size: [1, 2], fl: '一颗还能持续发热的能源核心。' }
+    { id: 'tre_solar',    name: '聚变电池芯', r: 2, type: 'treasure', icon: 'ic_tre_fuel', col: '#7fd5ff', size: [1, 2], fl: '一颗还能持续发热的能源核心。' },
+    { id: 'tre_gear',     name: '黄铜齿轮箱', r: 0, type: 'treasure', icon: 'ic_tre_craft', col: '#c9a86b', size: [1, 1], fl: '精密咬合的旧机械，拆下来论斤也值钱。' },
+    { id: 'tre_vial',     name: '霓虹药剂瓶', r: 1, type: 'treasure', icon: 'ic_tre_craft', col: '#55d6ff', size: [1, 1], fl: '还透光的化学药瓶，买主爱它的颜色胜过内容。' },
+    { id: 'tre_orb',      name: '古鎏金宝球', r: 2, type: 'treasure', icon: 'ic_tre_art', col: '#ffd24a', size: [2, 2], fl: '表面刻满已无人能解的铭文，底座沉得惊人。' },
+    { id: 'tre_unit',     name: '低温储存单元', r: 2, type: 'treasure', icon: 'ic_tre_fuel', col: '#5fdcff', size: [2, 2], fl: '内部恒温恒压，保存着某个被遗忘的实验样本。' },
+    { id: 'tre_figure',   name: '星尘手办', r: 1, type: 'treasure', icon: 'ic_tre_fashion', col: '#cfa0ff', size: [1, 1], fl: '绝版限定款，圈内人一眼就认得出。' },
+    { id: 'tre_totem',    name: '啖盐图腾柱', r: 0, type: 'treasure', icon: 'ic_tre_craft', col: '#9a6f4e', size: [2, 3], fl: '一整根赭石雕刻，盐渍渗进每道裂隙。' },
+    { id: 'tre_goblet',   name: '鎏金高脚杯', r: 3, type: 'treasure', icon: 'ic_tre_art', col: '#e8b34a', size: [1, 1], fl: '杯沿有磨痕，也挡不住金匠的手艺。' },
+    { id: 'tre_lyre',     name: '鎏银七弦琴', r: 2, type: 'treasure', icon: 'ic_tre_art', col: '#9fc4ff', size: [2, 3], fl: '弦已锈断，琴身仍讲究得像刚离工匠之手。' },
+    { id: 'tre_specs',    name: '深空目镜', r: 1, type: 'treasure', icon: 'ic_tre_elect', col: '#6fa8ff', size: [1, 1], fl: '瞄准过远方的镜片，如今只照得出深渊。' },
+    { id: 'tre_dyn',      name: '蒸汽动力泵', r: 1, type: 'treasure', icon: 'ic_tre_fuel', col: '#c98f5a', size: [2, 1], fl: '把热能换成嘶吼的老机器，还有行情。' },
+    { id: 'tre_helmet',   name: '刻纹战盔', r: 2, type: 'treasure', icon: 'ic_tre_fashion', col: '#9fc4ff', size: [2, 2], fl: '曾属于某个无名远征者，盔内刻着一串名字。' },
+    { id: 'tre_relay',    name: '混沌继电器', r: 3, type: 'treasure', icon: 'ic_tre_elect', col: '#5ad1ff', size: [1, 1], fl: '接上电流会有细微的杂音，像在低语。' },
+    { id: 'tre_corner',   name: '首层地图', r: 1, type: 'treasure', icon: 'ic_tre_elect', col: '#9ce8b4', size: [1, 1], fl: '画着早已失效的入口路线，纸质泛黄。' },
+    { id: 'tre_jade',     name: '鎏边玉璧', r: 2, type: 'treasure', icon: 'ic_tre_art', col: '#7fd56e', size: [1, 1], fl: '中间镂空，边缘鎏金，是身份的旧信物。' }
   ];
   TREASURE.forEach(function (t) { ITEMS.push(t); });
 
@@ -432,6 +446,16 @@
       'oAAAACC.',
       '.oAAABo.',
       '..ooo...'
+    ]);
+  }
+  if (!G.PX.has('ic_tre_craft')) {
+    G.PX.tint('ic_tre_craft', [
+      '.ooooo.',
+      'oAAACCo',
+      'oAoCABo',
+      'oAooooB',
+      'oAAAABo',
+      '.ooooo.'
     ]);
   }
 

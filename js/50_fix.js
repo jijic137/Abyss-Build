@@ -10,47 +10,9 @@
     var m = g.map;
     if (!m) return;
 
-    /* 锁门（1-2 扇，优先通往宝库/精英/BOSS） */
-    var cands = [];
-    function roomType(c, r) {
-      if (c < 0 || r < 0 || c >= m.cols || r >= m.rows) return null;
-      return m.rooms[c + r * m.cols].type;
-    }
-    for (var c = 0; c < m.cols - 1; c++) {
-      for (var r = 0; r < m.rows; r++) {
-        if (!m.doorsH[c][r]) continue;
-        var t1 = roomType(c, r), t2 = roomType(c + 1, r);
-        var w = (t1 === 'treasure' || t2 === 'treasure') ? 3 :
-                (t1 === 'elite' || t2 === 'elite' || t1 === 'boss' || t2 === 'boss') ? 2 : 1;
-        cands.push({ c: c, r: r, dir: 'H', w: w });
-      }
-    }
-    for (c = 0; c < m.cols; c++) {
-      for (r = 0; r < m.rows - 1; r++) {
-        if (!m.doorsV[c][r]) continue;
-        var t3 = roomType(c, r), t4 = roomType(c, r + 1);
-        var w2 = (t3 === 'treasure' || t4 === 'treasure') ? 3 :
-                 (t3 === 'elite' || t4 === 'elite' || t3 === 'boss' || t4 === 'boss') ? 2 : 1;
-        cands.push({ c: c, r: r, dir: 'V', w: w2 });
-      }
-    }
-    cands = cands.filter(function (ld) {
-      var a = roomType(ld.c, ld.r);
-      var b = roomType(ld.dir === 'H' ? ld.c + 1 : ld.c, ld.dir === 'H' ? ld.r : ld.r + 1);
-      return a !== 'spawn' && b !== 'spawn' && a !== 'extract' && b !== 'extract';
-    });
-    var locked = [];
-    var want = m.tierId === 1 ? 1 : 2;
-    var guard = 0;
-    while (locked.length < want && cands.length && guard++ < 40) {
-      var total = cands.reduce(function (a, b) { return a + b.w; }, 0);
-      var roll = Math.random() * total, idx = 0;
-      for (var i = 0; i < cands.length; i++) { roll -= cands[i].w; if (roll <= 0) { idx = i; break; } }
-      var pick = cands.splice(idx, 1)[0];
-      pick.key = (pick.dir === 'H' ? 'H:' : 'V:') + pick.c + ':' + pick.r;
-      locked.push(pick);
-    }
-    m.lockedDoors = locked;
+    /* 锁门：统一走安全生成（保证撤离房无需钥匙可达，出生侧保留钥匙来源） */
+    if (G.secureLockDoors) m.lockedDoors = G.secureLockDoors(m);
+    else m.lockedDoors = [];
 
     /* 事件 */
     g.events = [];

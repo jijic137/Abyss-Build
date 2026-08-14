@@ -111,6 +111,9 @@
       g.traps.push(new G.Trap(rc.x0 + 170 + G.rand(0, 360), rc.y0 + 170 + G.rand(0, 360), cr.idx));
       g.barrels.push(new G.Barrel(rc.x0 + 130 + G.rand(0, 440), rc.y0 + 130 + G.rand(0, 440), cr.idx));
     }
+    /* 统一安全锁门：基于最终房型，保证撤离房无需钥匙可达、出生侧保留钥匙来源 */
+    if (G.secureLockDoors) m.lockedDoors = G.secureLockDoors(m);
+    else m.lockedDoors = [];
   };
 
   /* ---------------- 目标（统一） ---------------- */

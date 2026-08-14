@@ -703,6 +703,48 @@ function runSlots() {
   if (!s2b || s2b.currency !== 443) throw new Error('自动快照未更新 ' + JSON.stringify(s2b));
   log('  [槽位] 双槽独立✓ 切换恢复✓ 自动快照✓');
 }
+/* ---------- 18. 锁门安全压力测试 ---------- */
+function runLockSafety() {
+  log('\n===== 档案R：锁门安全压力测试 =====');
+  function lockBfs(m, lockedSet, from) {
+    const seen = {}; const q = [from]; seen[from] = 1;
+    let reach = false, keys = 0;
+    while (q.length) {
+      const cur = q.shift();
+      if (cur === m.extractRoom) reach = true;
+      const rm = m.rooms[cur];
+      if (rm && (rm.type === 'elite' || rm.type === 'treasure' || rm.type === 'boss')) keys++;
+      const cc = cur % m.cols, rr = Math.floor(cur / m.cols);
+      const nbs = [];
+      if (cc > 0 && m.doorsH[cc - 1][rr] && !lockedSet['H:' + (cc - 1) + ':' + rr]) nbs.push(cur - 1);
+      if (cc < m.cols - 1 && m.doorsH[cc][rr] && !lockedSet['H:' + cc + ':' + rr]) nbs.push(cur + 1);
+      if (rr > 0 && m.doorsV[cc][rr - 1] && !lockedSet['V:' + cc + ':' + (rr - 1)]) nbs.push(cur - m.cols);
+      if (rr < m.rows - 1 && m.doorsV[cc][rr] && !lockedSet['V:' + cc + ':' + rr]) nbs.push(cur + m.cols);
+      for (const nb of nbs) if (!seen[nb]) { seen[nb] = 1; q.push(nb); }
+    }
+    return { reach, keys };
+  }
+  let total = 0, bad = 0;
+  for (let t = 1; t <= 5; t++) {
+    for (let iter = 0; iter < 60; iter++) {
+      resetMeta();
+      G.Save.reload();
+      G.Meta.reload();
+      G.game.init();
+      G.game.newRun(G.CHAR_BY_ID['knight'], t);
+      const m = G.game.map;
+      total++;
+      const lds = m.lockedDoors || [];
+      const lockedSet = {};
+      lds.forEach(ld => { lockedSet[ld.key] = 1; });
+      const info = lockBfs(m, lockedSet, m.startRoom);
+      if (!info.reach) { bad++; log('  ✗ T' + t + ' iter' + iter + ' 撤离房被锁死'); continue; }
+      if (lds.length && !info.keys) { bad++; log('  ✗ T' + t + ' iter' + iter + ' 出生侧无钥匙来源'); }
+    }
+  }
+  if (bad) throw new Error('锁门安全失败 ' + bad + '/' + total);
+  log('  [锁门] ' + total + ' 张地图全通过：撤离恒可达 + 出生侧保留钥匙来源');
+}
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {
   log('\n===== 档案I：物品占格 (ranger / t1) =====');
@@ -775,8 +817,9 @@ function runModsPortal() {
     runCampaign16();
     runStorage();
     runSlots();
+    runLockSafety();
     runInvDrag();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 平衡✓ 16关✓ 存储✓ 槽位✓ 错误数=${ERR}`);
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 锁门安全✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 平衡✓ 16关✓ 存储✓ 槽位✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

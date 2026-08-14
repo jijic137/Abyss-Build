@@ -30,7 +30,42 @@
     return { x0: dx - DOOR / 2, y0: (ld.r + 1) * SEG, x1: dx + DOOR / 2, y1: (ld.r + 1) * SEG + W };
   }
 
-  /* 选门上锁：优先通往 宝库/精英/BOSS 房 */
+  /* ------------------------------------------------------------
+     安全选门上锁
+     核心保证（防止"钥匙死局"）：
+       1) 撤离房始终无需钥匙即可到达 —— 玩家永远不会被锁死，随时能撤离；
+       2) 锁门后出生侧保留至少一个钥匙来源房（宝库/精英/BOSS），
+          保证钥匙可以获取、锁门另一侧可以探索；
+       3) 优先锁通往 宝库/精英/BOSS 的门（权重高），数量不足时少锁。
+     ------------------------------------------------------------ */
+  function doorKey(ld) {
+    return (ld.dir === 'H' ? 'H:' : 'V:') + ld.c + ':' + ld.r;
+  }
+
+  /* 视锁门为墙，从 from 出发统计：撤离房是否可达、钥匙来源房数量 */
+  function sideInfo(map, lockedSet, from) {
+    var seen = {};
+    var q = [from];
+    seen[from] = true;
+    var keys = 0, reachExtract = false;
+    while (q.length) {
+      var cur = q.shift();
+      if (cur === map.extractRoom) reachExtract = true;
+      var rm = map.rooms[cur];
+      if (rm && (rm.type === 'elite' || rm.type === 'treasure' || rm.type === 'boss')) keys++;
+      var cc = cur % map.cols, rr = Math.floor(cur / map.cols);
+      var nbs = [];
+      if (cc > 0 && map.doorsH[cc - 1][rr] && !lockedSet['H:' + (cc - 1) + ':' + rr]) nbs.push(cur - 1);
+      if (cc < map.cols - 1 && map.doorsH[cc][rr] && !lockedSet['H:' + cc + ':' + rr]) nbs.push(cur + 1);
+      if (rr > 0 && map.doorsV[cc][rr - 1] && !lockedSet['V:' + cc + ':' + (rr - 1)]) nbs.push(cur - map.cols);
+      if (rr < map.rows - 1 && map.doorsV[cc][rr] && !lockedSet['V:' + cc + ':' + rr]) nbs.push(cur + map.cols);
+      for (var i = 0; i < nbs.length; i++) {
+        if (!seen[nbs[i]]) { seen[nbs[i]] = true; q.push(nbs[i]); }
+      }
+    }
+    return { reachExtract: reachExtract, keys: keys };
+  }
+
   function lockDoors(map) {
     var cands = [];
     var i, c, r;
@@ -63,18 +98,39 @@
     });
     var want = map.tierId === 1 ? 1 : 2;
     var locked = [];
-    var guard2 = 0;
-    while (locked.length < want && cands.length && guard2++ < 40) {
-      var total = cands.reduce(function (a, b) { return a + b.w; }, 0);
+    var lockedSet = {};
+    var source = cands.slice();
+    var guard = 0;
+    while (locked.length < want && source.length && guard++ < 80) {
+      /* 过滤：加上该门后，撤离房必须仍无需钥匙可达 */
+      var pool = [], poolAB = [];
+      for (i = 0; i < source.length; i++) {
+        var trial = {};
+        for (var k in lockedSet) trial[k] = true;
+        trial[doorKey(source[i])] = true;
+        var info = sideInfo(map, trial, map.startRoom);
+        if (!info.reachExtract) continue;                 // 会断撤离路：排除
+        pool.push(source[i]);
+        if (info.keys > 0) poolAB.push(source[i]);        // 出生侧仍有钥匙来源：优先
+      }
+      var pickPool = poolAB.length ? poolAB : pool;
+      if (!pickPool.length) break;
+      var total = 0;
+      for (i = 0; i < pickPool.length; i++) total += pickPool[i].w;
       var roll = Math.random() * total, idx = 0;
-      for (i = 0; i < cands.length; i++) { roll -= cands[i].w; if (roll <= 0) { idx = i; break; } }
-      var pick = cands.splice(idx, 1)[0];
-      pick.key = (pick.dir === 'H' ? 'H:' : 'V:') + pick.c + ':' + pick.r;
+      for (i = 0; i < pickPool.length; i++) { roll -= pickPool[i].w; if (roll <= 0) { idx = i; break; } }
+      var pick = pickPool[idx];
+      var pk = doorKey(pick);
+      source = source.filter(function (s) { return doorKey(s) !== pk; });
+      pick.key = pk;
       locked.push(pick);
+      lockedSet[pk] = true;
     }
     map.lockedDoors = locked;
     return locked;
   }
+
+  G.secureLockDoors = lockDoors;
 
   /* 锁门参与墙体判定 */
   var _solid = G.Map.solid;
@@ -155,12 +211,17 @@
     return _try.call(this);
   };
 
-  /* 钥匙掉落：精英 55% / BOSS 100% / 金箱、深渊箱 35%（上限 3） */
+  /* 钥匙掉落：精英首杀保底 100% 后 55%；BOSS 100%；金箱/深渊箱 35%（上限 3） */
   var _drop = G.game.dropLoot;
   G.game.dropLoot = function (e) {
     _drop.call(this, e);
     if (!this.map || (this.depthKeys || 0) >= 3) return;
-    var ch = e.def.boss ? 1 : (e.def.elite ? 0.55 : 0);
+    var m = this.map;
+    var ch = e.def.boss ? 1 : 0;
+    if (e.def.elite) {
+      if (!m._keyPity) { m._keyPity = true; ch = 1; }   // 每层首杀精英必掉钥匙，防卡关
+      else ch = 0.55;
+    }
     if (ch > 0 && Math.random() < ch) {
       this.depthKeys++;
       G.UI.showLootCard(keyInst());

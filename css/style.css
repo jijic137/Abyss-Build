@@ -488,6 +488,8 @@ canvas#game{
 .lv-opt .x{ font-size:11px; color:var(--dim2); margin-top:8px; line-height:1.5; }
 .lv-opt.lv-trade{ border-color:#7a3a3a; }
 .lv-opt.lv-trade .dn{ color:#ff8a8a; font-size:15px; font-weight:800; margin-top:8px; }
+.lv-opt.lv-affinity{ border-color:#46a2ff; box-shadow:0 0 14px #2b6cff33; }
+.lv-opt.lv-affinity .tag{ display:inline-block; margin-top:7px; font-size:10px; font-weight:700; color:#9fc4ff; background:#16263c; border:1px solid #2b6cff; border-radius:10px; padding:2px 8px; }
 .lv-opt.picked{
   animation:lvPop .24s ease-out;
   border-color:#ffd24a; box-shadow:0 0 0 2px #ffd24a88, 0 0 38px #ffd24a66;

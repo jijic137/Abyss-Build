@@ -148,8 +148,11 @@
     box.innerHTML = '';
     opts.forEach(function (o) {
       var d = G.STAT_MAP[o.key];
-      var card = G.el('div', 'lv-opt' + (o.trade ? ' lv-trade' : ''));
+      var affinity = p.chars && p.chars.affinity ? p.chars.affinity.indexOf(o.key) >= 0
+        : (p.char && p.char.affinity ? p.char.affinity.indexOf(o.key) >= 0 : false);
+      var card = G.el('div', 'lv-opt' + (o.trade ? ' lv-trade' : '') + (affinity ? ' lv-affinity' : ''));
       card.appendChild(G.el('div', 'n', d.name));
+      if (affinity) card.appendChild(G.el('div', 'tag', '契合本角色'));
       card.appendChild(G.el('div', 'd', G.modText(o.key, o.val)));
       if (o.negKey) {
         var nd = G.STAT_MAP[o.negKey];

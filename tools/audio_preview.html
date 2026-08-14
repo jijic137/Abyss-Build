@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>深渊猎手 · 音效试听台</title>
+<title>深渊猎手 · 音效试听台 2.0</title>
 <style>
   :root{
     --bg:#0e0f17; --panel:#171a26; --panel2:#1f2333; --line:#2a2f44;
@@ -13,22 +13,23 @@
   body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a1d2e,#0e0f17);
        color:var(--txt);font:15px/1.5 "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
        min-height:100vh;padding:28px 16px 60px}
-  .wrap{max-width:880px;margin:0 auto}
+  .wrap{max-width:980px;margin:0 auto}
   h1{font-size:24px;margin:0 0 4px;letter-spacing:1px}
   .tip{color:var(--sub);margin:0 0 22px;font-size:13px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 20px;margin-bottom:18px}
   .card h2{font-size:14px;margin:0 0 14px;color:var(--sub);text-transform:uppercase;letter-spacing:2px;font-weight:600}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
-  button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--txt);
-         padding:11px 10px;border-radius:10px;font-size:14px;transition:.12s;display:flex;
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .grid button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--txt);
+         padding:10px 8px;border-radius:10px;font-size:14px;transition:.12s;display:flex;
          flex-direction:column;align-items:center;gap:2px}
-  button:hover{border-color:var(--acc);background:#262b40;transform:translateY(-1px)}
-  button:active{transform:translateY(0);background:var(--acc2)}
-  button .zh{font-size:12px;color:var(--sub)}
+  .grid button:hover{border-color:var(--acc);background:#262b40;transform:translateY(-1px)}
+  .grid button:active{transform:translateY(0);background:var(--acc2)}
+  .grid button .zh{font-size:12px;color:var(--sub)}
+  .grid button .vs{font-size:10.5px;color:#b9a7ff;letter-spacing:1px}
+  button{cursor:pointer}
   button.primary{background:linear-gradient(180deg,#7d6bff,#5a48d6);border-color:#8b7cff;color:#fff;font-weight:600}
-  button.primary:hover{filter:brightness(1.08)}
   button.danger{border-color:#5a2230;color:#ff9d9d}
-  button.danger:hover{background:#3a1a22}
+  button.demo{background:linear-gradient(180deg,#3b2f8c,#2b215f);border-color:#6b5ce0;color:#e6e9ff;font-weight:600;padding:11px 18px;border-radius:10px}
   .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px}
   .row label{color:var(--sub);min-width:84px;font-size:13px}
   input[type=range]{flex:1;min-width:160px;accent-color:var(--acc)}
@@ -36,35 +37,95 @@
   .status{font-size:13px;color:var(--sub);margin-top:10px}
   .status b{color:var(--ok)}
   .pill{display:inline-block;padding:2px 9px;border-radius:999px;background:#20243a;border:1px solid var(--line);font-size:12px;color:var(--sub)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{border:0;background:var(--panel2);color:var(--sub);padding:9px 20px;font-size:14px;transition:.12s}
+  .seg button + button{border-left:1px solid var(--line)}
+  .seg button:hover{color:var(--txt);background:#262b40}
+  .seg button.on{background:linear-gradient(180deg,#ffd24a,#e8a726);color:#201a05;font-weight:700}
+  .demo-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
   .footer{color:var(--sub);font-size:12px;margin-top:8px;line-height:1.7}
   code{background:#20243a;padding:1px 6px;border-radius:6px;color:#c9c9ff}
+  .grp{margin-bottom:14px}
+  .grp .gtitle{font-size:12px;color:#8fa3d8;letter-spacing:2px;margin:0 0 8px}
   .demo-note{color:var(--sub);font-size:12px;margin:6px 0 0}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>深渊猎手 · 音效试听台</h1>
-  <p class="tip">本页直接加载游戏里的 <code>js/12_audio.js</code> 合成引擎。点任意按钮即可试听（首次点击会解锁浏览器音频）。无需联网、无外部文件。</p>
+  <h1>深渊猎手 · 音效试听台 2.0</h1>
+  <p class="tip">加载 <code>12_audio.js</code> + <code>17_audio.js</code> + <code>65_audio2.js</code>。三档风格（经典 / 冲击 / 史诗）切换后，关键音效会有不同听感；带 v1/v2/v3 的是多版本方案，方便挑版本。首次点击解锁浏览器音频。</p>
 
   <div class="card">
-    <h2>全部音效（15 个）</h2>
-    <div class="grid" id="sfxGrid"></div>
-    <p class="demo-note">提示：<b>开火 / 命中 / 暴击 / 击杀</b> 每次触发都有随机音高微调，连点能听出“非机械感”。</p>
+    <h2>音效风格（全局）</h2>
+    <div class="seg" id="styleSeg">
+      <button data-style="1">经典</button>
+      <button data-style="2" class="on">冲击</button>
+      <button data-style="3">史诗</button>
+    </div>
+    <p class="demo-note">点击切换后自动试听一段 <b>crit</b> 暴击；设置会写入 localStorage，与游戏内设置页「音效风格」同步。</p>
   </div>
 
   <div class="card">
-    <h2>立体声定位</h2>
+    <h2>战斗</h2>
+    <div class="grp">
+      <div class="gtitle">射击 / 挥砍</div>
+      <div class="grid" id="gCombat1"></div>
+    </div>
+    <div class="grp">
+      <div class="gtitle">命中 / 暴击 / 击杀</div>
+      <div class="grid" id="gCombat2"></div>
+    </div>
+    <div class="grp">
+      <div class="gtitle">受击 / 死亡 / BOSS</div>
+      <div class="grid" id="gCombat3"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>出货</h2>
+    <div class="grp">
+      <div class="gtitle">开箱（白 → 红）</div>
+      <div class="grid" id="gChest"></div>
+    </div>
+    <div class="grp">
+      <div class="gtitle">物品弹出（白 → 红）</div>
+      <div class="grid" id="gLoot"></div>
+    </div>
+    <div class="grp">
+      <div class="gtitle">拾取 / 入包 / 市场</div>
+      <div class="grid" id="gLoot2"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>流程</h2>
+    <div class="grid" id="gFlow"></div>
+  </div>
+
+  <div class="card">
+    <h2>UI</h2>
+    <div class="grid" id="gUi"></div>
+  </div>
+
+  <div class="card">
+    <h2>演示</h2>
+    <div class="demo-row">
+      <button class="demo" id="btnCombo">⚔ 战斗连招（射击×3 → 暴击 → 击杀）</button>
+      <button class="demo" id="btnChest">🎁 开箱出货 白→绿→蓝→紫→红</button>
+      <button class="demo" id="btnExtract">⌛ 撤离流程（开放 → 引导 → 成功）</button>
+      <button class="demo" id="btnDescend">⬇ 深入下一层</button>
+    </div>
+    <p class="demo-note">演示按游戏内的真实节奏连放，模拟"战斗爽感"和"出货反馈"。</p>
+  </div>
+
+  <div class="card">
+    <h2>立体声 / 音量 / 音乐</h2>
     <div class="row">
       <label>声像 Pan</label>
       <input type="range" id="pan" min="-1" max="1" step="0.05" value="0">
-      <span class="panval" id="panVal">中 0.00</span>
+      <span class="panval" id="panVal">中 · 0.00</span>
     </div>
-    <p class="demo-note">拖动滑块后点下面的按钮：负值=左耳，正值=右耳。俯视战斗里，左边挨打/右边开火就是这么定位的。</p>
     <div class="row" id="panBtns" style="margin-top:12px"></div>
-  </div>
-
-  <div class="card">
-    <h2>音量 / 音乐</h2>
     <div class="row">
       <label>总音量</label>
       <input type="range" id="vol" min="0" max="1" step="0.02" value="0.22">
@@ -83,80 +144,177 @@
 
   <div class="card">
     <h2>状态</h2>
-    <div class="status" id="status">音频：<b id="actx">未解锁</b> ｜ <span class="pill" id="bpm">BGM 休止</span></div>
+    <div class="status">音频：<b id="actx">未解锁</b> ｜ <span class="pill" id="bpm">BGM 休止</span> ｜ 当前风格：<span class="pill" id="stylePill">冲击</span></div>
     <p class="footer">
-      想听某音效在“战斗里”的感觉？打开游戏 <code>index.html</code> 直接玩即可，所有调用都走同一套引擎。<br>
-      接口：<code>G.Audio.sfx('fire', pan)</code> · <code>G.Audio.startMusic()</code> · <code>G.Audio.setVolume(v)</code>
+      接口：<code>G.Audio.sfx('crit', pan)</code> ｜ <code>G.Audio.sfx('chest_open', 0, {tier:4})</code> ｜ <code>G.Loot.sfx(tier)</code> ｜ <code>G.Audio.setSfxStyle(1|2|3)</code><br>
+      想听"在游戏里"的效果？直接打开 <code>index.html</code> 游玩，所有调用走同一套引擎。
     </p>
   </div>
 </div>
 
 <script src="../js/12_audio.js"></script>
+<script src="../js/17_audio.js"></script>
+<script src="../js/65_audio2.js"></script>
 <script>
-(function(){
+(function () {
   var A = window.G && window.G.Audio;
-  if(!A){ document.getElementById('status').innerHTML='<span style="color:#ff6b6b">加载失败：未找到 G.Audio</span>'; return; }
-
-  var NAMES = [
-    ['fire','开火'], ['swing','挥击'], ['hit','命中'], ['crit','暴击'],
-    ['kill','击杀'], ['bossdie','BOSS亡'], ['pickup','拾取'], ['heal','治疗'],
-    ['wave','波次'], ['boss','BOSS现'], ['levelup','升级'], ['buy','购买'],
-    ['hurt','受伤'], ['death','死亡'], ['victory','胜利']
-  ];
-
-  var grid = document.getElementById('sfxGrid');
-  NAMES.forEach(function(n){
-    var b = document.createElement('button');
-    b.innerHTML = n[0] + '<span class="zh">'+n[1]+'</span>';
-    b.addEventListener('click', function(){ ensure(); A.sfx(n[0], curPan()); });
-    grid.appendChild(b);
-  });
-
-  // 立体声演示
-  var panBtns = document.getElementById('panBtns');
-  [['hit','左耳命中',-0.8],['hit','右耳命中',0.8],['crit','左暴击',-0.6],['crit','右暴击',0.6]]
-    .forEach(function(d){
-      var b = document.createElement('button');
-      b.innerHTML = d[1];
-      b.addEventListener('click', function(){ ensure(); A.sfx(d[0], d[2]); });
-      panBtns.appendChild(b);
-    });
-
-  var panEl = document.getElementById('pan'), panVal = document.getElementById('panVal');
-  function curPan(){ return parseFloat(panEl.value)||0; }
-  function fmtPan(p){
-    if(Math.abs(p)<0.02) return '中 '+p.toFixed(2);
-    return (p<0?'左 ':'右 ')+Math.abs(p).toFixed(2);
+  if (!A) {
+    document.getElementById('status').innerHTML = '<span style="color:#ff6b6b">加载失败：未找到 G.Audio</span>';
+    return;
   }
-  panEl.addEventListener('input', function(){ panVal.textContent = fmtPan(curPan()); });
 
-  // 音量
-  var vol = document.getElementById('vol'), volVal = document.getElementById('volVal');
-  vol.addEventListener('input', function(){ A.setVolume(parseFloat(vol.value)); volVal.textContent = parseFloat(vol.value).toFixed(2); });
-  var mvol = document.getElementById('mvol'), mvolVal = document.getElementById('mvolVal');
-  mvol.addEventListener('input', function(){ A.setMusicVolume(parseFloat(mvol.value)); mvolVal.textContent = parseFloat(mvol.value).toFixed(2); });
-
-  // 音乐
-  var musicOn = false, btnMusic = document.getElementById('btnMusic');
-  btnMusic.addEventListener('click', function(){
-    ensure();
-    if(!musicOn){ A.startMusic(); musicOn=true; btnMusic.textContent='⏸ 停止 BGM'; document.getElementById('bpm').textContent='BGM 播放中 · '+A._bpm+' BPM'; }
-    else { A.stopMusic(); musicOn=false; btnMusic.textContent='▶ 播放 BGM（程序化芯片乐）'; document.getElementById('bpm').textContent='BGM 休止'; }
-  });
-
-  document.getElementById('btnMute').addEventListener('click', function(){ A.toggleMute(); });
-
-  // 解锁
   var unlocked = false;
-  function ensure(){
-    if(unlocked){ if(A.ctx && A.ctx.state==='suspended') A.ctx.resume(); return; }
+  function ensure() {
+    if (unlocked) { if (A.ctx && A.ctx.state === 'suspended') A.ctx.resume(); return; }
     A.unlock();
     unlocked = true;
     var st = document.getElementById('actx');
     st.textContent = (A.ctx && A.ctx.state) ? A.ctx.state : '已解锁';
     st.style.color = '#4fd6a0';
   }
-  document.addEventListener('click', ensure, {once:false});
+  document.addEventListener('click', ensure);
+
+  function btn(label, zh, fn, vs) {
+    var b = document.createElement('button');
+    b.innerHTML = label + '<span class="zh">' + zh + '</span>' + (vs ? '<span class="vs">' + vs + '</span>' : '');
+    b.addEventListener('click', function () { ensure(); fn(); });
+    return b;
+  }
+  function addTo(id, label, zh, name, opts, vs) {
+    document.getElementById(id).appendChild(btn(label, zh, function () {
+      A.sfx(name, curPan(), opts);
+    }, vs));
+  }
+  function addVariants(id, label, zh, base) {
+    addTo(id, base, zh, base, null, 'v1 经典');
+    addTo(id, base + '·2', zh, base + '_v2', null, 'v2 冲击');
+    addTo(id, base + '·3', zh, base + '_v3', null, 'v3 史诗');
+  }
+
+  /* 战斗 */
+  addVariants('gCombat1', 'fire', '射击', 'fire');
+  addVariants('gCombat1', 'swing', '挥砍', 'swing');
+  addVariants('gCombat2', 'hit', '命中', 'hit');
+  addVariants('gCombat2', 'crit', '暴击', 'crit');
+  addVariants('gCombat2', 'kill', '击杀', 'kill');
+  addVariants('gCombat3', 'hurt', '受伤', 'hurt');
+  addVariants('gCombat3', 'death', '死亡', 'death');
+  addVariants('gCombat3', 'boss', 'BOSS 登场', 'boss');
+  addVariants('gCombat3', 'bossdie', 'BOSS 死亡', 'bossdie');
+  addTo('gCombat3', 'heal', '治疗', 'heal');
+
+  /* 出货 */
+  var TNAMES = ['白', '绿', '蓝', '紫', '红'];
+  var TCOLS = ['#d9dde8', '#7ee787', '#7db4ff', '#c07fff', '#ff6b6b'];
+  TNAMES.forEach(function (nm, i) {
+    addTo('gChest', 'chest_t' + i, '开箱·' + nm, 'chest_open', { tier: i }, '<span style="color:' + TCOLS[i] + '">' + nm + '</span>');
+    addTo('gLoot', 'loot_t' + i, '出货·' + nm, 'loot', { tier: i }, '<span style="color:' + TCOLS[i] + '">' + nm + '</span>');
+  });
+  addTo('gChest', 'chest_start', '开箱起手', 'chest_start');
+  addVariants('gLoot2', 'item_get', '物品入包', 'item_get');
+  addTo('gLoot2', 'pickup', '拾取材料/金币', 'pickup');
+  addTo('gLoot2', 'buy', '购买', 'buy');
+  addTo('gLoot2', 'reroll', '重随', 'reroll');
+
+  /* 流程 */
+  addTo('gFlow', 'map_enter', '进图', 'map_enter');
+  addTo('gFlow', 'descend', '深入下一层', 'descend');
+  addVariants('gFlow', 'extract_ready', '撤离开放', 'extract_ready');
+  addTo('gFlow', 'extract_start', '撤离引导', 'extract_start');
+  addVariants('gFlow', 'extract_done', '撤离成功', 'extract_done');
+  addVariants('gFlow', 'victory', '胜利', 'victory');
+  addTo('gFlow', 'lose', '失败', 'lose');
+  addTo('gFlow', 'save', '存档', 'save');
+  addTo('gFlow', 'levelup', '升级', 'levelup');
+  addTo('gFlow', 'abyss', '进入深渊', 'abyss');
+
+  /* UI */
+  addTo('gUi', 'select', '选中', 'select');
+  addTo('gUi', 'confirm', '确认', 'confirm');
+  addTo('gUi', 'back', '返回', 'back');
+  addTo('gUi', 'hover', '悬停', 'hover');
+
+  /* 演示 */
+  document.getElementById('btnCombo').addEventListener('click', function () {
+    ensure();
+    var p = curPan();
+    A.sfx('fire', p); A.sfx('fire', p); A.sfx('fire', p);
+    setTimeout(function () { A.sfx('hit', p); }, 260);
+    setTimeout(function () { A.sfx('crit', p); }, 520);
+    setTimeout(function () { A.sfx('kill', p); }, 820);
+  });
+  document.getElementById('btnChest').addEventListener('click', function () {
+    ensure();
+    for (var i = 0; i <= 4; i++) {
+      (function (t) {
+        setTimeout(function () {
+          A.sfx('chest_open', 0, { tier: t });
+          setTimeout(function () { A.sfx('loot', 0, { tier: t }); }, 260);
+        }, t * 900);
+      })(i);
+    }
+  });
+  document.getElementById('btnExtract').addEventListener('click', function () {
+    ensure();
+    A.sfx('extract_ready');
+    setTimeout(function () { A.sfx('extract_start'); }, 700);
+    setTimeout(function () { A.sfx('extract_done'); }, 1900);
+  });
+  document.getElementById('btnDescend').addEventListener('click', function () { ensure(); A.sfx('descend'); });
+
+  /* 风格切换 */
+  function syncStyle() {
+    var seg = document.getElementById('styleSeg');
+    var btns = seg.querySelectorAll('button');
+    btns.forEach(function (b) {
+      b.classList.toggle('on', parseInt(b.getAttribute('data-style'), 10) === A.sfxStyle);
+    });
+    document.getElementById('stylePill').textContent = A.sfxStyleName();
+  }
+  document.getElementById('styleSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    A.setSfxStyle(parseInt(b.getAttribute('data-style'), 10));
+    syncStyle();
+    ensure();
+    A.sfx('crit');
+  });
+  syncStyle();
+
+  /* 立体声 */
+  var panEl = document.getElementById('pan'), panVal = document.getElementById('panVal');
+  function curPan() { return parseFloat(panEl.value) || 0; }
+  function fmtPan(p) {
+    if (Math.abs(p) < 0.02) return '中 · ' + p.toFixed(2);
+    return (p < 0 ? '左 · ' : '右 · ') + Math.abs(p).toFixed(2);
+  }
+  panEl.addEventListener('input', function () { panVal.textContent = fmtPan(curPan()); });
+  [['hit', '左耳命中', -0.8], ['hit', '右耳命中', 0.8], ['crit', '左暴击', -0.6], ['crit', '右暴击', 0.6]]
+    .forEach(function (d) {
+      document.getElementById('panBtns').appendChild(btn(d[1], '', function () { A.sfx(d[0], d[2]); }));
+    });
+
+  /* 音量 */
+  var vol = document.getElementById('vol'), volVal = document.getElementById('volVal');
+  vol.addEventListener('input', function () { A.setVolume(parseFloat(vol.value)); volVal.textContent = parseFloat(vol.value).toFixed(2); });
+  var mvol = document.getElementById('mvol'), mvolVal = document.getElementById('mvolVal');
+  mvol.addEventListener('input', function () { A.setMusicVolume(parseFloat(mvol.value)); mvolVal.textContent = parseFloat(mvol.value).toFixed(2); });
+
+  /* BGM */
+  var musicOn = false, btnMusic = document.getElementById('btnMusic');
+  btnMusic.addEventListener('click', function () {
+    ensure();
+    if (!musicOn) {
+      A.startMusic(); musicOn = true;
+      btnMusic.textContent = '⏸ 停止 BGM';
+      document.getElementById('bpm').textContent = 'BGM 播放中 · ' + A._bpm + ' BPM';
+    } else {
+      A.stopMusic(); musicOn = false;
+      btnMusic.textContent = '▶ 播放 BGM（程序化芯片乐）';
+      document.getElementById('bpm').textContent = 'BGM 休止';
+    }
+  });
+  document.getElementById('btnMute').addEventListener('click', function () { A.toggleMute(); });
 })();
 </script>
 </body>

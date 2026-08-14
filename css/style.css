@@ -388,6 +388,11 @@ canvas#game{
 .set-row label{ width:84px; text-align:right; flex:none; }
 .set-row input[type=range]{ flex:1; accent-color:#ffd24a; cursor:pointer; }
 .set-val{ width:48px; text-align:left; color:var(--dim); font-variant-numeric:tabular-nums; }
+.seg{ display:inline-flex; flex:1; border:1px solid rgba(110,150,230,.22); border-radius:9px; overflow:hidden; background:rgba(12,18,34,.5); }
+.seg-btn{ flex:1; border:0; background:transparent; color:#9fb0d8; font-size:13px; padding:6px 0; cursor:pointer; transition:.12s; }
+.seg-btn + .seg-btn{ border-left:1px solid rgba(110,150,230,.14); }
+.seg-btn:hover{ background:rgba(110,150,230,.12); color:#dfe7ff; }
+.seg-btn.on{ background:linear-gradient(180deg,#ffd24a,#e8a726); color:#201a05; font-weight:700; }
 
 /* 设置页 · 操作说明 */
 .set-help{

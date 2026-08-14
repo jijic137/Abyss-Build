@@ -81,6 +81,17 @@
       byId('setBgmVal').textContent = s.bgm ? '开' : '关';
       byId('setShake').value = s.shake;
       byId('setShakeVal').textContent = Math.round(s.shake * 100) + '%';
+      syncSfxStyle();
+    }
+    function syncSfxStyle() {
+      var btns = document.querySelectorAll('#setSfxStyle .seg-btn');
+      var val = byId('setSfxStyleVal');
+      var cur = G.Audio.sfxStyle || 2;
+      btns.forEach(function (b) {
+        var on = parseInt(b.getAttribute('data-style'), 10) === cur;
+        b.classList.toggle('on', on);
+      });
+      if (val) val.textContent = G.Audio.sfxStyleName ? G.Audio.sfxStyleName() : (cur === 1 ? '经典' : cur === 3 ? '史诗' : '冲击');
     }
     function openSettings(from) { populateSettings(); G.UI.openSettings(from); }
     byId('btnSettings').addEventListener('click', function () { openSettings('title'); });
@@ -108,6 +119,15 @@
       G.game.shakeScale = v;
       byId('setShakeVal').textContent = Math.round(v * 100) + '%';
       G.Save.setSettings({ shake: v });
+    });
+    var styleBtns = document.querySelectorAll('#setSfxStyle .seg-btn');
+    styleBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var n = parseInt(b.getAttribute('data-style'), 10);
+        G.Audio.setSfxStyle(n);
+        syncSfxStyle();
+        G.Audio.sfx('crit');
+      });
     });
     byId('btnSettingsBack').addEventListener('click', function () { G.UI.closeSettings(); });
 

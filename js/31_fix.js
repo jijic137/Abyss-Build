@@ -23,7 +23,7 @@
     G.fx('ring', { x: c.x, y: c.y, r0: 8, r1: 150, col: col, w: 5, life: 0.5 });
     G.fx('flash', { x: c.x, y: c.y, r: 60, col: col, life: 0.2 });
     this.shake(6, 0.22);
-    G.Audio.sfx('chest_open');
+    G.Audio.sfx('chest_open', 0, { tier: (G.chestTierOf && c.type) ? G.chestTierOf(c.type) : 1 });
     if (out) this.applyContainerReward(c, out);
     this.saveRun();
   };

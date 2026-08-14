@@ -53,6 +53,7 @@
       var g = G.game;
       if (!g || !g.player || !g.map) return;
       g.saveRun();
+      G.Audio.sfx('save');
       G.Audio.sfx('select');
       G.UI.flashText(btnSave, '✓ 进度已保存');
     });

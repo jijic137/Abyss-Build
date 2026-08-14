@@ -135,15 +135,7 @@
   };
 
   function ldRect(ld) {
-    var SEG = G.Map.SEG, W = G.Map.WALL, DOOR = G.Map.DOOR;
-    if (ld.dir === 'H') {
-      var rc = G.Map.roomRect(ld.c, ld.r);
-      var dy = rc.y0 + G.Map.ROOM / 2;
-      return { x0: (ld.c + 1) * SEG, y0: dy - DOOR / 2, x1: (ld.c + 1) * SEG + W, y1: dy + DOOR / 2 };
-    }
-    var rc2 = G.Map.roomRect(ld.c, ld.r);
-    var dx = rc2.x0 + G.Map.ROOM / 2;
-    return { x0: dx - DOOR / 2, y0: (ld.r + 1) * SEG, x1: dx + DOOR / 2, y1: (ld.r + 1) * SEG + W };
+    return G.Map.doorRect(G.game.map, ld);
   }
 
 })();

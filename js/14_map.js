@@ -36,12 +36,126 @@
     return ((tierId * 7919 + (salt || 0) * 104729) >>> 0) || 1;
   }
 
+  /* ---------------- 拓扑风格（层 1） ---------------- */
+  function styleOf(rng) {
+    var r = rng.next();
+    if (r < 0.22) return { id: 'maze', backEdge: 0.10, merge: 0.18, interior: 0.55 };
+    if (r < 0.72) return { id: 'standard', backEdge: 0.22, merge: 0.30, interior: 0.45 };
+    return { id: 'open', backEdge: 0.34, merge: 0.42, interior: 0.38 };
+  }
+
+  /* ---------------- 房间合并（层 2）：战斗房组合成 1x2/2x1/2x2/L 大空间 ---------------- */
+  function mergeCombatRooms(map, rng, style) {
+    var cols = map.cols, rows = map.rows, rooms = map.rooms;
+    var internal = map.internalDoors;
+    var used = {};
+    var merged = 0;
+    for (var idx = 0; idx < rooms.length; idx++) {
+      if (used[idx]) continue;
+      var rm = rooms[idx];
+      if (rm.type !== 'combat') continue;
+      var cc = rm.c, rr = rm.r;
+      var group = [idx];
+      var horiz = cc < cols - 1 && !used[idx + 1] && rooms[idx + 1].type === 'combat' &&
+                  rng.chance(style.merge);
+      var vert = rr < rows - 1 && !used[idx + cols] && rooms[idx + cols].type === 'combat' &&
+                 rng.chance(style.merge);
+      if (horiz) group.push(idx + 1);
+      if (vert) group.push(idx + cols);
+      if (horiz && vert && cc < cols - 1 && rr < rows - 1) {
+        var br = idx + 1 + cols;
+        if (!used[br] && rooms[br].type === 'combat' && rng.chance(0.72)) {
+          group.push(br);
+          /* L 形：随机挖掉一个角，保留 3 格 */
+          if (group.length === 4 && rng.chance(0.35)) {
+            group.splice(1 + rng.int(0, 2), 1);
+          }
+        }
+      }
+      if (group.length < 2) continue;
+      for (var g = 0; g < group.length; g++) {
+        var gid = group[g];
+        used[gid] = true;
+        rooms[gid].group = idx;
+        var gc = gid % cols, gr = Math.floor(gid / cols);
+        if (gc < cols - 1 && group.indexOf(gid + 1) >= 0) {
+          map.doorsH[gc][gr] = true;
+          internal['H:' + gc + ':' + gr] = true;
+        }
+        if (gc > 0 && group.indexOf(gid - 1) >= 0) {
+          map.doorsH[gc - 1][gr] = true;
+          internal['H:' + (gc - 1) + ':' + gr] = true;
+        }
+        if (gr < rows - 1 && group.indexOf(gid + cols) >= 0) {
+          map.doorsV[gc][gr] = true;
+          internal['V:' + gc + ':' + gr] = true;
+        }
+        if (gr > 0 && group.indexOf(gid - cols) >= 0) {
+          map.doorsV[gc][gr - 1] = true;
+          internal['V:' + gc + ':' + (gr - 1)] = true;
+        }
+      }
+      rooms[idx].group = idx;
+      merged++;
+    }
+    return merged;
+  }
+
+  /* ---------------- 房内结构（层 3）：单格战斗房内部掩体 ---------------- */
+  function buildInterior(map, rng, style) {
+    var interior = [];
+    var byRoom = {};
+    map.rooms.forEach(function (rm) {
+      if (rm.type !== 'combat') return;
+      if (rm.group != null && rm.group !== rm.idx) return;   // 合并房保持开敞
+      if (!rng.chance(style.interior)) return;
+      var kind = rng.pick(['pillar', 'cross', 'corner', 'alcove', 'ruins']);
+      var rects = [];
+      var rc = G.Map.roomRect(rm.c, rm.r);
+      var cx = (rc.x0 + rc.x1) / 2, cy = (rc.y0 + rc.y1) / 2;
+      if (kind === 'pillar') {
+        /* 四角柱：中央 300px 安全区恒空，不挡门口 */
+        rects.push([rc.x0 + 90, rc.y0 + 90, rc.x0 + 154, rc.y0 + 154]);
+        rects.push([rc.x1 - 154, rc.y0 + 90, rc.x1 - 90, rc.y0 + 154]);
+        rects.push([rc.x0 + 90, rc.y1 - 154, rc.x0 + 154, rc.y1 - 90]);
+        rects.push([rc.x1 - 154, rc.y1 - 154, rc.x1 - 90, rc.y1 - 90]);
+      } else if (kind === 'cross') {
+        /* 十字四段：中央 300px 安全区留空，两端留绕行口 */
+        rects.push([rc.x0 + 70, cy - 14, cx - 150, cy + 14]);
+        rects.push([cx + 150, cy - 14, rc.x1 - 70, cy + 14]);
+        rects.push([cx - 14, rc.y0 + 70, cx + 14, cy - 150]);
+        rects.push([cx - 14, cy + 150, cx + 14, rc.y1 - 70]);
+      } else if (kind === 'corner') {
+        rects.push([rc.x0 + 40, rc.y0 + 40, rc.x0 + 190, rc.y1 - 40]);
+        rects.push([rc.x0 + 40, rc.y0 + 40, rc.x1 - 40, rc.y0 + 190]);
+      } else if (kind === 'alcove') {
+        rects.push([rc.x0 + 40, rc.y0 + 40, rc.x1 - 40, rc.y0 + 190]);
+        rects.push([rc.x0 + 40, rc.y1 - 190, rc.x1 - 40, rc.y1 - 40]);
+      } else { /* ruins */
+        var n = rng.int(3, 5);
+        for (var i = 0; i < n; i++) {
+          var w = rng.int(60, 110), h = rng.int(50, 100);
+          var rx = rc.x0 + 70 + rng.range(0, Math.max(1, ROOM - 140 - w));
+          var ry = rc.y0 + 70 + rng.range(0, Math.max(1, ROOM - 140 - h));
+          /* 块与中心 300px 安全区相交则跳过 */
+          if (rx + w > cx - 150 && rx < cx + 150 && ry + h > cy - 150 && ry < cy + 150) continue;
+          rects.push([rx, ry, rx + w, ry + h]);
+        }
+      }
+      if (!rects.length) return;
+      interior.push({ room: rm.idx, kind: kind, rects: rects });
+      byRoom[rm.idx] = rects;
+    });
+    return { interior: interior, byRoom: byRoom };
+  }
+
   /* ---------------- 生成 ---------------- */
   function generate(tierId, salt) {
     var tier = G.TIER_MAP[tierId];
     if (!tier) tier = G.TIERS[0];
     var cols = tier.grid[0], rows = tier.grid[1];
     var rng = new Rng(seedFromTier(tierId, salt));
+    var style = styleOf(rng);
 
     var worldW = cols * ROOM + (cols + 1) * WALL;
     var worldH = rows * ROOM + (rows + 1) * WALL;
@@ -73,19 +187,32 @@
       if (f[2] !== 0) doorsH[Math.min(f[0], nc)][f[1]] = true;   // 水平门
       else doorsV[f[0]][Math.min(f[1], nr)] = true;              // 垂直门
       pushFrontier(nc, nr);
-      if (rng.chance(0.22)) {   // 回边：增加环路，探索更自由
+      if (rng.chance(style.backEdge)) {   // 回边：增加环路，探索更自由
         if (f[2] !== 0 && !doorsH[Math.min(f[0], nc)][f[1]]) doorsH[Math.min(f[0], nc)][f[1]] = true;
       }
     }
-    /* 再随机补一些回边（20%） */
+    /* 再按风格随机补一些回边 */
     for (c = 0; c < cols - 1; c++) {
       for (r = 0; r < rows; r++) {
-        if (!doorsH[c][r] && rng.chance(0.20)) doorsH[c][r] = true;
+        if (!doorsH[c][r] && rng.chance(style.backEdge)) doorsH[c][r] = true;
       }
     }
     for (c = 0; c < cols; c++) {
       for (r = 0; r < rows - 1; r++) {
-        if (!doorsV[c][r] && rng.chance(0.20)) doorsV[c][r] = true;
+        if (!doorsV[c][r] && rng.chance(style.backEdge)) doorsV[c][r] = true;
+      }
+    }
+
+    /* 门偏移（层 4）：沿墙方向错位，±140px 且门边留足空间 */
+    var doorOffs = {};
+    for (c = 0; c < cols - 1; c++) {
+      for (r = 0; r < rows; r++) {
+        if (doorsH[c][r]) doorOffs['H:' + c + ':' + r] = Math.round(rng.range(-140, 140));
+      }
+    }
+    for (c = 0; c < cols; c++) {
+      for (r = 0; r < rows - 1; r++) {
+        if (doorsV[c][r]) doorOffs['V:' + c + ':' + r] = Math.round(rng.range(-140, 140));
       }
     }
 
@@ -165,6 +292,15 @@
       if (rm.type === 'boss') rm.bossId = tierId === 5 ? 'boss_abyss' : 'boss_behemoth';
     });
 
+    /* 多样性：合并战斗房成 1x2/2x1/2x2/L 大空间 + 单格房内部结构 */
+    var internalDoors = {};
+    var tmpMap = {
+      cols: cols, rows: rows, rooms: rooms,
+      doorsH: doorsH, doorsV: doorsV, internalDoors: internalDoors
+    };
+    mergeCombatRooms(tmpMap, rng, style);
+    var interiorRes = buildInterior(tmpMap, rng, style);
+
     /* 容器 */
     function roomRect(c2, r2) {
       return { x0: c2 * SEG + WALL, y0: r2 * SEG + WALL, x1: c2 * SEG + WALL + ROOM, y1: r2 * SEG + WALL + ROOM };
@@ -172,10 +308,20 @@
     function placeInRoom(rm, pad) {
       var rc = roomRect(rm.c, rm.r);
       pad = pad || 90;
-      return {
-        x: rc.x0 + pad + rng.range(0, ROOM - pad * 2),
-        y: rc.y0 + pad + rng.range(0, ROOM - pad * 2)
-      };
+      var rects = interiorRes.byRoom[rm.idx];
+      for (var t = 0; t < 8; t++) {
+        var px = rc.x0 + pad + rng.range(0, ROOM - pad * 2);
+        var py = rc.y0 + pad + rng.range(0, ROOM - pad * 2);
+        var hit = false;
+        if (rects) {
+          for (var i = 0; i < rects.length; i++) {
+            if (px > rects[i][0] - 34 && px < rects[i][2] + 34 &&
+                py > rects[i][1] - 34 && py < rects[i][3] + 34) { hit = true; break; }
+          }
+        }
+        if (!hit) return { x: px, y: py };
+      }
+      return { x: rc.x0 + ROOM / 2, y: rc.y0 + ROOM / 2 };
     }
     var containers = [];
     rooms.forEach(function (rm) {
@@ -223,8 +369,11 @@
       salt: salt || 0,
       tierId: tierId, tier: tier,
       cols: cols, rows: rows,
+      style: style.id,
       worldW: worldW, worldH: worldH,
       rooms: rooms, doorsH: doorsH, doorsV: doorsV,
+      doorOffs: doorOffs, internalDoors: internalDoors,
+      interior: interiorRes.interior, interiorByRoom: interiorRes.byRoom,
       spawn: spawn, extract: extract,
       containers: containers,
       startRoom: start, extractRoom: extractIdx,
@@ -260,21 +409,46 @@
       var offX = relX - c * SEG, offY = relY - r * SEG;
       var inVWall = offX >= ROOM;
       var inHWall = offY >= ROOM;
-      if (!inVWall && !inHWall) return false;
+      if (!inVWall && !inHWall) {
+        /* 房内结构：实心掩体 */
+        var rects = map.interiorByRoom && map.interiorByRoom[c + r * map.cols];
+        if (rects) {
+          for (var k = 0; k < rects.length; k++) {
+            var rr2 = rects[k];
+            if (x >= rr2[0] && x <= rr2[2] && y >= rr2[1] && y <= rr2[3]) return true;
+          }
+        }
+        return false;
+      }
       var rc = G.Map.roomRect(c, r);
       if (inVWall && c < map.cols - 1) {
         if (map.doorsH[c][r]) {
-          var doorY = rc.y0 + ROOM / 2;
+          var doorY = rc.y0 + ROOM / 2 + (map.doorOffs ? (map.doorOffs['H:' + c + ':' + r] || 0) : 0);
           if (Math.abs(y - doorY) < DOOR / 2) return false;
         }
       }
       if (inHWall && r < map.rows - 1) {
         if (map.doorsV[c][r]) {
-          var doorX = rc.x0 + ROOM / 2;
+          var doorX = rc.x0 + ROOM / 2 + (map.doorOffs ? (map.doorOffs['V:' + c + ':' + r] || 0) : 0);
           if (Math.abs(x - doorX) < DOOR / 2) return false;
         }
       }
       return true;
+    },
+    /* 门中心 / 门洞矩形（含错位偏移，统一出入口） */
+    doorCenter: function (map, dir, c, r) {
+      var rc = G.Map.roomRect(c, r);
+      var off = map.doorOffs ? (map.doorOffs[dir + ':' + c + ':' + r] || 0) : 0;
+      if (dir === 'H') return { x: (c + 1) * SEG, y: rc.y0 + ROOM / 2 + off };
+      return { x: rc.x0 + ROOM / 2 + off, y: (r + 1) * SEG };
+    },
+    doorRect: function (map, dir, c, r) {
+      if (typeof dir === 'object') { var ld = dir; dir = ld.dir; c = ld.c; r = ld.r; }
+      var ctr = G.Map.doorCenter(map, dir, c, r);
+      if (dir === 'H') {
+        return { x0: ctr.x, y0: ctr.y - DOOR / 2, x1: ctr.x + WALL, y1: ctr.y + DOOR / 2 };
+      }
+      return { x0: ctr.x - DOOR / 2, y0: ctr.y, x1: ctr.x + DOOR / 2, y1: ctr.y + WALL };
     },
     /* 视线：48px 步进采样，墙挡视线 */
     los: function (map, x1, y1, x2, y2) {

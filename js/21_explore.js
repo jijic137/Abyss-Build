@@ -19,15 +19,7 @@
 
   /* 门洞线段 */
   function doorRect(map, ld) {
-    var SEG = G.Map.SEG, W = G.Map.WALL, DOOR = G.Map.DOOR;
-    if (ld.dir === 'H') {
-      var rc = G.Map.roomRect(ld.c, ld.r);
-      var dy = rc.y0 + G.Map.ROOM / 2;
-      return { x0: (ld.c + 1) * SEG, y0: dy - DOOR / 2, x1: (ld.c + 1) * SEG + W, y1: dy + DOOR / 2 };
-    }
-    var rc2 = G.Map.roomRect(ld.c, ld.r);
-    var dx = rc2.x0 + G.Map.ROOM / 2;
-    return { x0: dx - DOOR / 2, y0: (ld.r + 1) * SEG, x1: dx + DOOR / 2, y1: (ld.r + 1) * SEG + W };
+    return G.Map.doorRect(map, ld);
   }
 
   /* ------------------------------------------------------------
@@ -76,6 +68,7 @@
     for (c = 0; c < map.cols - 1; c++) {
       for (r = 0; r < map.rows; r++) {
         if (!map.doorsH[c][r]) continue;
+        if (map.internalDoors && map.internalDoors['H:' + c + ':' + r]) continue;   // 合并房内部不锁
         var t1 = roomType(c, r), t2 = roomType(c + 1, r);
         var w = (t1 === 'treasure' || t2 === 'treasure') ? 3 :
                 (t1 === 'elite' || t2 === 'elite' || t1 === 'boss' || t2 === 'boss') ? 2 : 1;
@@ -85,6 +78,7 @@
     for (c = 0; c < map.cols; c++) {
       for (r = 0; r < map.rows - 1; r++) {
         if (!map.doorsV[c][r]) continue;
+        if (map.internalDoors && map.internalDoors['V:' + c + ':' + r]) continue;   // 合并房内部不锁
         var t3 = roomType(c, r), t4 = roomType(c, r + 1);
         var w2 = (t3 === 'treasure' || t4 === 'treasure') ? 3 :
                  (t3 === 'elite' || t4 === 'elite' || t3 === 'boss' || t4 === 'boss') ? 2 : 1;

@@ -202,7 +202,8 @@
       var x = (c + 1) * SEG;
       for (var r = 0; r < m.rows; r++) {
         var rc = G.Map.roomRect(c, r);
-        var doorY = rc.y0 + ROOM / 2;
+        if (m.internalDoors && m.internalDoors['H:' + c + ':' + r]) continue;  // 合并房内部：无墙
+        var doorY = rc.y0 + ROOM / 2 + (m.doorOffs ? (m.doorOffs['H:' + c + ':' + r] || 0) : 0);
         if (m.doorsH[c][r]) {
           push(x, 0, x + W, doorY - DOOR / 2);
           push(x, doorY + DOOR / 2, x + W, wh);
@@ -215,13 +216,21 @@
       for (r = 0; r < m.rows - 1; r++) {
         var y = (r + 1) * SEG;
         var rc2 = G.Map.roomRect(c, r);
-        var doorX = rc2.x0 + ROOM / 2;
+        if (m.internalDoors && m.internalDoors['V:' + c + ':' + r]) continue;  // 合并房内部：无墙
+        var doorX = rc2.x0 + ROOM / 2 + (m.doorOffs ? (m.doorOffs['V:' + c + ':' + r] || 0) : 0);
         if (m.doorsV[c][r]) {
           push(0, y, doorX - DOOR / 2, y + W);
           push(doorX + DOOR / 2, y, ww, y + W);
         } else {
           push(0, y, ww, y + W);
         }
+      }
+    }
+    /* 房内结构掩体 */
+    if (m.interior) {
+      for (var ii = 0; ii < m.interior.length; ii++) {
+        var segs = m.interior[ii].rects;
+        for (var si = 0; si < segs.length; si++) push(segs[si][0], segs[si][1], segs[si][2], segs[si][3]);
       }
     }
     this._wallRects = rects;
@@ -975,7 +984,7 @@
       for (var dc = 0; dc < m.cols - 1; dc++) {
         if (m.doorsH[dc][dr]) {
           var rch = G.Map.roomRect(dc, dr);
-          var dy = rch.y0 + G.Map.ROOM / 2;
+          var dy = rch.y0 + G.Map.ROOM / 2 + (m.doorOffs ? (m.doorOffs['H:' + dc + ':' + dr] || 0) : 0);
           c.fillRect((dc + 1) * G.Map.SEG, dy - G.Map.DOOR / 2, G.Map.WALL, G.Map.DOOR);
         }
       }
@@ -984,7 +993,7 @@
       for (var dc2 = 0; dc2 < m.cols; dc2++) {
         if (m.doorsV[dc2][dr2]) {
           var rcv = G.Map.roomRect(dc2, dr2);
-          var dx = rcv.x0 + G.Map.ROOM / 2;
+          var dx = rcv.x0 + G.Map.ROOM / 2 + (m.doorOffs ? (m.doorOffs['V:' + dc2 + ':' + dr2] || 0) : 0);
           c.fillRect(dx - G.Map.DOOR / 2, (dr2 + 1) * G.Map.SEG, G.Map.DOOR, G.Map.WALL);
         }
       }

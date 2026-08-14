@@ -83,8 +83,11 @@
       });
       while (have < need && combats.length) {
         var er = combats.shift();
-        er.type = 'elite';
-        er.eliteIds = [G.pick(pool)];
+        /* 合并房整组转精英，避免拆散大房间 */
+        var gset = (er.group != null)
+          ? m.rooms.filter(function (x) { return x.group === er.group; })
+          : [er];
+        gset.forEach(function (x) { x.type = 'elite'; x.eliteIds = [G.pick(pool)]; });
         have++;
       }
     }
@@ -101,15 +104,15 @@
       var type = chestTypes[Math.min(3, depthT + (i % 2))] || 'chest_wood';
       var n = {
         cid: 'c' + cr.idx + '_' + (200 + i),
-        x: rc.x0 + 120 + G.rand(0, 460),
-        y: rc.y0 + 120 + G.rand(0, 460),
+        x: rc.x0 + G.Map.ROOM / 2 - 130 + G.rand(0, 260),
+        y: rc.y0 + G.Map.ROOM / 2 - 130 + G.rand(0, 260),
         room: cr.idx, type: type,
         opened: false, used: false, ch: 0, started: false, pulse: G.rand(0, 6)
       };
       g.containers.push(new G.Container(n));
       m.containers.push({ cid: n.cid, x: n.x, y: n.y, room: n.room, type: n.type, opened: false, used: false, ch: 0, started: false, pulse: n.pulse });
-      g.traps.push(new G.Trap(rc.x0 + 170 + G.rand(0, 360), rc.y0 + 170 + G.rand(0, 360), cr.idx));
-      g.barrels.push(new G.Barrel(rc.x0 + 130 + G.rand(0, 440), rc.y0 + 130 + G.rand(0, 440), cr.idx));
+      g.traps.push(new G.Trap(rc.x0 + G.Map.ROOM / 2 - 120 + G.rand(0, 240), rc.y0 + G.Map.ROOM / 2 - 120 + G.rand(0, 240), cr.idx));
+      g.barrels.push(new G.Barrel(rc.x0 + G.Map.ROOM / 2 - 130 + G.rand(0, 260), rc.y0 + G.Map.ROOM / 2 - 130 + G.rand(0, 260), cr.idx));
     }
     /* 统一安全锁门：基于最终房型，保证撤离房无需钥匙可达、出生侧保留钥匙来源 */
     if (G.secureLockDoors) m.lockedDoors = G.secureLockDoors(m);

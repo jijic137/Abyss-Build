@@ -42,17 +42,21 @@
     var trapN = [0, 1, 1, 2, 2][T];
     var itemN = [1, 1, 1, 2, 2][T];
     var combats = m.rooms.filter(function (rm) { return rm.type === 'combat'; });
+    function setGroupType(rm, type) {
+      if (rm.group == null) { rm.type = type; return; }
+      m.rooms.forEach(function (x) { if (x.group === rm.group) x.type = type; });
+    }
     for (var ci = combats.length - 1; ci > 0; ci--) {
       var j = Math.floor(Math.random() * (ci + 1));
       var tmp = combats[ci]; combats[ci] = combats[j]; combats[j] = tmp;
     }
     for (var ti = 0; ti < trapN && combats.length; ti++) {
       var tr = combats.shift();
-      tr.type = 'trap';
+      setGroupType(tr, 'trap');
     }
     for (var ii = 0; ii < itemN && combats.length; ii++) {
       var ir = combats.shift();
-      ir.type = 'item';
+      setGroupType(ir, 'item');
     }
 
     /* 2) 容器重排 */
@@ -74,10 +78,24 @@
       }
       var rc = G.Map.roomRect(rm.c, rm.r);
       var h = (rm.idx * 7919 + out.length) & 0xffff;
+      var px = rc.x0 + 110 + (h % Math.max(1, rc.x1 - rc.x0 - 220));
+      var py = rc.y0 + 110 + ((h >>> 4) % Math.max(1, rc.y1 - rc.y0 - 220));
+      /* 避让房内结构：重叠则挪到中心安全区 */
+      var rects = m.interiorByRoom ? m.interiorByRoom[rm.idx] : null;
+      if (rects) {
+        var ov = false;
+        for (var hi = 0; hi < rects.length; hi++) {
+          if (px > rects[hi][0] - 30 && px < rects[hi][2] + 30 &&
+              py > rects[hi][1] - 30 && py < rects[hi][3] + 30) { ov = true; break; }
+        }
+        if (ov) {
+          px = rc.x0 + G.Map.ROOM / 2 - 120 + ((h >>> 7) % 240);
+          py = rc.y0 + G.Map.ROOM / 2 - 120 + ((h >>> 11) % 240);
+        }
+      }
       var n = {
         cid: 'c' + rm.idx + '_' + (100 + out.length),
-        x: rc.x0 + 110 + (h % Math.max(1, rc.x1 - rc.x0 - 220)),
-        y: rc.y0 + 110 + ((h >>> 4) % Math.max(1, rc.y1 - rc.y0 - 220)),
+        x: px, y: py,
         room: rm.idx, type: type,
         opened: false, used: false, ch: 0, started: false, pulse: Math.random() * 6
       };
@@ -137,15 +155,15 @@
       var i;
       for (i = 0; i < trapN2; i++) {
         g.traps.push(new G.Trap(
-          rc.x0 + 150 + ((h + i * 101) % Math.max(1, rc.x1 - rc.x0 - 300)),
-          rc.y0 + 150 + (((h >>> 5) + i * 67) % Math.max(1, rc.y1 - rc.y0 - 300)),
+          rc.x0 + G.Map.ROOM / 2 - 120 + ((h + i * 101) % 240),
+          rc.y0 + G.Map.ROOM / 2 - 120 + (((h >>> 5) + i * 67) % 240),
           rm.idx
         ));
       }
       for (i = 0; i < barrelN; i++) {
         g.barrels.push(new G.Barrel(
-          rc.x0 + 120 + ((h + i * 43) % Math.max(1, rc.x1 - rc.x0 - 240)),
-          rc.y0 + 120 + (((h >>> 3) + i * 29) % Math.max(1, rc.y1 - rc.y0 - 240)),
+          rc.x0 + G.Map.ROOM / 2 - 130 + ((h + i * 43) % 260),
+          rc.y0 + G.Map.ROOM / 2 - 130 + (((h >>> 3) + i * 29) % 260),
           rm.idx
         ));
       }

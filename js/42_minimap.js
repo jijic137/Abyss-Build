@@ -63,14 +63,11 @@
     }
     /* 锁门 */
     if (m.lockedDoors) {
-      var SEG = G.Map.SEG, W = G.Map.WALL, DOOR = G.Map.DOOR;
       for (i = 0; i < m.lockedDoors.length; i++) {
         var ld = m.lockedDoors[i];
         if (g.unlockedDoors && g.unlockedDoors[ld.key]) continue;
-        var rc = G.Map.roomRect(ld.c, ld.r);
-        var dx, dy;
-        if (ld.dir === 'H') { dx = (ld.c + 1) * SEG + W / 2; dy = rc.y0 + G.Map.ROOM / 2; }
-        else { dx = rc.x0 + G.Map.ROOM / 2; dy = (ld.r + 1) * SEG + W / 2; }
+        var ctr = G.Map.doorCenter(m, ld.dir, ld.c, ld.r);
+        var dx = ctr.x, dy = ctr.y;
         if (!explored(ld.c + ld.r * m.cols) &&
             !explored((ld.dir === 'H' ? ld.c + 1 : ld.c) + (ld.dir === 'H' ? ld.r : ld.r + 1) * m.cols)) continue;
         dot(ox + dx * scale, oy + dy * scale, '#ffd24a', 1.8);

@@ -160,8 +160,8 @@
       var n = 1 + (h2 % 2);
       for (var i = 0; i < n; i++) {
         g.barrels.push(new G.Barrel(
-          rc.x0 + 130 + ((h2 + i * 13) % Math.max(1, rc.x1 - rc.x0 - 260)),
-          rc.y0 + 130 + (((h2 >>> 3) + i * 7) % Math.max(1, rc.y1 - rc.y0 - 260)),
+          rc.x0 + G.Map.ROOM / 2 - 130 + ((h2 + i * 13) % 260),
+          rc.y0 + G.Map.ROOM / 2 - 130 + (((h2 >>> 3) + i * 7) % 260),
           rm.idx
         ));
       }
@@ -174,8 +174,8 @@
       var rc = G.Map.roomRect(rm.c, rm.r);
       var h3 = (rm.idx * 668265263) & 0xffff;
       g.traps.push(new G.Trap(
-        rc.x0 + 170 + (h3 % Math.max(1, rc.x1 - rc.x0 - 340)),
-        rc.y0 + 170 + ((h3 >>> 5) % Math.max(1, rc.y1 - rc.y0 - 340)),
+        rc.x0 + G.Map.ROOM / 2 - 120 + (h3 % 240),
+        rc.y0 + G.Map.ROOM / 2 - 120 + ((h3 >>> 5) % 240),
         rm.idx
       ));
     });

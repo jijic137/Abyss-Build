@@ -422,16 +422,24 @@
     var list = G.ITEMS.filter(function (it) { return it.type === 'treasure'; });
     if (!list.length) return null;
     var t = G.clamp(mapTier, 1, 5);
-    var ws = list.map(function (it) {
-      var weight = 1 + Math.max(0, it.r - 1) * 0.5;
-      weight *= (it.size[0] * it.size[1] >= 4) ? 0.5 : 1;
-      // deeper floors favor rare/big pieces
-      if (t >= 4) weight *= 1.6;
-      if (t >= 2 && it.r >= 2) weight *= 1.4;
-      return weight;
-    });
-    var it = G.weightedPick(list, ws);
-    return it ? G.makeItem(it.id, it.r) : null;
+    /* 每层宝物稀有度分布：越深越偏爱稀有/大件，1 层以白绿为主、5 层以紫红为主 */
+    var rarDist = [
+      [0.45, 0.35, 0.14, 0.05, 0.01],
+      [0.18, 0.42, 0.27, 0.10, 0.03],
+      [0.05, 0.22, 0.45, 0.22, 0.06],
+      [0.02, 0.12, 0.34, 0.40, 0.12],
+      [0,    0.06, 0.24, 0.46, 0.24]
+    ][t - 1];
+    var buckets = [[], [], [], [], []];
+    list.forEach(function (it) { buckets[it.r].push(it); });
+    var r = G.rand(0, 1), acc = 0, chosenR = 4;
+    for (var b = 0; b < 5; b++) {
+      acc += rarDist[b];
+      if (r < acc) { chosenR = b; break; }
+    }
+    var pool = buckets[chosenR];
+    if (!pool || !pool.length) pool = buckets[chosenR - 1] || list;
+    return G.makeItem(G.pick(pool).id, chosenR);
   };
 
   /* 敌人掉落：返回实例数组（普通小概率、精英必掉、BOSS 多件） */

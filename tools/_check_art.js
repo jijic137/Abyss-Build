@@ -60,6 +60,9 @@ server.listen(8777, '127.0.0.1', async () => {
       G.CHARACTERS.forEach(ch => {
         check(ch.sprite, [G.PX.get(ch.sprite, 3)]);
       });
+      ['wall_brick', 'wall_pillar', 'wall_ruin', 'wall_panel'].forEach(nm => {
+        check(nm, [G.PX.getTint(nm, '#7d8aa8', 3)]);
+      });
       return { bad, enemyCount };
     });
     if (audit.bad.length) { errs++; console.log('ART ISSUES:\n' + audit.bad.join('\n')); }

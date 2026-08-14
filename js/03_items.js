@@ -372,7 +372,7 @@
     { id: 'tre_orb',      name: '古鎏金宝球', r: 2, type: 'treasure', icon: 'ic_tre_art', col: '#ffd24a', size: [2, 2], fl: '表面刻满已无人能解的铭文，底座沉得惊人。' },
     { id: 'tre_unit',     name: '低温储存单元', r: 2, type: 'treasure', icon: 'ic_tre_fuel', col: '#5fdcff', size: [2, 2], fl: '内部恒温恒压，保存着某个被遗忘的实验样本。' },
     { id: 'tre_figure',   name: '星尘手办', r: 1, type: 'treasure', icon: 'ic_tre_fashion', col: '#cfa0ff', size: [1, 1], fl: '绝版限定款，圈内人一眼就认得出。' },
-    { id: 'tre_totem',    name: '啖盐图腾柱', r: 0, type: 'treasure', icon: 'ic_tre_craft', col: '#9a6f4e', size: [2, 3], fl: '一整根赭石雕刻，盐渍渗进每道裂隙。' },
+    { id: 'tre_totem',    name: '啖盐图腾柱', r: 3, type: 'treasure', icon: 'ic_tre_craft', col: '#9a6f4e', size: [3, 1], fl: '一整根赭石雕刻，盐渍渗进每道裂隙。' },
     { id: 'tre_goblet',   name: '鎏金高脚杯', r: 3, type: 'treasure', icon: 'ic_tre_art', col: '#e8b34a', size: [1, 1], fl: '杯沿有磨痕，也挡不住金匠的手艺。' },
     { id: 'tre_lyre',     name: '鎏银七弦琴', r: 2, type: 'treasure', icon: 'ic_tre_art', col: '#9fc4ff', size: [2, 3], fl: '弦已锈断，琴身仍讲究得像刚离工匠之手。' },
     { id: 'tre_specs',    name: '深空目镜', r: 1, type: 'treasure', icon: 'ic_tre_elect', col: '#6fa8ff', size: [1, 1], fl: '瞄准过远方的镜片，如今只照得出深渊。' },
@@ -380,7 +380,10 @@
     { id: 'tre_helmet',   name: '刻纹战盔', r: 2, type: 'treasure', icon: 'ic_tre_fashion', col: '#9fc4ff', size: [2, 2], fl: '曾属于某个无名远征者，盔内刻着一串名字。' },
     { id: 'tre_relay',    name: '混沌继电器', r: 3, type: 'treasure', icon: 'ic_tre_elect', col: '#5ad1ff', size: [1, 1], fl: '接上电流会有细微的杂音，像在低语。' },
     { id: 'tre_corner',   name: '首层地图', r: 1, type: 'treasure', icon: 'ic_tre_elect', col: '#9ce8b4', size: [1, 1], fl: '画着早已失效的入口路线，纸质泛黄。' },
-    { id: 'tre_jade',     name: '鎏边玉璧', r: 2, type: 'treasure', icon: 'ic_tre_art', col: '#7fd56e', size: [1, 1], fl: '中间镂空，边缘鎏金，是身份的旧信物。' }
+    { id: 'tre_jade',     name: '鎏边玉璧', r: 2, type: 'treasure', icon: 'ic_tre_art', col: '#7fd56e', size: [1, 1], fl: '中间镂空，边缘鎏金，是身份的旧信物。' },
+    { id: 'tre_altarpiece', name: '深渊祭坛画', r: 4, type: 'treasure', icon: 'ic_tre_art', col: '#b45cff', size: [3, 3], fl: '整幅祭坛画仍透着庙堂的冷光，收藏家愿倾囊。' },
+    { id: 'tre_grandpulse',name: '星象巨钟', r: 3, type: 'treasure', icon: 'ic_tre_art', col: '#ffd24a', size: [3, 3], fl: '指针指向早已消失的星座，机芯仍在低鸣。' },
+    { id: 'tre_tapestry', name: '织金壁毯', r: 3, type: 'treasure', icon: 'ic_tre_fashion', col: '#c98f5a', size: [3, 3], fl: '用金线织出的战争与丰收，一整幅都搬得动才值钱。' }
   ];
   TREASURE.forEach(function (t) { ITEMS.push(t); });
 

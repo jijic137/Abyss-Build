@@ -71,15 +71,15 @@
      地图档位（对应深渊不同区域）
      ------------------------------------------------------------ */
   G.TIERS = [
-    { id: 1, name: '裂隙边缘', sub: '浅层裂隙 · 侦察与入门', grid: [4, 3], fee: 0,
+    { id: 1, name: '裂隙边缘', sub: '浅层裂隙 · 侦察与入门', grid: [6, 5], fee: 0,
       waveBand: [1, 4], danger: 1.0, loot: 1.0, obj: '存活 60 秒后撤离点开放', col: '#7fbf7f', unlock: true },
-    { id: 2, name: '幽暗回廊', sub: '中层回廊 · 精英出没', grid: [4, 4], fee: 45,
+    { id: 2, name: '幽暗回廊', sub: '中层回廊 · 精英出没', grid: [7, 5], fee: 45,
       waveBand: [5, 9], danger: 1.9, loot: 1.6, obj: '击杀 1 名精英后撤离点开放', col: '#7fa8ff', unlock: false },
-    { id: 3, name: '深部矿坑', sub: '深部矿脉 · 腐化巨兽盘踞', grid: [5, 4], fee: 140,
+    { id: 3, name: '深部矿坑', sub: '深部矿脉 · 腐化巨兽盘踞', grid: [7, 6], fee: 140,
       waveBand: [10, 14], danger: 3.3, loot: 2.7, obj: '击败腐化巨兽后撤离点开放', col: '#c07fff', unlock: false },
-    { id: 4, name: '深渊腹地', sub: '腹地长廊 · 精英成群', grid: [5, 5], fee: 380,
+    { id: 4, name: '深渊腹地', sub: '腹地长廊 · 精英成群', grid: [8, 6], fee: 380,
       waveBand: [15, 19], danger: 5.2, loot: 4.4, obj: '击杀 2 名精英后撤离点开放', col: '#ff9a5a', unlock: false },
-    { id: 5, name: '终焉之门', sub: '深渊之心 · 深渊之主', grid: [6, 5], fee: 950,
+    { id: 5, name: '终焉之门', sub: '深渊之心 · 深渊之主', grid: [8, 7], fee: 950,
       waveBand: [20, 20], danger: 7.8, loot: 7.2, obj: '击败深渊之主后撤离点开放', col: '#ff4a6b', unlock: false }
   ];
   G.TIER_MAP = {};

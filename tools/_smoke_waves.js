@@ -176,8 +176,8 @@ function verifyMaps() {
         if (cr < m.rows-1 && m.doorsV[cc][cr]) nbs.push(cur+m.cols);
         nbs.forEach(nb => { if (!seen.has(nb)) { seen.add(nb); q.push(nb); } });
       }
-      if (seen.size !== m.cols * m.rows) throw new Error(`连通性不足 ${seen.size}/${m.cols*m.rows}`);
-      log(`  [t${tier}] ${m.cols}x${m.rows} 房间 ${m.rooms.length} 容器 ${m.containers.length} 连通 ✓`);
+      if (seen.size !== (m.activeCount || m.cols * m.rows)) throw new Error(`连通性不足 ${seen.size}/${m.activeCount || m.cols * m.rows}`);
+      log(`  [t${tier}] ${m.cols}x${m.rows} 网格 活动房 ${m.activeCount || (m.cols * m.rows)} 容器 ${m.containers.length} 连通 ✓`);
     });
   }
 }
@@ -329,17 +329,7 @@ function runLockedDoors() {
   g.player.maxHp = g.player.hp = 1e9;
   if (!g.map.lockedDoors || !g.map.lockedDoors.length) throw new Error('T2 应有锁门');
   const ld = g.map.lockedDoors[0];
-  const SEG = G.Map.SEG, W = G.Map.WALL, DOOR = G.Map.DOOR;
-  let rc;
-  if (ld.dir === 'H') {
-    const rr = G.Map.roomRect(ld.c, ld.r);
-    const dy = rr.y0 + G.Map.ROOM / 2;
-    rc = { x0: (ld.c + 1) * SEG, y0: dy - DOOR / 2, x1: (ld.c + 1) * SEG + W, y1: dy + DOOR / 2 };
-  } else {
-    const rr = G.Map.roomRect(ld.c, ld.r);
-    const dx = rr.x0 + G.Map.ROOM / 2;
-    rc = { x0: dx - DOOR / 2, y0: (ld.r + 1) * SEG, x1: dx + DOOR / 2, y1: (ld.r + 1) * SEG + W };
-  }
+  const rc = G.Map.doorRect(g.map, ld);
   const cx = (rc.x0 + rc.x1) / 2, cy = (rc.y0 + rc.y1) / 2;
   if (!G.Map.solid(g.map, cx, cy)) throw new Error('锁门应为实心');
   g.player.x = cx; g.player.y = cy;
@@ -418,6 +408,7 @@ function runNewSystems() {
   let wall = null;
   for (let c = 0; c < m.cols - 1 && !wall; c++) {
     for (let r = 0; r < m.rows; r++) {
+      if (!m.rooms[c + r * m.cols].active) continue;   // 形状外不选
       if (!m.doorsH[c][r]) { wall = { x: (c + 1) * G.Map.SEG, y: G.Map.roomRect(c, r).y0 + G.Map.ROOM / 2 }; break; }
     }
   }
@@ -425,6 +416,7 @@ function runNewSystems() {
   g.keys.right = true;
   p.x = wall.x - p.r - 6;
   p.y = wall.y;
+  if (G.Map.bboxSolid(m, p.x, p.y, p.r)) throw new Error('碰撞测试起点在墙内');
   const startX = p.x;
   driveFrames(60);
   g.keys.right = false;

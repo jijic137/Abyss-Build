@@ -31,7 +31,8 @@ server.listen(8788, '127.0.0.1', async () => {
     await page.goto('http://127.0.0.1:8788/', { waitUntil: 'load' });
     await page.waitForTimeout(1000);
     const res = await page.evaluate(() => {
-      const agg = { style: {}, mergedRooms: 0, groups: 0, interiorRooms: 0, doorOffs: 0, totalDoors: 0 };
+      const agg = { style: {}, mergedRooms: 0, groups: 0, interiorRooms: 0, doorOffs: 0, totalDoors: 0,
+        roomCounts: [], hullFill: [] };
       const bad = [];
       let maps = 0;
       for (let t = 1; t <= 5; t++) {
@@ -49,6 +50,16 @@ server.listen(8788, '127.0.0.1', async () => {
           });
           agg.groups += Object.keys(seen).length;
           agg.interiorRooms += (m.interior || []).length;
+          agg.roomCounts.push(m.activeCount || m.cols * m.rows);
+          /* 形状复杂度：活动格凸包填充率（<0.9 表示非矩形/有凹陷） */
+          let minC = m.cols, maxC = 0, minR = m.rows, maxR = 0;
+          m.rooms.forEach(rm => {
+            if (!rm.active) return;
+            minC = Math.min(minC, rm.c); maxC = Math.max(maxC, rm.c);
+            minR = Math.min(minR, rm.r); maxR = Math.max(maxR, rm.r);
+          });
+          const box = (maxC - minC + 1) * (maxR - minR + 1);
+          agg.hullFill.push((m.activeCount || 0) / box);
           for (const k in (m.doorOffs || {})) { agg.doorOffs++; agg.totalDoors++; }
           /* 门总数 = doorsH+doorsV true 计数 */
           for (let c = 0; c < m.cols; c++) for (let r = 0; r < m.rows; r++) {
@@ -67,7 +78,7 @@ server.listen(8788, '127.0.0.1', async () => {
             if (rr < m.rows - 1 && m.doorsV[cc][rr]) nbs.push(cur + m.cols);
             nbs.forEach(nb => { if (!seen2[nb]) { seen2[nb] = 1; q.push(nb); } });
           }
-          if (Object.keys(seen2).length !== m.cols * m.rows) bad.push('T' + t + 's' + salt + ':不连通');
+          if (Object.keys(seen2).length !== (m.activeCount || m.cols * m.rows)) bad.push('T' + t + 's' + salt + ':不连通');
           /* 内部结构不占中心 300 区 */
           (m.interior || []).forEach(iv => {
             const rc = G.Map.roomRect(m.rooms[iv.room].c, m.rooms[iv.room].r);
@@ -88,6 +99,13 @@ server.listen(8788, '127.0.0.1', async () => {
     console.log('合并大房间: ' + a.groups + ' 组 / ' + a.mergedRooms + ' 格 (占房间比例 ' + (a.mergedRooms / (res.maps * 4 * 3) * 100).toFixed(0) + '% 起)');
     console.log('内部结构房: ' + a.interiorRooms + ' (' + (a.interiorRooms / res.maps).toFixed(1) + ' 房/图)');
     console.log('门偏移: ' + a.doorOffs + '/' + a.totalDoors + ' 扇 (占 ' + (a.doorOffs / Math.max(1, a.totalDoors) * 100).toFixed(0) + '%)');
+    const counts = a.roomCounts;
+    console.log('房间数: 范围 ' + Math.min.apply(null, counts) + '~' + Math.max.apply(null, counts) +
+      ' · 均值 ' + (counts.reduce((x, y) => x + y, 0) / counts.length).toFixed(1));
+    const fills = a.hullFill;
+    const nonRect = fills.filter(f => f < 0.9).length;
+    console.log('形状: 凸包填充率均值 ' + (fills.reduce((x, y) => x + y, 0) / fills.length).toFixed(2) +
+      ' · 非矩形(填充<0.9) ' + nonRect + '/' + fills.length);
     console.log('问题: ' + (res.bad.length ? res.bad.slice(0, 10).join('; ') : '无'));
     if (res.bad.length) errs++;
   } catch (e) { console.log('ERR', e && e.stack || e); errs++; }

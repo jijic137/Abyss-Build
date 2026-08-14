@@ -161,6 +161,7 @@ server.listen(8765, '127.0.0.1', async () => {
       let wall = null;
       for (let c = 0; c < m.cols - 1 && !wall; c++) {
         for (let r = 0; r < m.rows; r++) {
+          if (!m.rooms[c + r * m.cols].active) continue;
           if (!m.doorsH[c][r]) { wall = { x: (c + 1) * SEG, y: G.Map.roomRect(c, r).y0 + ROOM / 2 }; break; }
         }
       }

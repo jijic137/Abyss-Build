@@ -44,6 +44,57 @@
     return { id: 'open', backEdge: 0.34, merge: 0.42, interior: 0.38 };
   }
 
+  /* ---------------- 房间数与形状（层 0）：随机生长，非矩形轮廓 ---------------- */
+  var ROOM_RANGES = {
+    1: [10, 14], 2: [12, 17], 3: [14, 20], 4: [16, 23], 5: [18, 27]
+  };
+
+  /**
+   * 在 cols×rows 网格内生长一块连通区域：
+   * 中心 + 2~4 条随机方向的"臂"（星形/十字骨架）→ blob 填充到目标房间数。
+   * 结果：房间数量随机、整体轮廓不规则（多臂/凹陷/斜切），不再是固定长方形。
+   */
+  function growShape(cols, rows, rng, target) {
+    var active = [];
+    for (var i = 0; i < cols * rows; i++) active.push(false);
+    var sc = Math.floor(cols / 2), sr = Math.floor(rows / 2);
+    var start = sc + sr * cols;
+    active[start] = true;
+    var n = 1;
+    var dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    /* 1) 臂骨架 */
+    var arms = rng.int(2, 4);
+    var idxs = [0, 1, 2, 3];
+    for (var a = 0; a < arms; a++) {
+      var di = idxs.splice(rng.int(0, idxs.length - 1), 1)[0];
+      var d = dirs[di];
+      var len = rng.int(1, Math.max(1, Math.min(cols, rows) - 1));
+      var cx = sc, cy = sr;
+      for (var s = 0; s < len && n < target; s++) {
+        cx += d[0]; cy += d[1];
+        if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) break;
+        var id = cx + cy * cols;
+        if (!active[id]) { active[id] = true; n++; }
+      }
+    }
+    /* 2) blob 填充到 target */
+    var frontier = [];
+    function pushF(c, r) {
+      if (c > 0 && !active[(c - 1) + r * cols]) frontier.push((c - 1) + r * cols);
+      if (c < cols - 1 && !active[(c + 1) + r * cols]) frontier.push((c + 1) + r * cols);
+      if (r > 0 && !active[c + (r - 1) * cols]) frontier.push(c + (r - 1) * cols);
+      if (r < rows - 1 && !active[c + (r + 1) * cols]) frontier.push(c + (r + 1) * cols);
+    }
+    for (i = 0; i < cols * rows; i++) if (active[i]) pushF(i % cols, Math.floor(i / cols));
+    while (frontier.length && n < target) {
+      var gi = frontier.splice(rng.int(0, frontier.length - 1), 1)[0];
+      if (active[gi]) continue;
+      active[gi] = true; n++;
+      pushF(gi % cols, Math.floor(gi / cols));
+    }
+    return { active: active, start: start, count: n };
+  }
+
   /* ---------------- 房间合并（层 2）：战斗房组合成 1x2/2x1/2x2/L 大空间 ---------------- */
   function mergeCombatRooms(map, rng, style) {
     var cols = map.cols, rows = map.rows, rooms = map.rooms;
@@ -160,21 +211,29 @@
     var worldW = cols * ROOM + (cols + 1) * WALL;
     var worldH = rows * ROOM + (rows + 1) * WALL;
 
-    /* 连通图：随机 Prim 生成树 + 少量回边 */
+    /* 房间数随机 + 形状生长（非矩形轮廓，层 0） */
+    var RANGE = ROOM_RANGES[tierId] || ROOM_RANGES[1];
+    var target = rng.int(RANGE[0], RANGE[1]);
+    var shape = growShape(cols, rows, rng, target);
+    var active = shape.active;
+    var start = shape.start;
+
+    /* 连通图：active 子图上的随机 Prim 生成树 + 按风格回边 */
     var doorsH = [], doorsV = [];
     for (var c = 0; c < cols; c++) { doorsH.push([]); for (var r = 0; r < rows; r++) doorsH[c].push(false); }
     for (c = 0; c < cols; c++) { doorsV.push([]); for (r = 0; r < rows; r++) doorsV[c].push(false); }
 
     var inTree = [];
-    for (var i = 0; i < cols * rows; i++) inTree.push(false);
-    var start = rng.int(0, cols * rows - 1);
+    for (var i = 0; i < cols * rows; i++) inTree.push(!active[i]);   // 非活动格视为已入树
     inTree[start] = true;
     var frontier = [];
     function pushFrontier(c, r) {
-      if (c > 0 && !inTree[(c - 1) + r * cols]) frontier.push([c, r, -1, 0]);
-      if (c < cols - 1 && !inTree[(c + 1) + r * cols]) frontier.push([c, r, 1, 0]);
-      if (r > 0 && !inTree[c + (r - 1) * cols]) frontier.push([c, r, 0, -1]);
-      if (r < rows - 1 && !inTree[c + (r + 1) * cols]) frontier.push([c, r, 0, 1]);
+      function tryAdd(nc, nr) {
+        if (nc < 0 || nr < 0 || nc >= cols || nr >= rows) return;
+        if (!active[nc + nr * cols]) return;
+        if (!inTree[nc + nr * cols]) frontier.push([c, r, nc - c, nr - r]);
+      }
+      tryAdd(c - 1, r); tryAdd(c + 1, r); tryAdd(c, r - 1); tryAdd(c, r + 1);
     }
     pushFrontier(start % cols, Math.floor(start / cols));
     while (frontier.length) {
@@ -187,18 +246,17 @@
       if (f[2] !== 0) doorsH[Math.min(f[0], nc)][f[1]] = true;   // 水平门
       else doorsV[f[0]][Math.min(f[1], nr)] = true;              // 垂直门
       pushFrontier(nc, nr);
-      if (rng.chance(style.backEdge)) {   // 回边：增加环路，探索更自由
-        if (f[2] !== 0 && !doorsH[Math.min(f[0], nc)][f[1]]) doorsH[Math.min(f[0], nc)][f[1]] = true;
-      }
     }
     /* 再按风格随机补一些回边 */
     for (c = 0; c < cols - 1; c++) {
       for (r = 0; r < rows; r++) {
+        if (!active[c + r * cols] || !active[c + 1 + r * cols]) continue;
         if (!doorsH[c][r] && rng.chance(style.backEdge)) doorsH[c][r] = true;
       }
     }
     for (c = 0; c < cols; c++) {
       for (r = 0; r < rows - 1; r++) {
+        if (!active[c + r * cols] || !active[c + (r + 1) * cols]) continue;
         if (!doorsV[c][r] && rng.chance(style.backEdge)) doorsV[c][r] = true;
       }
     }
@@ -220,7 +278,8 @@
     var rooms = [];
     var TYPE = { combat: 0, treasure: 1, elite: 2, boss: 3, shrine: 4, altar: 5 };
     for (i = 0; i < cols * rows; i++) {
-      rooms.push({ type: 'combat', c: i % cols, r: Math.floor(i / cols), idx: i,
+      rooms.push({ type: active[i] ? 'combat' : 'void', active: !!active[i],
+        c: i % cols, r: Math.floor(i / cols), idx: i,
         explored: false, visited: false, spawned: false, eliteIds: [], containers: [] });
     }
 
@@ -247,11 +306,14 @@
     function pickFarRoom(minRatio, avoid) {
       var pool = [];
       for (i = 0; i < rooms.length; i++) {
+        if (!rooms[i].active) continue;
         if (i === start || i === extractIdx) continue;
         if (avoid && avoid.indexOf(i) >= 0) continue;
         if (dist[i] >= maxDist * minRatio) pool.push(i);
       }
-      if (!pool.length) pool = rooms.map(function (x) { return x.idx; }).filter(function (x) { return x !== start && x !== extractIdx; });
+      if (!pool.length) pool = rooms.map(function (x) { return x.idx; }).filter(function (x) {
+        return rooms[x].active && x !== start && x !== extractIdx;
+      });
       return rng.pick(pool);
     }
 
@@ -325,6 +387,7 @@
     }
     var containers = [];
     rooms.forEach(function (rm) {
+      if (!rm.active) return;   // 非活动（形状外）格无内容
       if (rm.type === 'spawn' || rm.type === 'extract') return;
       var n = 0;
       if (rm.type === 'treasure') {
@@ -370,6 +433,7 @@
       tierId: tierId, tier: tier,
       cols: cols, rows: rows,
       style: style.id,
+      activeCount: shape.count,
       worldW: worldW, worldH: worldH,
       rooms: rooms, doorsH: doorsH, doorsV: doorsV,
       doorOffs: doorOffs, internalDoors: internalDoors,
@@ -406,6 +470,8 @@
       if (x < WALL || y < WALL || x >= map.worldW - WALL || y >= map.worldH - WALL) return true;
       var relX = x - WALL, relY = y - WALL;
       var c = Math.floor(relX / SEG), r = Math.floor(relY / SEG);
+      var room = map.rooms[c + r * map.cols];
+      if (room && room.active === false) return true;   // 形状外：整格视为墙
       var offX = relX - c * SEG, offY = relY - r * SEG;
       var inVWall = offX >= ROOM;
       var inHWall = offY >= ROOM;

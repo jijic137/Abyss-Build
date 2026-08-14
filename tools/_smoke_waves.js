@@ -683,6 +683,11 @@ function runCampaign16() {
       if (g.state !== 'pause' || !g._pendingDescend) throw new Error('深入未进整备 s=' + s);
       guard('beginNextFloor@' + s, () => g.beginNextFloor());
       if (g.state !== 'play') throw new Error('深入后未开战 s=' + s);
+      /* 防“深入后开局零怪”回归：出生房应立即刷怪 */
+      const rm = G.Map.roomAt(g.map, g.player.x, g.player.y);
+      let seeded = 0;
+      g.enemies.forEach(function (e) { if (!e.dead && e.room === rm.idx) seeded++; });
+      if (seeded < 2) throw new Error('深入后出生房未立即刷怪 s=' + s + ' n=' + seeded);
     }
     const S = G.SUBLEVELS[s - 1];
     if (g.map.zoneId !== S.zone) throw new Error('区域错 s=' + s);

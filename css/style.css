@@ -552,7 +552,7 @@ canvas#game{
 /* 单字：独立扭曲 + 上下飘动 + 辉光脉动 */
 .btn-gate-text .gt{
   display:inline-block;
-  font-size:34px; font-weight:900; letter-spacing:10px; color:#eef4ff;
+  font-size:50px; font-weight:900; letter-spacing:14px; color:#eef4ff;
   text-shadow:
     0 0 10px rgba(150,195,255,.95),
     0 0 24px rgba(120,165,255,.65),
@@ -689,19 +689,19 @@ canvas#game{
 @media (max-width:980px){
   .screen-cover .game-title{ font-size:64px; letter-spacing:10px; }
   .screen-cover .game-sub{ letter-spacing:4px; }
-  .btn-gate-text .gt{ font-size:28px; letter-spacing:8px; }
+  .btn-gate-text .gt{ font-size:40px; letter-spacing:11px; }
   .cover-menu .btn{ font-size:12px; padding:6px 14px; }
 }
 @media (max-width:680px){
   .screen-cover .game-title{ font-size:48px; letter-spacing:8px; }
   .screen-cover .game-sub{ letter-spacing:3px; font-size:11px; }
-  .btn-gate-text .gt{ font-size:24px; letter-spacing:6px; }
+  .btn-gate-text .gt{ font-size:32px; letter-spacing:8px; }
   .cover-menu{ gap:8px; }
   .cover-menu .btn{ font-size:11.5px; padding:5px 10px; letter-spacing:1px; }
   .cover-inner{ top:5%; }
 }
 @media (max-height:640px){
-  .btn-gate-text .gt{ font-size:26px; letter-spacing:7px; }
+  .btn-gate-text .gt{ font-size:36px; letter-spacing:9px; }
   .cover-inner{ top:4%; }
   .screen-cover .game-title{ font-size:56px; letter-spacing:10px; }
   .cover-tag{ margin-bottom:8px; }

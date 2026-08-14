@@ -113,17 +113,22 @@
         var rc = iv.rects[r];
         if (rc[2] < vx0 || rc[0] > vx1 || rc[3] < vy0 || rc[1] > vy1) continue;
         var w = rc[2] - rc[0], h = rc[3] - rc[1];
-        var dark = G.PX.shade(col, -0.38);
-        /* 1) 投影（向右下偏移，强化凸起于地板之上） */
-        c.fillStyle = 'rgba(0,0,0,0.45)';
-        c.fillRect(rc[0] + 7, rc[1] + 9, w, h);
-        /* 2) 主体（比地板更暗的墙面色，拉开对比） */
-        c.fillStyle = dark;
+        var pad = 5;                                        // 侧壁厚度
+        var side = G.PX.shade(col, -0.58);                  // 侧壁（深色，像墙的厚度）
+        var top = G.PX.shade(col, 0.10);                    // 顶面（受光，比侧壁亮）
+        /* 1) 投影（更远更深，强化凸起） */
+        c.fillStyle = 'rgba(0,0,0,0.50)';
+        c.fillRect(rc[0] + 10, rc[1] + 12, w, h);
+        /* 2) 外扩侧壁（整块浮雕的厚度） */
+        c.fillStyle = side;
+        c.fillRect(rc[0] - pad, rc[1] - pad, w + pad * 2, h + pad * 2);
+        /* 3) 顶面（亮于侧壁，明确"面朝上"） */
+        c.fillStyle = top;
         c.fillRect(rc[0], rc[1], w, h);
-        /* 3) 纹理平铺（材质细节） */
+        /* 4) 顶面纹理（材质细节，低透明度） */
         if (spr) {
           c.save();
-          c.globalAlpha = 0.72;
+          c.globalAlpha = 0.55;
           for (var x = rc[0]; x < rc[2]; x += spr.width) {
             for (var y = rc[1]; y < rc[3]; y += spr.height) {
               c.drawImage(spr, x, y);
@@ -131,28 +136,19 @@
           }
           c.restore();
         }
-        /* 4) 顶部受光面（墙体高于地板的证据） */
-        c.fillStyle = 'rgba(255,255,255,0.13)';
-        c.fillRect(rc[0], rc[1], w, 10);
-        c.fillStyle = 'rgba(255,255,255,0.34)';
-        c.fillRect(rc[0], rc[1], w, 4);
-        /* 5) 右侧 / 下侧侧面暗带 */
-        c.fillStyle = 'rgba(0,0,0,0.42)';
-        c.fillRect(rc[0] + w - 6, rc[1], 6, h);
-        c.fillRect(rc[0], rc[1] + h - 6, w, 6);
-        /* 6) 轮廓描边（清晰边界） */
-        c.strokeStyle = 'rgba(0,0,0,0.62)';
-        c.lineWidth = 2.5;
-        c.strokeRect(rc[0] + 1, rc[1] + 1, w - 2, h - 2);
-        /* 柱帽 / 栏帽（跨出墙体上沿） */
+        /* 5) 顶面高光条（受光最亮处） */
+        c.fillStyle = 'rgba(255,255,255,0.30)';
+        c.fillRect(rc[0], rc[1], w, 3);
+        /* 6) 顶面内侧轮廓 */
+        c.strokeStyle = 'rgba(0,0,0,0.38)';
+        c.lineWidth = 1;
+        c.strokeRect(rc[0] + 0.5, rc[1] + 0.5, w - 1, h - 1);
+        /* 柱帽 / 栏帽（跨出顶面上沿，更醒目） */
         if (iv.kind === 'pillar' || iv.kind === 'alcove') {
-          c.fillStyle = dark;
-          c.fillRect(rc[0] - 5, rc[1] - 5, w + 10, 5);
-          c.fillStyle = 'rgba(255,255,255,0.20)';
-          c.fillRect(rc[0] - 5, rc[1] - 5, w + 10, 2);
-          c.strokeStyle = 'rgba(0,0,0,0.45)';
-          c.lineWidth = 1.5;
-          c.strokeRect(rc[0] - 5, rc[1] - 5, w + 10, 5);
+          c.fillStyle = side;
+          c.fillRect(rc[0] - pad - 2, rc[1] - pad - 3, w + (pad + 2) * 2, 4);
+          c.fillStyle = 'rgba(255,255,255,0.28)';
+          c.fillRect(rc[0] - pad - 2, rc[1] - pad - 3, w + (pad + 2) * 2, 2);
         }
         if (iv.kind === 'ruins') {
           /* 顶面亮边，像石块顶 */

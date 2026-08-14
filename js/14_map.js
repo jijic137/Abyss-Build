@@ -39,9 +39,9 @@
   /* ---------------- 拓扑风格（层 1） ---------------- */
   function styleOf(rng) {
     var r = rng.next();
-    if (r < 0.22) return { id: 'maze', backEdge: 0.10, merge: 0.18, interior: 0.55 };
-    if (r < 0.72) return { id: 'standard', backEdge: 0.22, merge: 0.30, interior: 0.45 };
-    return { id: 'open', backEdge: 0.34, merge: 0.42, interior: 0.38 };
+    if (r < 0.22) return { id: 'maze', backEdge: 0.10, merge: 0.18, interior: 0.70 };
+    if (r < 0.72) return { id: 'standard', backEdge: 0.22, merge: 0.30, interior: 0.62 };
+    return { id: 'open', backEdge: 0.34, merge: 0.42, interior: 0.55 };
   }
 
   /* ---------------- 房间数与形状（层 0）：随机生长，非矩形轮廓 ---------------- */
@@ -166,16 +166,16 @@
       var cx = (rc.x0 + rc.x1) / 2, cy = (rc.y0 + rc.y1) / 2;
       if (kind === 'pillar') {
         /* 四角柱：中央 300px 安全区恒空，不挡门口 */
-        rects.push([rc.x0 + 90, rc.y0 + 90, rc.x0 + 154, rc.y0 + 154]);
-        rects.push([rc.x1 - 154, rc.y0 + 90, rc.x1 - 90, rc.y0 + 154]);
-        rects.push([rc.x0 + 90, rc.y1 - 154, rc.x0 + 154, rc.y1 - 90]);
-        rects.push([rc.x1 - 154, rc.y1 - 154, rc.x1 - 90, rc.y1 - 90]);
+        rects.push([rc.x0 + 78, rc.y0 + 78, rc.x0 + 150, rc.y0 + 150]);
+        rects.push([rc.x1 - 150, rc.y0 + 78, rc.x1 - 78, rc.y0 + 150]);
+        rects.push([rc.x0 + 78, rc.y1 - 150, rc.x0 + 150, rc.y1 - 78]);
+        rects.push([rc.x1 - 150, rc.y1 - 150, rc.x1 - 78, rc.y1 - 78]);
       } else if (kind === 'cross') {
         /* 十字四段：中央 300px 安全区留空，两端留绕行口 */
-        rects.push([rc.x0 + 70, cy - 14, cx - 150, cy + 14]);
-        rects.push([cx + 150, cy - 14, rc.x1 - 70, cy + 14]);
-        rects.push([cx - 14, rc.y0 + 70, cx + 14, cy - 150]);
-        rects.push([cx - 14, cy + 150, cx + 14, rc.y1 - 70]);
+        rects.push([rc.x0 + 70, cy - 17, cx - 150, cy + 17]);
+        rects.push([cx + 150, cy - 17, rc.x1 - 70, cy + 17]);
+        rects.push([cx - 17, rc.y0 + 70, cx + 17, cy - 150]);
+        rects.push([cx - 17, cy + 150, cx + 17, rc.y1 - 70]);
       } else if (kind === 'corner') {
         rects.push([rc.x0 + 40, rc.y0 + 40, rc.x0 + 190, rc.y1 - 40]);
         rects.push([rc.x0 + 40, rc.y0 + 40, rc.x1 - 40, rc.y0 + 190]);

@@ -1353,7 +1353,7 @@
     var rc = G.Map.roomRect(map.rooms[roomIdx].c, map.rooms[roomIdx].r);
     var totalW = 0;
     gd.elements.forEach(function (e) { totalW += e.w; });
-    var n = Math.round((gd.density || 0.15) * 230);
+    var n = Math.round((gd.density || 0.15) * 90);
     var iRect = map.interiorByRoom ? map.interiorByRoom[roomIdx] : null;
     var cx = rc.x0 + G.Map.ROOM / 2, cy = rc.y0 + G.Map.ROOM / 2;
     var salt = (map.salt || 0);
@@ -1401,7 +1401,7 @@
       out.push({
         spr: pick.spr, col: pick.col, x: x, y: y,
         sc: sc,
-        a: 0.55 + ((h2 >>> 11) % 22) / 100,
+        a: 0.5 + ((h2 >>> 11) % 20) / 100,
         flip: ((h2 >>> 13) % 3) === 0
       });
     }

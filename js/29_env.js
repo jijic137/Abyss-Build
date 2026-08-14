@@ -53,22 +53,6 @@
             c.drawImage(gcv, rc.x0, rc.y0, G.Map.ROOM, G.Map.ROOM);
           }
         }
-        /* 2a) 像素纹理平铺（无框 tile 无缝拼接、变体混用、亮度由主题色决定） */
-        if (th && th.floor.variants && th.floor.variants.length) {
-          c.save();
-          c.globalAlpha = th.floor.tileAlpha || 0.6;
-          var vstep = 48;
-          for (var tx = rc.x0 + 24; tx <= rc.x1 - 24; tx += vstep) {
-            for (var ty = rc.y0 + 24; ty <= rc.y1 - 24; ty += vstep) {
-              var hh = ((((tx + (m.salt || 0) * 131) | 0) * 374761393) ^
-                        (((ty + (m.salt || 0) * 911) | 0) * 668265263)) >>> 0;
-              var vr = th.floor.variants[hh % th.floor.variants.length];
-              var vc = G.PX.getTint(vr, th.floor.col, 3);
-              if (vc) G.PX.draw(c, vc, tx, ty);
-            }
-          }
-          c.restore();
-        }
         /* 2b) 地面材质元素散布（草丛/石板/岩块/焦土…，让地面读得出材质） */
         if (G.Art && G.Art.groundElements) {
           var els = G.Art.groundElements(m, rm.idx);

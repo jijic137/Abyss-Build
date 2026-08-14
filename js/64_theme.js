@@ -855,8 +855,9 @@
   };
 
   /* ------------------------------------------------------------
-     噪声渐变地面：每房间烘焙 350×350 离屏画布（双线性插值逐像素），
-     绘制时拉伸到房间尺寸。无缝、平滑、无重复图案、无平铺缝隙。
+     像素风块状地面：350×350 离屏画布。
+     双线性插值生成明暗渐变 → 量化为 ~25px 大像素块（显示约 50px），
+     每块左上高光、右下阴影、块间细缝——经典像素地面斑驳感。
      ------------------------------------------------------------ */
   G.Art.groundOf = function (map, roomIdx) {
     map._grounds = map._grounds || {};
@@ -911,6 +912,31 @@
         data[idx++] = 255;
       }
     }
+    /* 量化 + 像素块立体边（14×14 逻辑块） */
+    var B = 14, bw = W / B;
+    function colArr(c) { return [c[0], c[1], c[2]]; }
+    for (var by = 0; by < B; by++) {
+      for (var bx = 0; bx < B; bx++) {
+        var c0 = sample((bx + 0.5) / B * (S - 1), (by + 0.5) / B * (S - 1));
+        var hi = [Math.min(255, c0[0] + 22), Math.min(255, c0[1] + 22), Math.min(255, c0[2] + 22)];
+        var sh = [c0[0] * 0.68, c0[1] * 0.68, c0[2] * 0.68];
+        var seam = [c0[0] * 0.5, c0[1] * 0.5, c0[2] * 0.5];
+        var x0 = Math.floor(bx * bw), x1 = Math.floor((bx + 1) * bw);
+        var y0 = Math.floor(by * bw), y1 = Math.floor((by + 1) * bw);
+        for (var py = y0; py < y1; py++) {
+          for (var px = x0; px < x1; px++) {
+            var di = (py * W + px) * 4;
+            var col = c0;
+            if (py === y0 || px === x0) col = seam;
+            else if (py - y0 < 2 || px - x0 < 2) col = hi;
+            else if (py >= y1 - 2 || px >= x1 - 2) col = sh;
+            data[di] = col[0];
+            data[di + 1] = col[1];
+            data[di + 2] = col[2];
+          }
+        }
+      }
+    }
     ctx.putImageData(img, 0, 0);
     return (map._grounds[roomIdx] = cv);
   };
@@ -928,7 +954,7 @@
     var rc = G.Map.roomRect(map.rooms[roomIdx].c, map.rooms[roomIdx].r);
     var totalW = 0;
     gd.elements.forEach(function (e) { totalW += e.w; });
-    var n = Math.round((gd.density || 0.15) * 340);
+    var n = Math.round((gd.density || 0.15) * 230);
     var iRect = map.interiorByRoom ? map.interiorByRoom[roomIdx] : null;
     var cx = rc.x0 + G.Map.ROOM / 2, cy = rc.y0 + G.Map.ROOM / 2;
     var salt = (map.salt || 0);

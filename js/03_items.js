@@ -476,7 +476,16 @@
     return Math.max(1, Math.round(p));
   };
   G.sellPrice = function (it, wave) {
-    return Math.max(1, Math.floor(G.itemPrice(it, wave) * 0.4));
+    var p = G.itemPrice(it, wave) * 0.4;
+    if (it && it.type === 'treasure') {
+      var d = (G.Meta && G.Meta.get) ? G.Meta.get().discovered : null;
+      var total = G.ITEMS ? G.ITEMS.filter(function (x) { return x.type === 'treasure'; }).length : 0;
+      var got = d ? Object.keys(d).length : 0;
+      var ratio = total ? got / total : 0;
+      var bonus = 1 + Math.floor(ratio * 5) * 0.05 + (ratio >= 1 ? 0.25 : 0);
+      p *= bonus;
+    }
+    return Math.max(1, Math.floor(p));
   };
 
   /** 按稀有度分组，供商店抽取 */

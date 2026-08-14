@@ -105,6 +105,8 @@
       tiers: { 1: true },
       stats: { extracts: 0, deaths: 0, itemsExtracted: 0, itemsLost: 0, bestTier: 0, totalEarned: 0, totalSpent: 0 },
       expansions: 0,
+      discovered: {},
+      treasureReward: null,
       shop: null                 // 市场缓存 {tier:1, level:1, tokens:n, offers:[...]}
     };
   }
@@ -136,6 +138,8 @@
               for (var k in d.stats) mem.stats[k] = d.stats[k];
             }
             mem.expansions = +d.expansions || 0;
+            mem.discovered = (d.discovered && typeof d.discovered === 'object') ? d.discovered : {};
+            mem.treasureReward = d.treasureReward || null;
             mem.shop = d.shop || null;
           }
         }

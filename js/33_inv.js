@@ -20,14 +20,24 @@ G.discoverTreasure = function (inst) {
   var d = G.Meta.get();
   if (!d.discovered) d.discovered = {};
   d.discovered[inst.defId || inst.def.id] = true;
+  var total = G.ITEMS ? G.ITEMS.filter(function (i) { return i.type === 'treasure'; }).length : 0;
+  var got = Object.keys(d.discovered).length;
+  var kick = null;
+  if (total && got >= total && d.treasureReward !== 'all') {
+    d.treasureReward = 'all';
+    kick = [80, '集齐宝物 · 收藏家赏金'];
+  } else if (total && got >= Math.ceil(total / 2) && !d.treasureReward) {
+    d.treasureReward = 'half';
+    kick = [20, '收集过半 · 集宝奖励'];
+  }
+  if (kick) G.Meta.addCurrency(kick[0]);
   G.Meta.flush();
-  /* 收集里程碑成就 */
   if (G.ACHIEVEMENTS && G.Save && G.Save.unlockAch) {
-    var total = G.ITEMS ? G.ITEMS.filter(function (i) { return i.type === 'treasure'; }).length : 0;
-    var got = Object.keys(d.discovered).length;
     if (total && got >= Math.min(8, total)) G.Save.unlockAch('treasure_half');
     if (total && got >= total) G.Save.unlockAch('treasure_all');
   }
+  if (kick && G.UI && G.UI.banner) G.UI.banner(kick[1], '#ffd24a');
+  return kick ? kick[0] : 0;
 };
 var _abi0 = G.addBagItem;
 G.addBagItem = function (inst) {

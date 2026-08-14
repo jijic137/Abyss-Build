@@ -165,27 +165,29 @@
       var rc = G.Map.roomRect(rm.c, rm.r);
       var cx = (rc.x0 + rc.x1) / 2, cy = (rc.y0 + rc.y1) / 2;
       if (kind === 'pillar') {
-        /* 四角柱：中央 300px 安全区恒空，不挡门口 */
-        rects.push([rc.x0 + 78, rc.y0 + 78, rc.x0 + 150, rc.y0 + 150]);
-        rects.push([rc.x1 - 150, rc.y0 + 78, rc.x1 - 78, rc.y0 + 150]);
-        rects.push([rc.x0 + 78, rc.y1 - 150, rc.x0 + 150, rc.y1 - 78]);
-        rects.push([rc.x1 - 150, rc.y1 - 150, rc.x1 - 78, rc.y1 - 78]);
+        /* 四根细石柱：细长立柱，不厚重 */
+        rects.push([rc.x0 + 112, rc.y0 + 70, rc.x0 + 138, rc.y0 + 150]);
+        rects.push([rc.x1 - 138, rc.y0 + 70, rc.x1 - 112, rc.y0 + 150]);
+        rects.push([rc.x0 + 112, rc.y1 - 150, rc.x0 + 138, rc.y1 - 70]);
+        rects.push([rc.x1 - 138, rc.y1 - 150, rc.x1 - 112, rc.y1 - 70]);
       } else if (kind === 'cross') {
-        /* 十字四段：中央 300px 安全区留空，两端留绕行口 */
-        rects.push([rc.x0 + 70, cy - 17, cx - 150, cy + 17]);
-        rects.push([cx + 150, cy - 17, rc.x1 - 70, cy + 17]);
-        rects.push([cx - 17, rc.y0 + 70, cx + 17, cy - 150]);
-        rects.push([cx - 17, cy + 150, cx + 17, rc.y1 - 70]);
+        /* 十字细墙：中央安全区留空 */
+        rects.push([rc.x0 + 70, cy - 10, cx - 150, cy + 10]);
+        rects.push([cx + 150, cy - 10, rc.x1 - 70, cy + 10]);
+        rects.push([cx - 10, rc.y0 + 70, cx + 10, cy - 150]);
+        rects.push([cx - 10, cy + 150, cx + 10, rc.y1 - 70]);
       } else if (kind === 'corner') {
-        rects.push([rc.x0 + 40, rc.y0 + 40, rc.x0 + 190, rc.y1 - 40]);
-        rects.push([rc.x0 + 40, rc.y0 + 40, rc.x1 - 40, rc.y0 + 190]);
+        /* L 形细墙 */
+        rects.push([rc.x0 + 40, rc.y0 + 40, rc.x0 + 62, rc.y1 - 40]);
+        rects.push([rc.x0 + 40, rc.y0 + 40, rc.x1 - 40, rc.y0 + 62]);
       } else if (kind === 'alcove') {
-        rects.push([rc.x0 + 40, rc.y0 + 40, rc.x1 - 40, rc.y0 + 190]);
-        rects.push([rc.x0 + 40, rc.y1 - 190, rc.x1 - 40, rc.y1 - 40]);
+        /* 上下细隔墙 */
+        rects.push([rc.x0 + 40, rc.y0 + 40, rc.x1 - 40, rc.y0 + 62]);
+        rects.push([rc.x0 + 40, rc.y1 - 62, rc.x1 - 40, rc.y1 - 40]);
       } else { /* ruins */
         var n = rng.int(3, 5);
         for (var i = 0; i < n; i++) {
-          var w = rng.int(60, 110), h = rng.int(50, 100);
+          var w = rng.int(30, 56), h = rng.int(24, 48);
           var rx = rc.x0 + 70 + rng.range(0, Math.max(1, ROOM - 140 - w));
           var ry = rc.y0 + 70 + rng.range(0, Math.max(1, ROOM - 140 - h));
           /* 块与中心 300px 安全区相交则跳过 */

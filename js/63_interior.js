@@ -113,7 +113,7 @@
         var rc = iv.rects[r];
         if (rc[2] < vx0 || rc[0] > vx1 || rc[3] < vy0 || rc[1] > vy1) continue;
         var w = rc[2] - rc[0], h = rc[3] - rc[1];
-        var pad = 5;                                        // 侧壁厚度
+        var pad = 2;                                        // 侧壁厚度（细墙配细侧壁）
         var side = G.PX.shade(col, -0.58);                  // 侧壁（深色，像墙的厚度）
         var top = G.PX.shade(col, 0.10);                    // 顶面（受光，比侧壁亮）
         /* 1) 投影（更远更深，强化凸起） */

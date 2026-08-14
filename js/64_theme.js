@@ -1410,14 +1410,9 @@
 
   /* 兼容旧接口：biome（地板/墙 tile 与配色）从主题派生 */
   G.Art.getBiome = function (tierId) {
-    var th = G.Art.themeOf(tierId);
-    var names = { fringe: 'bio_fringe_floor', corridor: 'bio_corridor_floor', mine: 'bio_mine_floor', heart: 'bio_heart_floor', gate: 'bio_gate_floor' };
-    return {
-      floor: names[th.id] || 'bio_fringe_floor',
-      wall: 'bio_fringe_wall',
-      floorCol: th.floor.col,
-      wallCol: th.wall.col
-    };
+    /* 原版 5 区域 biome（程序化瓷砖 + 区域配色） */
+    var names = ['', 'fringe', 'corridor', 'mine', 'heart', 'gate'];
+    return G.Art.biomes[names[tierId]] || G.Art.biomes.fringe;
   };
 
   /* ------------------------------------------------------------

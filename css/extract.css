@@ -348,3 +348,13 @@
 
 .pause-context{ font-size:12px; color:#bfffd8; letter-spacing:1px; margin:2px 0 14px; text-align:center; text-shadow:0 0 10px #6ee78744; }
 
+/* ===== 数据管理页 ===== */
+.data-summary{ display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; margin:12px auto 16px; max-width:640px; }
+.data-summary .ds-row{ display:flex; justify-content:space-between; font-size:12.5px; padding:7px 10px; background:rgba(255,255,255,.04); border:1px solid #222a3d; border-radius:6px; }
+.data-summary .ds-row b{ color:#ffd24a; font-weight:700; }
+.data-tip{ font-size:11px; color:var(--dim2,#5f6580); line-height:1.7; max-width:640px; margin:10px auto; text-align:left; letter-spacing:.5px; }
+.data-msg{ min-height:18px; font-size:12px; color:#8fe0a8; margin-top:8px; text-align:center; }
+.data-msg.err{ color:#ff7a7a; }
+.btn-danger{ border-color:#7a2a2a; color:#ff8a8a; }
+.btn-danger:hover{ border-color:#ff5a5a; box-shadow:0 0 14px #ff5a5a33; }
+

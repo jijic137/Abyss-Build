@@ -116,6 +116,7 @@
         <button class="btn" id="btnRecords">记录</button>
         <button class="btn" id="btnAch">成就</button>
         <button class="btn" id="btnSave">存档</button>
+        <button class="btn" id="btnData">数据</button>
         <button class="btn" id="btnSettings">设置</button>
       </div>
 
@@ -197,6 +198,19 @@
       <h2 class="lv-title">存档</h2>
       <div class="sub-body" id="saveBody"></div>
       <div class="pause-btns"><button class="btn" id="btnSaveBack">返回</button></div>
+    </section>
+
+    <!-- ============ 数据管理（子页） ============ -->
+    <section id="scrData" class="screen sub-screen">
+      <h2 class="lv-title">数据管理</h2>
+      <div class="sub-body" id="dataBody"></div>
+      <div class="pause-btns">
+        <button class="btn btn-primary" id="btnDataExport">导出档案</button>
+        <button class="btn" id="btnDataImport">导入档案</button>
+        <button class="btn btn-danger" id="btnDataReset">重置档案</button>
+        <button class="btn" id="btnDataBack">返回</button>
+      </div>
+      <input type="file" id="dataFileInput" accept=".json,application/json" style="display:none">
     </section>
 
     <!-- ============ 角色选择（轮盘） ============ -->
@@ -364,3 +378,5 @@
 <script src="js/58_fx.js"></script>
 <script src="js/59_minimap.js"></script>
 <script src="js/60_ui2.js"></script>
+<script src="js/61_storage.js"></script>
+<script src="js/62_dataui.js"></script>

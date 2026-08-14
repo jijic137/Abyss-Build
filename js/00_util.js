@@ -136,12 +136,17 @@ G.Save = (function () {
     return mem;
   }
   function persist() {
-    try { if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, JSON.stringify(mem)); }
+    try {
+      mem.updatedAt = Date.now();
+      if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, JSON.stringify(mem));
+    }
     catch (e) { /* 忽略 */ }
   }
   return {
     get: function () { return load(); },
     getSettings: function () { return load().settings; },
+    flush: function () { persist(); },
+    reload: function () { mem = null; },
     setSettings: function (patch) {
       var d = load();
       if (patch && patch.volume != null) d.settings.volume = num(patch.volume, d.settings.volume);

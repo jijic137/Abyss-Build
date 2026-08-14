@@ -617,6 +617,49 @@ function runCampaign16() {
   if (G.game.sublevel !== 9 || G.game.map.zoneId !== 3) throw new Error('读档小关/区域未恢复');
   log('  [16关] ' + seen.join(' ') + ' 全解锁 ✓ 存档小关 ✓');
 }
+/* ---------- 16. 持久化导出/导入/合并 ---------- */
+function runStorage() {
+  log('\n===== 档案P：持久化导出/导入/合并 =====');
+  resetMeta();
+  G.Save.reload();
+  G.Meta.reload();
+  guard('init', () => G.game.init());
+  guard('newRun', () => G.game.newRun(G.CHAR_BY_ID['knight'], 1));
+  const g = G.game;
+  g.player.maxHp = g.player.hp = 1e9;
+  G.Meta.addCurrency(123);
+  G.Meta.addToStash(G.makeWeapon('pistol', 3));
+  g.saveRun();
+
+  const json = G.Storage.exportProfile();
+  const doc = JSON.parse(json);
+  if (doc.schema !== 2) throw new Error('导出 schema 错误: ' + doc.schema);
+  if (!doc.profile || !doc.profile.meta || !doc.profile.meta.stash.length) throw new Error('导出档案不完整');
+  if (!doc.profile.run || doc.profile.run.charId !== 'knight') throw new Error('导出未含战局');
+  if (doc.profile.meta.currency !== 183) throw new Error('导出货币错误: ' + doc.profile.meta.currency);
+
+  G.Storage.resetProfile({ keepSettings: true });
+  if (G.Meta.currency() !== 60) throw new Error('重置未生效 currency=' + G.Meta.currency());
+
+  const r = G.Storage.importProfile(json, { merge: 'replace' });
+  if (!r.ok) throw new Error('导入失败: ' + r.msg);
+  if (G.Meta.currency() !== 183) throw new Error('导入货币未恢复: ' + G.Meta.currency());
+  if (G.Meta.stash().length < 1) throw new Error('导入仓库未恢复');
+  const snap = G.Save.getRun();
+  if (!snap || snap.charId !== 'knight') throw new Error('导入战局未恢复');
+
+  /* 合并策略：较新者字段覆盖 */
+  const a = JSON.parse(json);
+  a.profile.meta.currency = 999;
+  a.profile.meta.updatedAt = Date.now() + 99999;
+  a.profile.meta.stats = { extracts: 7 };
+  a.profile.best.achievements = { ach_a: { t: 1 } };
+  const merged = G.Storage.mergeProfiles(doc.profile, a.profile, 'merge');
+  if (merged.meta.currency !== 999) throw new Error('合并货币取新失败');
+  if ((merged.meta.stats || {}).extracts !== 7) throw new Error('合并统计失败');
+  if (!(merged.best.achievements || {}).ach_a) throw new Error('合并成就失败');
+  log('  [存储] 导出→重置→导入✓ 战局恢复✓ 合并策略✓');
+}
 /* ---------- 9. 物品占格 ---------- */
 function runInvSizes() {
   log('\n===== 档案I：物品占格 (ranger / t1) =====');
@@ -687,8 +730,9 @@ function runModsPortal() {
     runChat();
     runBalance();
     runCampaign16();
+    runStorage();
     runInvDrag();
-    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 平衡✓ 16关✓ 错误数=${ERR}`);
+    log(`\n结果：地图✓ 撤离✓ 死亡✓ 读档✓ T4✓ 锁门✓ 事件✓ 碎片✓ 词缀/传送✓ 占格✓ 新系统✓ 拖拽✓ 分层✓ 台词✓ 平衡✓ 16关✓ 存储✓ 错误数=${ERR}`);
   } catch (e) {
     log('TOP-LEVEL THROW: ' + (e && e.stack || e));
     ERR++;

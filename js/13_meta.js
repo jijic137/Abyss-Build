@@ -131,13 +131,17 @@
     return mem;
   }
   function persist() {
-    try { if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, JSON.stringify(mem)); }
+    try {
+      mem.updatedAt = Date.now();
+      if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, JSON.stringify(mem));
+    }
     catch (e) { /* 忽略 */ }
   }
 
   var Meta = {
     get: function () { return load(); },
     flush: persist,
+    reload: function () { mem = null; },
 
     currency: function () { return load().currency; },
     addCurrency: function (v) { load().currency += Math.max(0, Math.floor(v)); persist(); return load().currency; },

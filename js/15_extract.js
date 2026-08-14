@@ -21,7 +21,7 @@
      屏幕切换（扩展新屏，容错缺失节点）
      ------------------------------------------------------------ */
   var SCREENS = ['scrTitle', 'scrCharSelect', 'scrBase', 'scrMarket', 'scrMapSelect',
-    'scrLevel', 'scrPause', 'scrResult', 'scrSettings', 'scrRecords', 'scrAch', 'scrSave'];
+    'scrLevel', 'scrPause', 'scrResult', 'scrSettings', 'scrRecords', 'scrAch', 'scrSave', 'scrData'];
 
   G.UI.showScreen = function (id) {
     var ov = $('overlay');

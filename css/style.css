@@ -1,6 +1,6 @@
 /* ============================================================
-   深渊猎手 Abyss Hunter —— 样式表
-   像素风 / 暗色调 / 稀有度色阶：白 绿 蓝 紫 红
+   深渊猎手 Abyss Hunter —�?样式�?
+   像素�?/ 暗色�?/ 稀有度色阶：白 �?�?�?�?
    ============================================================ */
 
 :root{
@@ -54,7 +54,7 @@ canvas#game{
 .dim{ color:var(--dim); font-weight:400; }
 .flex1{ flex:1; min-height:0; }
 
-/* ---------------- 按钮（圆角 + HUD 角标 + 辉光，去除生硬长方形感） ---------------- */
+/* ---------------- 按钮（圆�?+ HUD 角标 + 辉光，去除生硬长方形感） ---------------- */
 .btn{
   position:relative;
   font-family:inherit; font-size:14px; font-weight:600;
@@ -193,130 +193,176 @@ canvas#game{
 }
 .weapon-bar{ display:flex; gap:6px; }
 .skill-mod{
-  display:flex; align-items:center; gap:10px;
+  display:flex; align-items:center; gap:11px;
   position:relative;
   background:
-    linear-gradient(180deg,#ffffff10,transparent 30%),
-    linear-gradient(160deg,var(--sk-c,#ffd24a)0a 0%,#161b2afa 22%,#0d101bfa 100%);
-  border:1px solid color-mix(in srgb, var(--sk-c,#ffd24a) 45%, #2a3050);
-  border-radius:7px;
-  padding:10px 16px 10px 11px;
-  box-shadow:0 12px 30px #000c, inset 0 0 0 1px #ffffff0a;
+    linear-gradient(180deg,#ffffff0c,transparent 34%),
+    linear-gradient(155deg, color-mix(in srgb, var(--sk-c,#ffd24a) 14%, transparent) 0%, #171c2bd6 30%, #0c0f1af2 100%);
+  border:1px solid color-mix(in srgb, var(--sk-c,#ffd24a) 38%, #2a3050);
+  border-radius:9px;
+  padding:9px 15px 9px 9px;
+  box-shadow:
+    0 14px 32px #000d,
+    0 1px 0 rgba(255,255,255,.06) inset,
+    0 -1px 0 #000a inset,
+    0 0 0 1px #ffffff08 inset;
   cursor:pointer;
-  transition:border-color .15s, box-shadow .15s, transform .1s;
+  transition:border-color .16s, box-shadow .16s, transform .1s, filter .16s;
   isolation:isolate;
 }
-.skill-mod:hover{ transform:translateY(-1px); border-color:#ffffff4a; }
+.skill-mod:hover{ transform:translateY(-1px); filter:brightness(1.05); border-color:#ffffff4a; }
 .skill-mod::before{
-  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
-  background:linear-gradient(135deg, var(--sk-c,#ffd24a)22, transparent 30%);
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; border-radius:9px;
+  background:
+    repeating-linear-gradient(115deg, rgba(255,255,255,.02) 0 1px, transparent 1px 9px),
+    linear-gradient(135deg, color-mix(in srgb, var(--sk-c,#ffd24a) 16%, transparent), transparent 38%);
 }
 .skill-mod::after{
-  content:""; position:absolute; top:5px; left:5px; z-index:3; pointer-events:none;
-  width:9px; height:9px; opacity:.75;
+  content:""; position:absolute; top:6px; left:6px; z-index:3; pointer-events:none;
+  width:10px; height:10px; opacity:.85;
   border-top:2px solid var(--sk-c,#ffd24a); border-left:2px solid var(--sk-c,#ffd24a);
-  border-radius:3px 0 0 0; filter:drop-shadow(0 0 4px var(--sk-c,#ffd24a88));
+  border-radius:3px 0 0 0; filter:drop-shadow(0 0 5px var(--sk-c,#ffd24a99));
 }
-.skill-mod.ready{ box-shadow:0 0 26px #000d, 0 0 0 1px var(--sk-c,#ffd24a)88, inset 0 0 0 1px #ffffff14; }
-.skill-mod.ready::before{ background:linear-gradient(135deg, var(--sk-c,#ffd24a)44, transparent 42%); }
 .skill-core{
-  position:relative; width:54px; height:54px;
+  position:relative; width:56px; height:56px;
   display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(circle at 52% 36%, #22293c 0%, #12151f 70%),
+    linear-gradient(180deg,#2c3550,#151827);
+  border:1px solid #000a;
+  border-radius:10px;
+  box-shadow:0 0 0 1px #ffffff0d inset, 0 0 14px #000a, inset 0 2px 6px #000c;
 }
 .skill-core::before{
-  content:""; position:absolute; inset:-3px; border-radius:8px;
-  background:linear-gradient(135deg, var(--sk-c,#ffd24a), transparent 46%);
-  opacity:.5; filter:drop-shadow(0 0 2px var(--sk-c,#ffd24a66));
+  content:""; position:absolute; inset:-4px; border-radius:13px; pointer-events:none;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sk-c,#ffd24a) 62%, #fff) 0 1px, transparent 2px),
+    linear-gradient(180deg, color-mix(in srgb, var(--sk-c,#ffd24a) 34%, transparent), transparent 55%);
+  opacity:.55; filter:drop-shadow(0 0 4px var(--sk-c,#ffd24a88));
 }
 .skill-core::after{
-  content:""; position:absolute; inset:2px; z-index:3;
-  background:conic-gradient(from -90deg, var(--sk-c,#ffd24a) var(--fill,0deg), #ffffff12 var(--fill,0deg));
-  opacity:.92; border-radius:6px;
+  content:""; position:absolute; inset:3px; z-index:3; border-radius:8px; pointer-events:none;
+  background:conic-gradient(from -90deg, var(--sk-c,#ffd24a) var(--fill,0deg), #ffffff14 var(--fill,0deg));
+  opacity:.95;
   -webkit-mask:radial-gradient(circle, #000 52%, transparent 60%);
           mask:radial-gradient(circle, #000 52%, transparent 60%);
 }
 .skill-glyph{
   position:relative; z-index:4;
-  width:44px; height:44px; border-radius:50%;
+  width:42px; height:42px; border-radius:8px;
   display:flex; align-items:center; justify-content:center;
   font-size:20px; font-weight:900; color:var(--sk-c,#ffd24a);
   background:
-    linear-gradient(180deg,#3a4a86,#1c2a52 60%,#0e1426),
-    radial-gradient(circle at 35% 30%,#232a3d,#0e111b 70%);
-  border:2px solid color-mix(in srgb, var(--sk-c,#ffd24a) 78%, #ffffffa0);
-  text-shadow:0 0 10px var(--sk-c,#ffd24a88);
-  box-shadow:0 0 14px var(--sk-c,#ffd24a22), inset 0 0 12px #000c;
+    radial-gradient(circle at 38% 28%, #ffffff18, transparent 46%),
+    linear-gradient(180deg,#39456f,#1b2544 58%,#0d1323);
+  border:1px solid color-mix(in srgb, var(--sk-c,#ffd24a) 70%, #ffffffa8);
+  text-shadow:0 0 12px var(--sk-c,#ffd24a99);
+  box-shadow:0 2px 4px #000c, 0 0 14px var(--sk-c,#ffd24a26), inset 0 2px 4px rgba(255,255,255,.12), inset 0 -2px 4px #000a;
 }
 .skill-cooldown{
-  position:absolute; left:0; right:0; bottom:0; z-index:2;
-  background:linear-gradient(180deg,color-mix(in srgb, var(--sk-c,#ffd24a) 26%, #000d),#000f);
-  border-top:1px solid var(--sk-c,#ffd24a)44;
+  position:absolute; left:3px; right:3px; bottom:3px; z-index:2; border-radius:0 0 6px 6px;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--sk-c,#ffd24a) 22%, #000b), #000f);
+  border-top:1px solid color-mix(in srgb, var(--sk-c,#ffd24a) 42%, transparent);
   transition:height .08s linear, opacity .15s;
 }
 .skill-band{
-  position:absolute; inset:3px; z-index:3; border-radius:6px;
+  position:absolute; inset:3px; z-index:3; border-radius:7px;
   display:flex; align-items:flex-end; justify-content:center;
-  padding-bottom:2px;
+  padding-bottom:3px;
   font-size:12px; font-weight:800; color:var(--sk-c,#ffd24a);
-  text-shadow:0 1px 3px #000; pointer-events:none;
+  text-shadow:0 1px 4px #000; pointer-events:none;
 }
 .skill-ready{
-  position:absolute; z-index:5; bottom:-10px; left:50%; transform:translateX(-50%);
-  font-size:9.5px; font-weight:800; letter-spacing:.5px; color:#b7ffc8;
-  background:#0f2415; border:1px solid #3f9a58; border-radius:6px;
-  padding:2px 10px 3px; white-space:nowrap; opacity:0; transition:opacity .15s;
+  position:absolute; z-index:6; bottom:-9px; left:50%; transform:translateX(-50%);
+  font-size:9.5px; font-weight:800; letter-spacing:1px; color:#b9ffce;
+  background:linear-gradient(180deg,#13301b,#0d1f13);
+  border:1px solid #3f9a58; border-radius:7px;
+  padding:2px 11px 3px; white-space:nowrap; opacity:0; transition:opacity .18s;
+  box-shadow:0 4px 12px #000c, 0 0 10px #3f9a5844;
 }
 .skill-mod.ready .skill-ready{ opacity:1; }
-.skill-meta{ display:flex; flex-direction:column; gap:2px; min-width:76px; }
-.skill-name{
-  font-size:12.5px; font-weight:800; color:#eef1ff; letter-spacing:2.5px;
-  white-space:nowrap; text-shadow:0 1px 2px #000;
+.skill-mod.ready{
+  border-color:color-mix(in srgb, var(--sk-c,#ffd24a) 78%, #fff);
+  box-shadow:
+    0 14px 34px #000d,
+    0 0 0 1px color-mix(in srgb, var(--sk-c,#ffd24a) 55%, transparent),
+    0 0 24px color-mix(in srgb, var(--sk-c,#ffd24a) 30%, transparent),
+    0 1px 0 rgba(255,255,255,.08) inset;
 }
-.skill-key{ font-size:10px; color:var(--dim2); letter-spacing:1px; }
+.skill-mod.ready::before{ background:
+  repeating-linear-gradient(115deg, rgba(255,255,255,.03) 0 1px, transparent 1px 9px),
+  linear-gradient(135deg, color-mix(in srgb, var(--sk-c,#ffd24a) 30%, transparent), transparent 42%); }
+.skill-meta{ display:flex; flex-direction:column; gap:5px; min-width:78px; justify-content:center; }
+.skill-name{
+  font-size:12.5px; font-weight:900; color:#f0f3ff; letter-spacing:3px;
+  white-space:nowrap; text-shadow:0 1px 3px #000;
+}
+.skill-key{
+  font-size:10px; font-weight:700; color:color-mix(in srgb, var(--sk-c,#ffd24a) 75%, #aab);
+  letter-spacing:1.5px;
+}
+.skill-key b{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; padding:2px 0 3px; margin-right:5px;
+  background:linear-gradient(180deg,#262c40,#161a28);
+  border:1px solid color-mix(in srgb, var(--sk-c,#ffd24a) 45%, #3a4258);
+  border-bottom-width:2px; border-radius:5px; box-shadow:0 0 0 1px #ffffff08 inset;
+}
 .skill-mod:not(.ready) .skill-ready{ display:none; }
 
 .wslot{
   width:56px; height:56px;
   background:
-    linear-gradient(180deg,#ffffff12,transparent 46%),
-    linear-gradient(180deg,#20263cf2,#10131ff2 74%,#0b0e17fa);
-  border:1px solid #ffffff2a; border-radius:5px;
+    radial-gradient(circle at 35% 24%, rgba(255,255,255,.14), transparent 44%),
+    linear-gradient(180deg,#232a40 0%, color-mix(in srgb, var(--rc,#333a52) 12%, #141827) 58%, #0d101a 100%);
+  border:1px solid var(--rc,#333a52);
+  border-top-color:color-mix(in srgb, var(--rc,#333a52) 62%, #fff);
+  border-radius:8px;
   display:flex; align-items:center; justify-content:center;
   position:relative; overflow:hidden;
-  box-shadow:0 6px 18px #000b, inset 0 0 0 1px #ffffff0a;
-  transition:transform .12s, filter .15s;
-  filter:drop-shadow(0 0 2px var(--rc,#333a52)55);
+  box-shadow:0 0 0 1px #000a inset, 0 1px 0 #ffffff14 inset, 0 6px 16px #000b;
+  transition:transform .12s, filter .16s, box-shadow .16s;
+  filter:drop-shadow(0 0 3px color-mix(in srgb, var(--rc,#333a52) 55%, transparent));
 }
 .wslot::before{
   content:""; position:absolute; inset:0;
   background:
-    linear-gradient(180deg,#ffffff16,transparent 42%),
-    linear-gradient(180deg, var(--rc,#333a52)00, var(--rc,#333a52)55 135%);
+    linear-gradient(115deg, rgba(255,255,255,.1), transparent 34%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.025) 0 1px, transparent 1px 7px),
+    linear-gradient(180deg, color-mix(in srgb, var(--rc,#333a52) 0%, transparent), color-mix(in srgb, var(--rc,#333a52) 40%, transparent) 140%);
   pointer-events:none;
 }
 .wslot::after{
   content:""; position:absolute; inset:2px; z-index:4;
-  border:1px solid var(--rc,#333a52); border-radius:3px;
+  border:1px solid color-mix(in srgb, var(--rc,#333a52) 18%, #ffffff14); border-radius:6px;
   pointer-events:none;
 }
-.wslot:hover{ transform:translateY(-3px); filter:brightness(1.15); box-shadow:0 8px 18px #000c, inset 0 0 0 1px #ffffff14; }
-.wslot canvas{ image-rendering:pixelated; }
+.wslot:hover{
+  transform:translateY(-3px); filter:brightness(1.16);
+  box-shadow:0 0 0 1px #000a inset, 0 1px 0 #ffffff16 inset, 0 10px 22px #000c, 0 0 16px color-mix(in srgb, var(--rc,#333a52) 45%, transparent);
+}
+.wslot canvas{ image-rendering:pixelated; filter:drop-shadow(0 3px 3px rgba(0,0,0,.65)); }
 .wslot-num{
-  position:absolute; top:2px; left:4px; z-index:3;
-  font-size:9px; font-weight:800; color:#8a90a8;
-  text-shadow:0 1px 2px #000; letter-spacing:0;
+  position:absolute; top:2px; left:3px; z-index:5;
+  font-size:8.5px; font-weight:900; letter-spacing:0;
+  color:#0a0d18;
+  background:linear-gradient(180deg, var(--rc,#333a52), color-mix(in srgb, var(--rc,#333a52) 45%, #171b2a));
+  padding:1px 4px; border-radius:3px 0 3px 0;
+  box-shadow:0 1px 3px #000c;
 }
 .wslot-gem{
   position:absolute; top:-4px; right:-4px; z-index:5;
-  width:14px; height:14px;
-  background:var(--rc,#333a52);
+  width:16px; height:16px;
+  background:
+    radial-gradient(circle at 50% 36%, #ffffffa0 0 2px, transparent 3px),
+    linear-gradient(135deg, color-mix(in srgb, var(--rc,#333a52) 76%, #fff), var(--rc,#333a52) 55%, #0a0d18);
   clip-path:polygon(50% 0,100% 38%,50% 100%,0 38%);
-  filter:drop-shadow(0 0 6px var(--rc,#333a52aa));
+  filter:drop-shadow(0 0 6px var(--rc,#333a52cc));
 }
 .wslot .cd{
-  position:absolute; left:0; right:0; bottom:0; z-index:2;
-  background:linear-gradient(180deg,color-mix(in srgb, var(--rc,#333a52) 24%, #000c),#000f);
-  border-top:1px solid var(--rc,#333a52)40;
+  position:absolute; left:2px; right:2px; bottom:2px; z-index:2; border-radius:0 0 5px 5px;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--rc,#333a52) 20%, #000b), #000f);
+  border-top:1px solid color-mix(in srgb, var(--rc,#333a52) 42%, transparent);
   transition:height .06s linear;
 }
 .hint{ font-size:11px; color:var(--dim2); letter-spacing:1px; }
@@ -355,7 +401,7 @@ canvas#game{
   100%{ opacity:0; transform:translate(-50%,-60%) scale(1); }
 }
 
-/* ---------------- 属性浮层 ---------------- */
+/* ---------------- 属性浮�?---------------- */
 .stat-panel{
   position:absolute; top:96px; left:16px; z-index:8;
   width:260px; max-height:70vh; overflow:auto;
@@ -433,7 +479,7 @@ canvas#game{
 .inv-cell.empty{ border-style:dashed; opacity:.35; cursor:default; }
 .side-stats{ overflow:auto; }
 
-/* 商品卡 */
+/* 商品�?*/
 .card{
   background:var(--panel); border:2px solid var(--line);
   border-radius:3px; padding:12px 12px 10px;
@@ -462,7 +508,7 @@ canvas#game{
 .card-mods .sp{ color:#ffd98a; }
 .card-flavor{ font-size:10.5px; color:var(--dim2); font-style:italic; line-height:1.5; }
 .card-dmgattr{ font-size:10px; color:#9ad0ff; letter-spacing:.4px; margin-top:5px; font-weight:700; }
-.card-dmgattr::before{ content:'▸ '; color:var(--dim2); }
+.card-dmgattr::before{ content:'�?'; color:var(--dim2); }
 .tt-attr{ font-size:11px; color:#9ad0ff; margin:4px 0 3px; font-weight:700; }
 .card-foot{ display:flex; gap:6px; align-items:center; }
 .card-buy{ flex:1; }
@@ -481,7 +527,7 @@ canvas#game{
   100%{ transform:scale(1); }
 }
 
-/* 界面内 DOM 粒子（购买 / 升级确认反馈） */
+/* 界面�?DOM 粒子（购�?/ 升级确认反馈�?*/
 .dom-particle{
   position:fixed; width:7px; height:7px; border-radius:50%;
   pointer-events:none; z-index:80; transform:translate(-50%,-50%);
@@ -535,7 +581,7 @@ canvas#game{
 .seg-btn:hover{ background:rgba(110,150,230,.12); color:#dfe7ff; }
 .seg-btn.on{ background:linear-gradient(180deg,#ffd24a,#e8a726); color:#201a05; font-weight:700; }
 
-/* 设置页 · 操作说明 */
+/* 设置�?· 操作说明 */
 .set-help{
   width:420px; max-width:90vw; margin:26px auto 4px;
   padding:14px 18px; border-radius:12px;
@@ -572,7 +618,7 @@ canvas#game{
 }
 .set-help-tip .kbd{ font-size:10.5px; padding:1px 6px; }
 
-/* 开关切换（背景音乐） */
+/* 开关切换（背景音乐�?*/
 .switch{ position:relative; display:inline-block; width:46px; height:24px; }
 .set-row label.switch{ width:auto; text-align:left; flex:none; cursor:pointer; }
 .switch input{ position:absolute; opacity:0; width:0; height:0; margin:0; }
@@ -614,7 +660,7 @@ canvas#game{
 .tooltip .sp{ color:#ffd98a; }
 .tooltip .tt-f{ color:var(--dim2); font-style:italic; margin-top:5px; font-size:11px; }
 
-/* 滚动条 */
+/* 滚动�?*/
 ::-webkit-scrollbar{ width:8px; height:8px; }
 ::-webkit-scrollbar-track{ background:#0d1018; }
 ::-webkit-scrollbar-thumb{ background:#2e3448; border-radius:4px; }
@@ -635,17 +681,17 @@ canvas#game{
   z-index:0; pointer-events:none; display:block;
 }
 
-/* ---------------- 封面（深渊猎手 · 裂隙之章） ----------------
-   极简 + 质感：AI 生成的克苏鲁深渊像素封面 + 巨大标题 + 裂隙式入口 */
+/* ---------------- 封面（深渊猎�?· 裂隙之章�?----------------
+   极简 + 质感：AI 生成的克苏鲁深渊像素封面 + 巨大标题 + 裂隙式入�?*/
 .screen-cover{ overflow:hidden; background:#06080f; }
-/* 封面背景：AI 生成的像素插画（克苏鲁深渊，centred 居中缩放） */
+/* 封面背景：AI 生成的像素插画（克苏鲁深渊，centred 居中缩放�?*/
 .cover-bg{
   position:absolute; inset:0; width:100%; height:100%;
   z-index:0; pointer-events:none; display:block;
   object-fit:cover; object-position:center 55%;
   image-rendering:pixelated;
 }
-/* 上下暗角（中部 30-70% 透明，让眼睛中心可见；顶部/底部护字） */
+/* 上下暗角（中�?30-70% 透明，让眼睛中心可见；顶�?底部护字�?*/
 .screen-cover::before{
   content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
   background:linear-gradient(180deg,
@@ -668,7 +714,7 @@ canvas#game{
 }
 @keyframes tagFloat{ 0%,100%{opacity:.55; transform:translateY(0);} 50%{opacity:1; transform:translateY(-4px);} }
 
-/* 巨大标题：绝对主体，白→冰蓝渐变 + 深描边 + 蓝辉光 */
+/* 巨大标题：绝对主体，白→冰蓝渐变 + 深描�?+ 蓝辉�?*/
 .screen-cover .game-title{
   font-size:96px; letter-spacing:12px; margin:0; line-height:1.02; font-weight:900;
   background:linear-gradient(180deg,#ffffff 0%,#e8efff 45%,#b9cdf8 100%);
@@ -686,7 +732,7 @@ canvas#game{
   white-space:nowrap; text-shadow:0 0 12px rgba(110,150,255,.3);
 }
 
-/* 主入口：探索深渊——四字发光扭曲飘动（悬于深渊之眼下方） */
+/* 主入口：探索深渊——四字发光扭曲飘动（悬于深渊之眼下方�?*/
 .cover-entry{
   position:absolute; left:50%; top:58%; transform:translate(-50%,0);
   z-index:3; display:flex; align-items:center; justify-content:center;
@@ -696,7 +742,7 @@ canvas#game{
   font-family:inherit; line-height:1;
   transition:transform .2s cubic-bezier(.2,.7,.3,1);
 }
-/* 单字：独立扭曲 + 上下飘动 + 辉光脉动 */
+/* 单字：独立扭�?+ 上下飘动 + 辉光脉动 */
 .btn-gate-text .gt{
   display:inline-block;
   font-size:50px; font-weight:900; letter-spacing:14px; color:#eef4ff;
@@ -730,12 +776,12 @@ canvas#game{
     text-shadow:0 0 12px rgba(165,205,255,1), 0 0 28px rgba(130,175,255,.75), 0 0 48px rgba(100,150,255,.5), 0 0 3px rgba(0,0,0,.9);
   }
 }
-/* 悬停：整组微亮放大 */
+/* 悬停：整组微亮放�?*/
 .btn-gate-text:hover{ transform:scale(1.06); }
 .btn-gate-text:hover .gt{ color:#ffffff; }
 .btn-gate-text:active{ transform:scale(1.02); }
 
-/* 功能入口：HUD 角标按钮行（与游戏内一致），收紧 */
+/* 功能入口：HUD 角标按钮行（与游戏内一致），收�?*/
 .cover-menu{
   position:absolute; left:50%; bottom:8%; transform:translateX(-50%);
   z-index:3; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
@@ -751,7 +797,7 @@ canvas#game{
 }
 @keyframes titleShine{ 0%{background-position:0% 50%;} 100%{background-position:240% 50%;} }
 
-/* ---------------- 子页（记录 / 成就 / 存档） ---------------- */
+/* ---------------- 子页（记�?/ 成就 / 存档�?---------------- */
 .sub-screen{
   flex-direction:column; align-items:center; justify-content:center;
   gap:22px; padding:40px 20px; overflow-y:auto;
@@ -802,7 +848,7 @@ canvas#game{
 .ach-tile.got .ach-name{ color:#eaf1ff; }
 .ach-desc{ font-size:11px; color:var(--dim2); line-height:1.4; margin-top:2px; }
 
-/* 存档槽 */
+/* 存档�?*/
 .save-empty{ color:var(--dim); font-size:13px; line-height:1.7; text-align:center; padding:24px 8px; }
 .save-slot{
   padding:16px; border-radius:12px;
@@ -814,7 +860,7 @@ canvas#game{
 .save-ch{ font-size:18px; font-weight:900; color:#eaf1ff; letter-spacing:1px; }
 .save-wave{ font-size:12px; color:var(--dim); margin-top:6px; letter-spacing:1px; }
 .save-head .save-wave{ margin-top:0; }
-/* 波次进度条 */
+/* 波次进度�?*/
 .save-prog{
   height:6px; border-radius:3px; margin:12px 0 14px;
   background:#0d1424; border:1px solid #243a66; overflow:hidden;
@@ -874,7 +920,7 @@ canvas#game{
   .sub-body{ max-height:70vh; }
 }
 
-/* 进入漩涡：封面缩放淡出 */
+/* 进入漩涡：封面缩放淡�?*/
 .screen.leaving{ animation:coverOut .62s ease-in forwards; }
 @keyframes coverOut{
   0%{ opacity:1; transform:scale(1); }
@@ -967,7 +1013,7 @@ canvas#game{
 .wi-mods .n{ color:var(--bad); }
 .wi-weapon{ font-size:11.5px; color:#8a90a8; margin-top:5px; }
 .wheel-foot{ grid-area:wheelfoot; justify-self:center; position:relative; z-index:2; display:flex; gap:18px; margin-top:14px; }
-/* 轮盘操作提示（代替原返回/确认按钮） */
+/* 轮盘操作提示（代替原返回/确认按钮�?*/
 .wheel-hint{
   font-size:12px; letter-spacing:3px; color:#7f8bb0;
   text-shadow:0 0 10px rgba(0,0,0,.7);
@@ -993,7 +1039,7 @@ canvas#game{
   .wheel-token canvas{ width:60px !important; height:60px !important; }
 }
 
-/* 商店重掷洗牌动画：新卡依次「派发」入场 */
+/* 商店重掷洗牌动画：新卡依次「派发」入�?*/
 #shopCards.reroll .card{ animation:cardDeal .42s cubic-bezier(.2,.7,.3,1.15) both; }
 #shopCards.reroll .card:nth-child(1){ animation-delay:.02s; }
 #shopCards.reroll .card:nth-child(2){ animation-delay:.07s; }

@@ -369,6 +369,188 @@
   ]);
 
   /* ------------------------------------------------------------
+     地面材质元素素材（散布用，可染色）——让地面"读得出来"是什么材质
+     ------------------------------------------------------------ */
+  PX.tint('g_grass_tuft', [
+    '...o...o..',
+    '..oA.o.Ao.',
+    '..oA.o.Ao.',
+    '.oAA.oAAo.',
+    '.oAAooAAo.',
+    '.oAo..oAo.',
+    '..o....o..',
+    '..oo..oo..'
+  ]);
+  PX.tint('g_grass_blade', [
+    '.o..',
+    '.Ao.',
+    '.Ao.',
+    '.Ao.',
+    '.Ao.',
+    '..Ao',
+    '..Ao',
+    '..oo'
+  ]);
+  PX.tint('g_moss_patch', [
+    '..ooooo...',
+    '.oAAAAAo..',
+    'oACCAACCAo',
+    'oAAAAAAAo.',
+    'oACCAACCAo',
+    '.oAAAAAo..',
+    '..ooooo...'
+  ]);
+  PX.tint('g_pebble', [
+    '..oooo.',
+    '.oAAAo.',
+    'oACCCAo',
+    '.oAAAo.',
+    '..oooo.'
+  ]);
+  PX.tint('g_dirt_patch', [
+    '...oooo....',
+    '..oAAAAo...',
+    '.oAAAAAAo..',
+    'oAABBAABo..',
+    'oAAAAAAAo..',
+    '.oAAAAAAo..',
+    '..oAAAAo...',
+    '...oooo....'
+  ]);
+  PX.tint('g_leaf', [
+    '.oo..',
+    'oAAo.',
+    'oAAAo',
+    '.oAAo',
+    '..oo.'
+  ]);
+  PX.tint('g_slab', [
+    'oooooooooooooooo',
+    'oAAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAAo',
+    'oBBBBBBBBBBBBBBo',
+    'oAAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAAo',
+    'oAAAAAAAAAAAAAAo',
+    'oooooooooooooooo'
+  ]);
+  PX.tint('g_crack', [
+    '...........o..',
+    '.........o.o..',
+    '.......o.o....',
+    '.....o.o......',
+    '...o.o........',
+    '...o..........'
+  ]);
+  PX.tint('g_chip', [
+    '.ooo.',
+    'oAAAo',
+    'oAABo',
+    '.ooo.',
+    '.....'
+  ]);
+  PX.tint('g_dust', [
+    '..oooo..',
+    '.oAAAAo.',
+    'oAAAAAAo',
+    'oAAAAAAo',
+    '.oAAAAo.',
+    '..oooo..'
+  ]);
+  PX.tint('g_rock_chunk', [
+    '..oooo....',
+    '.oAAAAo...',
+    'oACCCCAo..',
+    'oACCCCCAo.',
+    'oACCCCAo..',
+    '.oAAAAAo..',
+    '.oAAAAo...',
+    '..oooo....'
+  ]);
+  PX.tint('g_crystal_grain', [
+    '..D...',
+    '.DCD..',
+    '.DCD..',
+    'oACCo.',
+    'oACCo.',
+    'oACCo.',
+    '.oAo..',
+    '..oo..'
+  ]);
+  PX.tint('g_slag', [
+    '..oooo.',
+    '.oAAAAo',
+    'oAkAAo.',
+    'oAAAkAo',
+    '.oAAo..',
+    '..ooo..'
+  ]);
+  PX.tint('g_char', [
+    '..ooooo...',
+    '.oAAAAAo..',
+    'oAkkAAAo..',
+    'oAkAAkAo..',
+    'oAAAAkAo..',
+    '.oAAAAAo..',
+    '..ooooo...'
+  ]);
+  PX.tint('g_bone_chip', [
+    '.o.o.o.',
+    'oAoAoAo',
+    'oAAAAAo',
+    '.oAAAo.',
+    '..ooo..'
+  ]);
+  PX.tint('g_ash_patch', [
+    '...ooooo..',
+    '..oAAAAo..',
+    '.oAAAAAo..',
+    'oAAAAAAo..',
+    'oAAAAAAo..',
+    '.oAAAAAo..',
+    '..ooooo...'
+  ]);
+  PX.tint('g_blood_crack', [
+    '..........o.....',
+    '........o.o.....',
+    '......o.o.......',
+    '....o.o.........',
+    '..o.o...........',
+    '..o.............'
+  ]);
+  PX.tint('g_flower', [
+    '...o..o..',
+    '..oAo.oA.',
+    '..oAAoAA.',
+    '...oAAo..',
+    '..oAAAAo.',
+    '..oAAAAo.',
+    '...oAAo..',
+    '....oo...'
+  ]);
+  PX.tint('g_mushroom', [
+    '..ooooo.',
+    '.oAAAAo.',
+    '.oAAAAo.',
+    '..oAAAo.',
+    '...oAo..',
+    '...oAo..',
+    '...oAo..',
+    '...ooo..'
+  ]);
+  PX.tint('g_twig', [
+    '..o.....',
+    '.oAo....',
+    '.oAo....',
+    'oAAo....',
+    '.oAo....',
+    '..oo....',
+    '........'
+  ]);
+
+  /* ------------------------------------------------------------
      主题配置：T1 生机 → T2 荒凉 → T3 破败 → T4 阳光骗局 → T5 终焉
      ------------------------------------------------------------ */
   G.Art.THEMES = {
@@ -377,6 +559,15 @@
       floor: { sprite: 't_floor_moss', variants: ['t_floor_moss', 't_floor_moss_v2'], col: '#4f7a44', alpha: 0.42 },
       wall: { col: '#39493c' },
       void: ['#0b0f0b', '#0d120d'],
+      ground: { density: 0.16, elements: [
+        { spr: 'g_grass_tuft', col: '#6fae5a', w: 4 },
+        { spr: 'g_grass_blade', col: '#7fbf68', w: 4 },
+        { spr: 'g_moss_patch', col: '#4f8a44', w: 3 },
+        { spr: 'g_pebble', col: '#5f6655', w: 2 },
+        { spr: 'g_dirt_patch', col: '#4a443a', w: 2 },
+        { spr: 'g_leaf', col: '#8a7a4a', w: 1 },
+        { spr: 'g_twig', col: '#6a5a3a', w: 1 }
+      ] },
       decor: [
         { spr: 't_grass', col: '#5f9a4f', n: 7 },
         { spr: 't_moss', col: '#4a7a3a', n: 5 },
@@ -392,6 +583,13 @@
       floor: { sprite: 't_floor_stone', variants: ['t_floor_stone', 't_floor_stone_v2'], col: '#3c4460', alpha: 0.46 },
       wall: { col: '#3a4160' },
       void: ['#0a0c14', '#0c0f18'],
+      ground: { density: 0.14, elements: [
+        { spr: 'g_slab', col: '#4a5270', w: 3 },
+        { spr: 'g_crack', col: '#242a3c', w: 3 },
+        { spr: 'g_chip', col: '#5a6278', w: 2 },
+        { spr: 'g_dust', col: '#3c4460', w: 2 },
+        { spr: 'g_pebble', col: '#4a5068', w: 1 }
+      ] },
       decor: [
         { spr: 't_bone', col: '#b9c0cc', n: 5 },
         { spr: 't_rubble', col: '#5a6278', n: 5 },
@@ -406,6 +604,13 @@
       floor: { sprite: 't_floor_mine', variants: ['t_floor_mine', 't_floor_mine_v2'], col: '#5a4a6a', alpha: 0.44 },
       wall: { col: '#4a3c5a' },
       void: ['#0a0810', '#0c0a14'],
+      ground: { density: 0.15, elements: [
+        { spr: 'g_rock_chunk', col: '#3a3548', w: 4 },
+        { spr: 'g_crystal_grain', col: '#a06fff', w: 3 },
+        { spr: 'g_slag', col: '#2a2634', w: 3 },
+        { spr: 'g_crack', col: '#1c1826', w: 2 },
+        { spr: 'g_dust', col: '#4a4058', w: 1 }
+      ] },
       decor: [
         { spr: 't_crystal', col: '#a06fff', n: 5 },
         { spr: 't_rubble', col: '#3a3548', n: 5 },
@@ -420,6 +625,13 @@
       floor: { sprite: 't_floor_meadow', variants: ['t_floor_meadow', 't_floor_meadow_v2'], col: '#6fae5f', alpha: 0.55 },
       wall: { col: '#b09a6a' },
       void: ['#1a1c10', '#202414'],
+      ground: { density: 0.15, elements: [
+        { spr: 'g_grass_tuft', col: '#7fbf68', w: 4 },
+        { spr: 'g_flower', col: '#ffe9a0', w: 3 },
+        { spr: 'g_mushroom', col: '#d8a06a', w: 2 },
+        { spr: 'g_pebble', col: '#8a8f6a', w: 2 },
+        { spr: 'g_leaf', col: '#9a8a4a', w: 2 }
+      ] },
       decor: [
         { spr: 't_flower', col: '#ffe9a0', n: 6 },
         { spr: 't_grass', col: '#8fc06a', n: 5 },
@@ -435,6 +647,13 @@
       floor: { sprite: 't_floor_void', variants: ['t_floor_void', 't_floor_void_v2'], col: '#4a2a3a', alpha: 0.46 },
       wall: { col: '#4a2a3a' },
       void: ['#0a0608', '#0c070a'],
+      ground: { density: 0.15, elements: [
+        { spr: 'g_char', col: '#2a1c24', w: 4 },
+        { spr: 'g_ash_patch', col: '#3a2a34', w: 3 },
+        { spr: 'g_blood_crack', col: '#8a2438', w: 3 },
+        { spr: 'g_bone_chip', col: '#6a5a62', w: 2 },
+        { spr: 'g_slag', col: '#241820', w: 2 }
+      ] },
       decor: [
         { spr: 't_ash', col: '#2a1c24', n: 6 },
         { spr: 't_bone', col: '#6a5a62', n: 3 },
@@ -510,6 +729,74 @@
     }
     ctx.putImageData(img, 0, 0);
     return (map._grounds[roomIdx] = cv);
+  };
+
+  /* ------------------------------------------------------------
+     地面材质元素散布：确定性位置/种类/大小/透明度/镜像，
+     避开中心安全区与房内墙体。让地面"读得出来"是什么材质。
+     ------------------------------------------------------------ */
+  G.Art.groundElements = function (map, roomIdx) {
+    map._groundEls = map._groundEls || {};
+    if (map._groundEls[roomIdx]) return map._groundEls[roomIdx];
+    var th = G.Art.themeOf(map.tierId);
+    var gd = th.ground;
+    if (!gd || !gd.elements || !gd.elements.length) return (map._groundEls[roomIdx] = []);
+    var rc = G.Map.roomRect(map.rooms[roomIdx].c, map.rooms[roomIdx].r);
+    var totalW = 0;
+    gd.elements.forEach(function (e) { totalW += e.w; });
+    var n = Math.round((gd.density || 0.15) * 340);
+    var iRect = map.interiorByRoom ? map.interiorByRoom[roomIdx] : null;
+    var cx = rc.x0 + G.Map.ROOM / 2, cy = rc.y0 + G.Map.ROOM / 2;
+    var salt = (map.salt || 0);
+    var out = [];
+    /* 低矮贴地元素（可在中心安全区出现，不遮挡交互） */
+    var FLAT = {
+      g_moss_patch: 1, g_dirt_patch: 1, g_dust: 1, g_crack: 1,
+      g_ash_patch: 1, g_blood_crack: 1, g_pebble: 1, g_slag: 1,
+      g_char: 1, g_leaf: 1
+    };
+    var flatList = gd.elements.filter(function (e) { return FLAT[e.spr]; });
+    for (var i = 0; i < n; i++) {
+      var h = ((i * 104729 + roomIdx * 73856093 + salt * 19349663) >>> 0);
+      h = ((h ^ (h >>> 13)) * 1274126177) >>> 0;
+      var h2 = ((h >>> 7) * 668265263 + i * 7919) >>> 0;
+      var x = 0, y = 0, ok = false;
+      var centerZone = false;
+      for (var tr = 0; tr < 8 && !ok; tr++) {
+        x = rc.x0 + 70 + ((h + tr * 7919) % Math.max(1, G.Map.ROOM - 140));
+        y = rc.y0 + 70 + (((h2 >>> 4) + tr * 104729) % Math.max(1, G.Map.ROOM - 140));
+        centerZone = Math.abs(x - cx) < 180 && Math.abs(y - cy) < 180;
+        if (centerZone && !flatList.length) continue;   // 中心区只放低矮元素
+        ok = true;
+        if (iRect) {
+          for (var ir = 0; ir < iRect.length; ir++) {
+            if (x > iRect[ir][0] - 20 && x < iRect[ir][2] + 20 &&
+                y > iRect[ir][1] - 20 && y < iRect[ir][3] + 20) { ok = false; break; }
+          }
+        }
+      }
+      if (!ok) continue;
+      var roll = h2 % totalW;
+      var pool = centerZone ? flatList : gd.elements;
+      var poolW = 0;
+      pool.forEach(function (e) { poolW += e.w; });
+      roll = h2 % poolW;
+      var pick = pool[0];
+      for (var wi = 0; wi < pool.length; wi++) {
+        roll -= pool[wi].w;
+        if (roll < 0) { pick = pool[wi]; break; }
+      }
+      var sc = pick.sc
+        ? pick.sc[Math.floor((h2 >>> 8) % pick.sc.length)]
+        : (pick.scale || 2);
+      out.push({
+        spr: pick.spr, col: pick.col, x: x, y: y,
+        sc: sc,
+        a: 0.72 + ((h2 >>> 11) % 26) / 100,
+        flip: ((h2 >>> 13) % 3) === 0
+      });
+    }
+    return (map._groundEls[roomIdx] = out);
   };
 
   /* 兼容旧接口：biome（地板/墙 tile 与配色）从主题派生 */

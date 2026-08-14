@@ -53,6 +53,15 @@
             c.drawImage(gcv, rc.x0, rc.y0, G.Map.ROOM, G.Map.ROOM);
           }
         }
+        /* 2b) 地面材质元素散布（草丛/石板/岩块/焦土…，让地面读得出材质） */
+        if (G.Art && G.Art.groundElements) {
+          var els = G.Art.groundElements(m, rm.idx);
+          for (var ei = 0; ei < els.length; ei++) {
+            var el = els[ei];
+            var ecv = G.PX.getTint(el.spr, el.col, el.sc);
+            if (ecv) G.PX.draw(c, ecv, el.x, el.y, { alpha: el.a, flip: el.flip });
+          }
+        }
         /* 3) 微噪点（亮/暗颗粒） */
         c.save();
         for (var np = 0; np < 22; np++) {

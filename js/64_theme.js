@@ -551,14 +551,198 @@
   ]);
 
   /* ------------------------------------------------------------
+     像素风地板纹理（无边框、图案连续、平铺无缝）——v5 覆盖版
+     ------------------------------------------------------------ */
+  PX.tint('t_floor_moss', [
+    'AAAAAAAAAAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AAAAAAAABAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AABAAAAAAAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AAAAAABAAAAAAAAC',
+    'ACCAACCAACCAACCA',
+    'AAAAAAAAAABAAAAA',
+    'ACCAACCAACCAACCA',
+    'AABAAAAAAAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AAAAAAAAAAAABAAA',
+    'ACCAACCAACCAACCA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+  PX.tint('t_floor_moss_v2', [
+    'AAAAAAAAAAAAAAAA',
+    'AABAAAAAAAAAAAAB',
+    'AAAAAAAAAAAAAAAA',
+    'AAACAAACAAACAAAC',
+    'AAAAAAAAAAAAAAAA',
+    'AABAAAAAAAAAAAAB',
+    'AAAAAAAAAAAAAAAA',
+    'AAACAAACAAACAAAC',
+    'AAAAAAAAAAAAAAAA',
+    'AABAAAAAAAAAAAAB',
+    'AAAAAAAAAAAAAAAA',
+    'AAACAAACAAACAAAC',
+    'AAAAAAAAAAAAAAAA',
+    'AABAAAAAAAAAAAAB',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+  PX.tint('t_floor_stone', [
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAABAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'BBBBBBBBBBBBBBBB',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'BBBBBBBBBBBBBBBB',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'BBBBBBBBBBBBBBBB',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+  PX.tint('t_floor_stone_v2', [
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAABAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'BBBBBBBBBBBBBBBB',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAABAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'BBBBBBBBBBBBBBBB',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+  PX.tint('t_floor_mine', [
+    'AAAAAAAAAAAAAAAA',
+    'AAAAkAAAAAAAAAAA',
+    'AAAADAAAAAAkAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAkAAAAAAkAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAkAAAAADAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAADAAAAAAkAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAkAAAAAAAA',
+    'AAAAkAAAAAAAAAAA',
+    'AAAAAAAAAAkAAAAA',
+    'AAAADAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+  PX.tint('t_floor_mine_v2', [
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAADAAAAAAAA',
+    'AAAAkAAAAAAkAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAADAAAAAAADAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAkAAAAAAAkA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAkAAADAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAADAAAAkAAA',
+    'AAAAkAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAADAAAAAAkAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+  PX.tint('t_floor_meadow', [
+    'AAAAAAAAAAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AAAAAAADAAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AADAAAAAAAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AAAAAAADAAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AAAAAAAAAADAAAAA',
+    'ACCAACCAACCAACCA',
+    'AADAAAAAAAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AAAAADAAAAAAAAAA',
+    'ACCAACCAACCAACCA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+  PX.tint('t_floor_meadow_v2', [
+    'AAAAAAAAAAAAAAAA',
+    'AADAAAAAAAAAAAAD',
+    'AAAAAAAAAAAAAAAA',
+    'AAACAAACAAACAAAC',
+    'AAAAAADAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AADAAAAAAAAAAAAD',
+    'AAACAAACAAACAAAC',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAADAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAACAAACAAACAAAC',
+    'AAAAAADAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+  PX.tint('t_floor_void', [
+    'AAAAAAAAAAAAAAAA',
+    'AAkAAAAAAAAAAAAA',
+    'AAAAAAkAAAAAAkAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAkAAAAAAAAAAA',
+    'AAAAAAAAAAkAAAAA',
+    'AAAAAAAkAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAkAAAAAAkAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAkAAAAAAkAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAkAAAAAAAAAAA',
+    'AAAAAAAAAAkAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+  PX.tint('t_floor_void_v2', [
+    'AAAAAAAAAAAAAAAA',
+    'AAAAkAAAAAAAAAAA',
+    'AAkAAAAAAkAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAkAAAAAAAAA',
+    'AAAAAAAkAAkAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAkAAAAAAAAAAA',
+    'AAkAAAAAAAAAAAkA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAkAAAAAAkAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAkAAAAAAAAAAA',
+    'AAAAAAAkAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA'
+  ]);
+
+  /* ------------------------------------------------------------
      主题配置：T1 生机 → T2 荒凉 → T3 破败 → T4 阳光骗局 → T5 终焉
      ------------------------------------------------------------ */
   G.Art.THEMES = {
     1: {
       id: 'fringe', name: '裂隙边缘', concept: '地表边缘 · 尚有生机',
-      floor: { sprite: 't_floor_moss', variants: ['t_floor_moss', 't_floor_moss_v2'], col: '#4f7a44', alpha: 0.42 },
+      floor: { sprite: 't_floor_moss', variants: ['t_floor_moss', 't_floor_moss_v2'], col: '#5f9a52', alpha: 0.42, tileAlpha: 0.62 },
       wall: { col: '#39493c' },
-      void: ['#0b0f0b', '#0d120d'],
+      void: ['#141c14', '#182218'],
       ground: { density: 0.16, elements: [
         { spr: 'g_grass_tuft', col: '#6fae5a', w: 4 },
         { spr: 'g_grass_blade', col: '#7fbf68', w: 4 },
@@ -575,14 +759,14 @@
         { spr: 't_pebble', col: '#5f6655', n: 4 },
         { spr: 't_bone', col: '#c9c9c9', n: 1 }
       ],
-      ambient: { top: 'rgba(130,190,130,0.10)', bottom: 'rgba(0,0,0,0.52)', glow: '#7fbf7f', glowA: 0.05 },
+      ambient: { top: 'rgba(130,190,130,0.08)', bottom: 'rgba(0,0,0,0.38)', glow: '#7fbf7f', glowA: 0.05 },
       particles: { col: '#9fcf8f' }
     },
     2: {
       id: 'corridor', name: '幽暗回廊', concept: '中层回廊 · 严肃荒凉',
-      floor: { sprite: 't_floor_stone', variants: ['t_floor_stone', 't_floor_stone_v2'], col: '#3c4460', alpha: 0.46 },
+      floor: { sprite: 't_floor_stone', variants: ['t_floor_stone', 't_floor_stone_v2'], col: '#6a78a8', alpha: 0.46, tileAlpha: 0.62 },
       wall: { col: '#3a4160' },
-      void: ['#0a0c14', '#0c0f18'],
+      void: ['#12162a', '#161c36'],
       ground: { density: 0.14, elements: [
         { spr: 'g_slab', col: '#4a5270', w: 3 },
         { spr: 'g_crack', col: '#242a3c', w: 3 },
@@ -596,14 +780,14 @@
         { spr: 't_vine', col: '#4a5a44', n: 3 },
         { spr: 't_pebble', col: '#4a5068', n: 3 }
       ],
-      ambient: { top: 'rgba(90,110,170,0.10)', bottom: 'rgba(0,0,0,0.60)', glow: '#7fa8ff', glowA: 0.04 },
+      ambient: { top: 'rgba(90,110,170,0.08)', bottom: 'rgba(0,0,0,0.42)', glow: '#7fa8ff', glowA: 0.04 },
       particles: { col: '#8fa8d8' }
     },
     3: {
       id: 'mine', name: '深部矿坑', concept: '深部矿脉 · 黑暗破败',
-      floor: { sprite: 't_floor_mine', variants: ['t_floor_mine', 't_floor_mine_v2'], col: '#5a4a6a', alpha: 0.44 },
+      floor: { sprite: 't_floor_mine', variants: ['t_floor_mine', 't_floor_mine_v2'], col: '#7a68a8', alpha: 0.44, tileAlpha: 0.58 },
       wall: { col: '#4a3c5a' },
-      void: ['#0a0810', '#0c0a14'],
+      void: ['#141020', '#181230'],
       ground: { density: 0.15, elements: [
         { spr: 'g_rock_chunk', col: '#3a3548', w: 4 },
         { spr: 'g_crystal_grain', col: '#a06fff', w: 3 },
@@ -617,14 +801,14 @@
         { spr: 't_ash', col: '#2a2634', n: 4 },
         { spr: 't_bone', col: '#8f8898', n: 2 }
       ],
-      ambient: { top: 'rgba(120,80,180,0.08)', bottom: 'rgba(0,0,0,0.70)', glow: '#c07fff', glowA: 0.06 },
+      ambient: { top: 'rgba(120,80,180,0.08)', bottom: 'rgba(0,0,0,0.48)', glow: '#c07fff', glowA: 0.06 },
       particles: { col: '#b88fff' }
     },
     4: {
       id: 'heart', name: '深渊腹地', concept: '阳光骗局 · 地面镜像',
-      floor: { sprite: 't_floor_meadow', variants: ['t_floor_meadow', 't_floor_meadow_v2'], col: '#6fae5f', alpha: 0.55 },
+      floor: { sprite: 't_floor_meadow', variants: ['t_floor_meadow', 't_floor_meadow_v2'], col: '#78c06a', alpha: 0.55, tileAlpha: 0.66 },
       wall: { col: '#b09a6a' },
-      void: ['#1a1c10', '#202414'],
+      void: ['#242a16', '#2c341c'],
       ground: { density: 0.15, elements: [
         { spr: 'g_grass_tuft', col: '#7fbf68', w: 4 },
         { spr: 'g_flower', col: '#ffe9a0', w: 3 },
@@ -638,15 +822,15 @@
         { spr: 't_mushroom', col: '#d8a06a', n: 2 },
         { spr: 't_pebble', col: '#8a8f6a', n: 3 }
       ],
-      ambient: { top: 'rgba(255,230,150,0.18)', bottom: 'rgba(60,40,10,0.36)', glow: '#ffe9a0', glowA: 0.10 },
+      ambient: { top: 'rgba(255,230,150,0.16)', bottom: 'rgba(60,40,10,0.28)', glow: '#ffe9a0', glowA: 0.10 },
       light: { sun: true, col: '#ffe9a0', beamA: 0.10, spots: 3 },
       particles: { col: '#ffe9a0' }
     },
     5: {
       id: 'gate', name: '终焉之门', concept: '深渊之心 · 最黑暗破败',
-      floor: { sprite: 't_floor_void', variants: ['t_floor_void', 't_floor_void_v2'], col: '#4a2a3a', alpha: 0.46 },
+      floor: { sprite: 't_floor_void', variants: ['t_floor_void', 't_floor_void_v2'], col: '#6a4458', alpha: 0.46, tileAlpha: 0.6 },
       wall: { col: '#4a2a3a' },
-      void: ['#0a0608', '#0c070a'],
+      void: ['#120a10', '#160c14'],
       ground: { density: 0.15, elements: [
         { spr: 'g_char', col: '#2a1c24', w: 4 },
         { spr: 'g_ash_patch', col: '#3a2a34', w: 3 },
@@ -661,7 +845,7 @@
         { spr: 't_crystal', col: '#ff4a6b', n: 2 },
         { spr: 't_eye', col: '#ff3b6b', n: 1 }
       ],
-      ambient: { top: 'rgba(120,20,40,0.10)', bottom: 'rgba(0,0,0,0.82)', glow: '#ff4a6b', glowA: 0.07 },
+      ambient: { top: 'rgba(120,20,40,0.08)', bottom: 'rgba(0,0,0,0.55)', glow: '#ff4a6b', glowA: 0.07 },
       particles: { col: '#ff5a7a' }
     }
   };

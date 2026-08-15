@@ -335,7 +335,48 @@ async function runExtractSuccess() {
   const gIn = G.makeItem('glasses', 0);
   if (!G.grantItemOrDrop(gIn)) throw new Error('授予接口空背包应入包');
   if (gu.bag.indexOf(gIn) < 0) throw new Error('授予接口未入包');
-  log('  [授予] 统一落地/入包 ✓');
+
+  /* 丢弃物品 不自动拾取 -- 只有按 E 才会拾取 */
+  resetMeta();
+  G.game.init();
+  G.game.newRun(G.CHAR_BY_ID['alchemist'], 1);
+  const gd = G.game;
+  gd.bag = [];
+  const dItem = G.makeItem('glasses', 0);
+  G.dropItemGround(dItem);
+  const gdPk = gd.pickups.find(pu => pu.type === 'item' && pu.value === dItem);
+  if (!gdPk) throw new Error('丢弃物品未落地');
+  gdPk.x = gd.player.x; gdPk.y = gd.player.y;   // 站在其上, 不自动拾取
+  const bagBefore = gd.bag.length;
+  driveFrames(4);   // 正常运行几帧, 直接走过不应提取
+  if (gd.bag.indexOf(dItem) >= 0 || gd.bag.length !== bagBefore) throw new Error('丢弃物品被自动拾取——应留在地面');
+  // 按 E 才拾取
+  gd.bag = [];
+  const pk2 = gd.pickups.find(pu => pu.type === 'item' && pu.value === dItem);
+  if (!pk2) throw new Error('丢弃物品在地面丢失');
+  pk2.x = gd.player.x; pk2.y = gd.player.y;
+  G.game.tryInteract();   // 模拟按 E
+  if (gd.bag.indexOf(dItem) < 0) throw new Error('按 E 未拾取地面物品');
+  log('  [丢弃] 不自动拾取·仅 E 拾取 ✓');
+
+  // 满包站在地面物品上 -- 不会自动拾取 / 不弹装备已满提示
+  resetMeta();
+  G.game.init();
+  G.game.newRun(G.CHAR_BY_ID['alchemist'], 1);
+  const gf = G.game;
+  gf.bag = [];
+  const fItem = G.makeItem('glasses', 0);
+  G.dropItemGround(fItem);
+  const fPk = gf.pickups.find(pu => pu.type === 'item' && pu.value === fItem);
+  if (!fPk) throw new Error('满包地面物需先落地');
+  for (let fi = 0; fi < G.BAG_CELLS; fi++) gf.bag.push(G.makeItem('clover', 0));
+  gf.bag.forEach(it => G.invAutoPlace(gf.bag, G.Inv2.bagCols, G.Inv2.bagRows, it));
+  fPk.x = gf.player.x; fPk.y = gf.player.y;
+  const fullLen = gf.bag.length;
+  driveFrames(6);
+  if (gf.bag.length !== fullLen) throw new Error('满包时地面物被自动提取');
+  if (!gf.pickups.some(pu => pu.type === 'item' && pu.value === fItem)) throw new Error('满包地面物失踪');
+  log('  [满包] 站地面物品不自动拾取·不弹已满 ✓');
 
 
   /* 区域解锁：通关该区域最后一小关（第 3 小关）才解锁下一区域 */

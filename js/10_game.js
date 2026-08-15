@@ -315,6 +315,16 @@
       ex.channel = Math.max(ex.channel, 0.01);
       return;
     }
+    // 拾取地上的物品 -- 只有按 E 才会拾取，不自动提取
+    var it = null, itd = 1e9;
+    for (i = 0; i < this.pickups.length; i++) {
+      var pk = this.pickups[i];
+      if (pk.dead || pk.type !== 'item') continue;
+      var dd = G.dist(p.x, p.y, pk.x, pk.y);
+      if (dd < 48 && dd < itd) { it = pk; itd = dd; }
+    }
+    if (it) { it.collect(); return; }
+
     for (i = 0; i < this.containers.length; i++) {
       var c = this.containers[i];
       if (c.opened || c.used) continue;

@@ -128,6 +128,19 @@
   G.Pickup.prototype.update = function (dt) {
     var g = G.game, p = g.player;
     this.t += dt;
+    // 手动丢弃 / 满包掉落的物品不自动磁吸、不自动拾取——留在地图上，按 E 交互拾取
+    if (this.type === 'item') {
+      var dd0 = Math.pow(0.90, dt * 60);
+      this.vx *= dd0; this.vy *= dd0;
+      var nx0 = this.x + this.vx * dt, ny0 = this.y + this.vy * dt;
+      var limW0 = g.map ? g.map.worldW - G.Map.WALL : g.arena;
+      var limH0 = g.map ? g.map.worldH - G.Map.WALL : g.arena;
+      nx0 = G.clamp(nx0, 10, limW0 - 10);
+      ny0 = G.clamp(ny0, 10, limH0 - 10);
+      if (!g.map || !G.Map.solid(g.map, nx0, ny0)) { this.x = nx0; this.y = ny0; }
+      else { this.vx *= 0.4; this.vy *= 0.4; }
+      return;
+    }
     var range = 62 * (1 + p.st.pickupRange / 100);
     var d = G.dist(this.x, this.y, p.x, p.y);
     if (d < range) this.magnet = true;

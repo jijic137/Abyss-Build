@@ -3,6 +3,7 @@ node_modules/
 
 # 打包产物（构建脚本生成，不入库）
 dist/
+深渊猎手_AbyssHunter.zip
 深渊猎手_AbyssHunter_v1.zip
 
 # 本地日志 / 临时产物

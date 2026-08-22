@@ -92,7 +92,7 @@ process.on('unhandledRejection', (e) => { log('UNHANDLED: ' + (e && e.stack || e
 /* ---------- 从 index.html 解析脚本列表 ---------- */
 const html = fs.readFileSync('index.html', 'utf8');
 const files = [];
-const re = /<script src="js\/([\w]+\.js)"><\/script>/g;
+const re = /<script src="js\/([\w.-]+\.js)"><\/script>/g;
 let m;
 while ((m = re.exec(html)) !== null) files.push(m[1]);
 log('脚本列表：' + files.join(', '));

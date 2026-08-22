@@ -2,7 +2,8 @@
    55_campaign.js —— 16 小关战役系统
    五大层（区域）每层 3 小关，第 5 层 4 小关，最后一关 BOSS 战。
    局外选图 = 区域入口（进入该层第 1 小关），向下深入贯穿 16 关。
-   每小关独立目标/难度/掉落；区域 BOSS 关：深部矿坑·终、终焉之门·终。
+   每小关独立目标/难度/掉落；区域 BOSS 关：幽暗回廊·三（幽影霸主）、
+   深部矿坑·终、终焉之门·终。
    ============================================================ */
 'use strict';
 
@@ -19,7 +20,7 @@
     { name: '裂隙边缘 · 三', zone: 1, waveBand: [3, 4], objType: 'survive', survive: 65, danger: 1.3, loot: 1.3 },
     { name: '幽暗回廊 · 一', zone: 2, waveBand: [5, 6], objType: 'elite', objNeed: 1, danger: 1.9, loot: 1.7 },
     { name: '幽暗回廊 · 二', zone: 2, waveBand: [6, 8], objType: 'elite', objNeed: 1, danger: 2.2, loot: 1.9 },
-    { name: '幽暗回廊 · 三', zone: 2, waveBand: [8, 9], objType: 'elite', objNeed: 2, danger: 2.5, loot: 2.1 },
+    { name: '幽暗回廊 · 三', zone: 2, waveBand: [8, 9], objType: 'boss', boss: 'boss_wraith', danger: 2.6, loot: 2.3 },
     { name: '深部矿坑 · 一', zone: 3, waveBand: [10, 11], objType: 'elite', objNeed: 1, danger: 3.3, loot: 2.8 },
     { name: '深部矿坑 · 二', zone: 3, waveBand: [11, 13], objType: 'elite', objNeed: 2, danger: 3.7, loot: 3.1 },
     { name: '深部矿坑 · 终', zone: 3, waveBand: [13, 14], objType: 'boss', boss: 'boss_behemoth', danger: 4.2, loot: 3.4 },

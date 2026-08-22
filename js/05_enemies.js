@@ -87,6 +87,9 @@
       keep: 260, fireCd: 2.6, bspd: 240, bdmg: 5, salvo: 3, salvoArc: 0.5 },
     { id: 'ogre', name: '石拳魔', sprite: 'e_ogre', sc: 3, r: 19,
       hp: 96, spd: 34, dmg: 16, armor: 8, mat: 5, danger: 4.4, ai: 'chase' },
+    { id: 'hexfly', name: '咒环虫', sprite: 'e_wraith', sc: 3, r: 15,
+      hp: 30, spd: 68, dmg: 7, armor: 0, mat: 2, danger: 3, ai: 'orbit',
+      orbitR: 220, orbitCd: 2.2, bspd: 270, bdmg: 8 },
 
     /* ---------------- 精英 ---------------- */
     { id: 'el_warden', name: '精英 · 守望者', sprite: 'el_warden', sc: 4, r: 25, elite: true,
@@ -121,7 +124,11 @@
 
     { id: 'boss_abyss', name: '深渊之主', sprite: 'boss_abyss', sc: 5, r: 48,
       boss: true, noScale: true,
-      hp: 72000, spd: 52, dmg: 38, armor: 24, mat: 300, danger: 0, ai: 'boss2' }
+      hp: 72000, spd: 52, dmg: 38, armor: 24, mat: 300, danger: 0, ai: 'boss2' },
+
+    { id: 'boss_wraith', name: '幽影霸主', sprite: 'el_reaper', sc: 5, r: 42,
+      boss: true, noScale: true,
+      hp: 36000, spd: 72, dmg: 26, armor: 12, mat: 200, danger: 0, ai: 'boss3' }
   ];
 
   G.ENEMIES = E;
@@ -166,7 +173,7 @@
     { dur: 50, rate: 4.20, pool: [['bat', 6], ['slime', 6], ['skeleton', 7], ['spider', 5], ['swarmling', 6]],
       elites: [['el_butcher', 0.40]], label: '精英出现' },
     { dur: 50, rate: 4.76, pool: [['skeleton', 7], ['spider', 6], ['beetle', 5], ['eye', 4], ['swarmling', 6], ['void_horror', 4], ['ogre', 3], ['crystal', 3], ['glutton', 3]], label: '甲壳' },
-    { dur: 52, rate: 5.39, pool: [['skeleton', 6], ['spider', 6], ['beetle', 6], ['eye', 5], ['wraith', 4], ['hex_archer', 4], ['gargoyle', 4], ['crystal', 4], ['mite', 4], ['swarmling', 4]], label: '游魂' },
+    { dur: 52, rate: 5.39, pool: [['skeleton', 6], ['spider', 6], ['beetle', 6], ['eye', 5], ['wraith', 4], ['hex_archer', 4], ['gargoyle', 4], ['crystal', 4], ['mite', 4], ['swarmling', 4], ['hexfly', 3]], label: '游魂' },
     { dur: 54, rate: 6.02, pool: [['spider', 6], ['beetle', 6], ['eye', 5], ['wraith', 5], ['bomber', 4], ['gargoyle', 5], ['mimic', 3], ['ogre', 3], ['crystal', 3], ['void_horror', 4]], label: '引爆' },
     { dur: 56, rate: 6.58, pool: [['beetle', 6], ['eye', 5], ['wraith', 5], ['bomber', 5], ['warlock', 4], ['gargoyle', 4]],
       elites: [['el_warden', 0.35], ['el_hexer', 0.70]], label: '双精英' },
@@ -174,11 +181,11 @@
       boss: 'boss_behemoth', label: 'BOSS · 腐化巨兽' },
 
     { dur: 58, rate: 7.14, pool: [['skeleton', 5], ['beetle', 6], ['wraith', 5], ['bomber', 5], ['warlock', 5], ['stone', 3], ['mimic', 4], ['glutton', 4], ['gargoyle', 4], ['ogre', 4], ['crystal', 4], ['void_horror', 4]], label: '硬化' },
-    { dur: 60, rate: 7.70, pool: [['beetle', 6], ['wraith', 5], ['bomber', 5], ['warlock', 5], ['stone', 4], ['charger', 3], ['void_horror', 5], ['hex_archer', 5], ['ogre', 3], ['crystal', 3], ['glutton', 3]], label: '冲锋' },
+    { dur: 60, rate: 7.70, pool: [['beetle', 6], ['wraith', 5], ['bomber', 5], ['warlock', 5], ['stone', 4], ['charger', 3], ['void_horror', 5], ['hex_archer', 5], ['hexfly', 3], ['ogre', 3], ['crystal', 3], ['glutton', 3]], label: '冲锋' },
     { dur: 62, rate: 8.33, pool: [['spider', 5], ['bomber', 6], ['warlock', 5], ['stone', 5], ['charger', 4], ['eye', 4], ['ogre', 3], ['crystal', 3], ['glutton', 4]], label: '压迫' },
     { dur: 64, rate: 8.96, pool: [['beetle', 5], ['wraith', 6], ['bomber', 5], ['warlock', 6], ['stone', 5], ['charger', 5], ['gargoyle', 4]],
       elites: [['el_brood', 0.30], ['el_ironclad', 0.50], ['el_reaper', 0.70]], label: '孵化' },
-    { dur: 65, rate: 8.54, pool: [['skeleton', 4], ['wraith', 6], ['bomber', 6], ['warlock', 6], ['stone', 5], ['charger', 5], ['glutton', 5], ['void_horror', 5], ['ogre', 4], ['crystal', 4], ['hex_archer', 4]],
+    { dur: 65, rate: 8.54, pool: [['skeleton', 4], ['wraith', 6], ['bomber', 6], ['warlock', 6], ['stone', 5], ['charger', 5], ['glutton', 5], ['void_horror', 5], ['hexfly', 3], ['ogre', 4], ['crystal', 4], ['hex_archer', 4]],
       elites: [['el_butcher', 0.30], ['el_warden', 0.48], ['el_hexer', 0.64]], label: '围剿' },
     { dur: 66, rate: 9.17, pool: [['beetle', 5], ['wraith', 6], ['bomber', 6], ['warlock', 6], ['stone', 6], ['charger', 6], ['spider', 5], ['hex_archer', 5], ['ogre', 4], ['crystal', 4], ['mimic', 4]], label: '洪流' },
     { dur: 68, rate: 9.66, pool: [['wraith', 6], ['bomber', 7], ['warlock', 6], ['stone', 6], ['charger', 6], ['eye', 5], ['ogre', 4], ['crystal', 4], ['glutton', 4]],

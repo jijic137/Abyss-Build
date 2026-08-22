@@ -364,6 +364,8 @@
     if (!def.mods) return null;
     var out = {}, mul = 1 + tier * 0.35;
     for (var k in def.mods) out[k] = Math.round(def.mods[k] * mul * 10) / 10;
+    /* 红档进化：额外获得攻击速度奖励（体现质变） */
+    if (tier === 4) out.attackSpeed = (out.attackSpeed || 0) + 18;
     return out;
   };
 

@@ -107,6 +107,7 @@
       expansions: 0,
       discovered: {},
       treasureReward: null,
+      daily: null,                 // 每日挑战：{ date, win, best }
       shop: null                 // 市场缓存 {tier:1, level:1, tokens:n, offers:[...]}
     };
   }
@@ -140,6 +141,7 @@
             mem.expansions = +d.expansions || 0;
             mem.discovered = (d.discovered && typeof d.discovered === 'object') ? d.discovered : {};
             mem.treasureReward = d.treasureReward || null;
+            mem.daily = (d.daily && typeof d.daily === 'object') ? d.daily : null;
             mem.shop = d.shop || null;
           }
         }
@@ -211,6 +213,35 @@
       return { ok: true, cost: cost };
     },
     expandCost: function () { return 120 * (load().expansions + 1); },
+
+    /* 进化武器：把仓库武器升一档（红档锁定），消耗深渊币 */
+    EVOLVE_COST: [0, 45, 95, 175, 280],   // 下标 = 目标档位 tier+1
+    setStashTier: function (uid, tier) {
+      var d = load();
+      for (var i = 0; i < d.stash.length; i++) {
+        if (d.stash[i].uid === uid) {
+          if (d.stash[i].type !== 'weapon') return { ok: false, msg: '只有武器可以进化' };
+          if (tier < 0 || tier > 4) return { ok: false, msg: '档位越界' };
+          d.stash[i].tier = tier;
+          persist();
+          return { ok: true, tier: tier };
+        }
+      }
+      return { ok: false, msg: '仓库中找不到该武器' };
+    },
+    evolveStashWeapon: function (inst) {
+      if (!inst || inst.type !== 'weapon') return { ok: false, msg: '只有武器可以进化' };
+      if (inst.tier >= 4) return { ok: false, msg: '已是红档，无法继续进化' };
+      var toTier = inst.tier + 1;
+      var cost = (this.EVOLVE_COST || [0, 45, 95, 175, 280])[toTier];
+      var d = load();
+      if (d.currency < cost) return { ok: false, msg: '深渊币不足' };
+      d.currency -= cost;
+      d.stats.totalSpent = (d.stats.totalSpent || 0) + cost;
+      persist();
+      inst.tier = toTier;
+      return { ok: true, cost: cost, tier: toTier };
+    },
 
     /* ---------- 装备栏 ---------- */
     loadout: function () { return load().loadout; },

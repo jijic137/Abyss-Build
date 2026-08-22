@@ -44,6 +44,20 @@
     return { id: 'open', backEdge: 0.34, merge: 0.42, interior: 0.55 };
   }
 
+  /* 区域级概念图模板：给每层一个结构化拓扑性格（在随机 ±0.03 抖动内） */
+  var ZONE_THEME = {
+    1: { id: 'edge',      backEdge: 0.16, merge: 0.24, interior: 0.60 },  // 裂隙边缘：开阔少回环
+    2: { id: 'corridor',  backEdge: 0.34, merge: 0.40, interior: 0.64 },  // 幽暗回廊：迷宫回廊密
+    3: { id: 'mine',      backEdge: 0.10, merge: 0.16, interior: 0.66 },  // 深部矿坑：竖井直通、少合并
+    4: { id: 'heartland', backEdge: 0.40, merge: 0.46, interior: 0.56 },  // 深渊腹地：开阔回环（阳光骗局）
+    5: { id: 'gate',      backEdge: 0.24, merge: 0.50, interior: 0.62 }   // 终焉之门：圣殿紧凑多合并
+  };
+  function zoneStyle(tierId, rng) {
+    var t = ZONE_THEME[tierId] || ZONE_THEME[1];
+    var j = function (v) { return Math.max(0.04, Math.min(0.5, v + (rng ? (rng.range(-0.03, 0.03)) : 0))); };
+    return { id: t.id, backEdge: j(t.backEdge), merge: j(t.merge), interior: t.interior + (rng ? rng.range(-0.04, 0.04) : 0) };
+  }
+
   /* ---------------- 房间数与形状（层 0）：随机生长，非矩形轮廓 ---------------- */
   var ROOM_RANGES = {
     1: [10, 14], 2: [12, 17], 3: [14, 20], 4: [16, 23], 5: [18, 27]
@@ -160,7 +174,7 @@
       if (rm.type !== 'combat') return;
       if (rm.group != null && rm.group !== rm.idx) return;   // 合并房保持开敞
       if (!rng.chance(style.interior)) return;
-      var kind = rng.pick(['pillar', 'cross', 'corner', 'alcove', 'ruins']);
+      var kind = rng.pick(['pillar', 'cross', 'corner', 'alcove', 'ruins', 'ring', 'island']);
       var rects = [];
       var rc = G.Map.roomRect(rm.c, rm.r);
       var cx = (rc.x0 + rc.x1) / 2, cy = (rc.y0 + rc.y1) / 2;
@@ -184,6 +198,19 @@
         /* 上下细隔墙 */
         rects.push([rc.x0 + 40, rc.y0 + 40, rc.x1 - 40, rc.y0 + 62]);
         rects.push([rc.x0 + 40, rc.y1 - 62, rc.x1 - 40, rc.y1 - 40]);
+      } else if (kind === 'ring') {
+        /* 环形围边：外周一圈细墙，中央留大空地绕行 */
+        rects.push([cx - 150, cy - 150, cx + 150, cy - 134]);
+        rects.push([cx - 150, cy + 134, cx + 150, cy + 150]);
+        rects.push([cx - 150, cy - 150, cx - 134, cy + 150]);
+        rects.push([cx + 134, cy - 150, cx + 150, cy + 150]);
+      } else if (kind === 'island') {
+        /* 中央方岛 + 四角细柱：绕中央转圈走位 */
+        rects.push([cx - 90, cy - 90, cx + 90, cy + 90]);
+        rects.push([rc.x0 + 70, rc.y0 + 70, rc.x0 + 96, rc.y0 + 150]);
+        rects.push([rc.x1 - 96, rc.y0 + 70, rc.x1 - 70, rc.y0 + 150]);
+        rects.push([rc.x0 + 70, rc.y1 - 150, rc.x0 + 96, rc.y1 - 70]);
+        rects.push([rc.x1 - 96, rc.y1 - 150, rc.x1 - 70, rc.y1 - 70]);
       } else { /* ruins */
         var n = rng.int(3, 5);
         for (var i = 0; i < n; i++) {
@@ -208,7 +235,7 @@
     if (!tier) tier = G.TIERS[0];
     var cols = tier.grid[0], rows = tier.grid[1];
     var rng = new Rng(seedFromTier(tierId, salt));
-    var style = styleOf(rng);
+    var style = zoneStyle(tierId, rng);
 
     var worldW = cols * ROOM + (cols + 1) * WALL;
     var worldH = rows * ROOM + (rows + 1) * WALL;
@@ -435,6 +462,7 @@
       tierId: tierId, tier: tier,
       cols: cols, rows: rows,
       style: style.id,
+      theme: style.id,
       activeCount: shape.count,
       worldW: worldW, worldH: worldH,
       rooms: rooms, doorsH: doorsH, doorsV: doorsV,

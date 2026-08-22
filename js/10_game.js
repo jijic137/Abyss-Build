@@ -76,6 +76,12 @@
         e.preventDefault();
         game.player.useSkill();
       }
+      if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && game.state === 'play' && game.player &&
+          !G.UI.isScreenOn('scrBag') && !G.UI._flowOpen && !G.UI._evtOpen) {
+        e.preventDefault();
+        game.player.dodge();
+      }
+
       if (e.code === 'Escape') {
         e.preventDefault();
         if (G.UI.isScreenOn('scrBag')) { G.UI.toggleBag(); return; }
@@ -158,7 +164,7 @@
     this.materials = charDef.startMat;
     this.bag = [];
     this.carried = carried;
-    this.map = G.Map.generate(tierId || 1);
+    this.map = G.Map.generate(tierId || 1, this._dailySeed || 0);
     this.arena = this.map.worldW;
     this.map.wave = this.map.tier.waveBand[1];
     this.buildWallRects();
@@ -188,6 +194,7 @@
     G.UI.updateObjective(this.map);
     G.Audio.sfx('map_enter');
     G.Audio.setBgm(G.Save.getSettings().bgm);
+    G.Audio.startZone(tierId || 1);
     this.saveRun();
     if (!this.running) { this.running = true; this.lastT = performance.now(); requestAnimationFrame(loop); }
   };
@@ -1267,6 +1274,7 @@ for (i = 0; i < this.effects.length; i++) this.effects[i].draw(c);
     G.UI.updateObjective(this.map);
     if (!this.running) { this.running = true; this.lastT = performance.now(); requestAnimationFrame(loop); }
     G.Audio.setBgm(G.Save.getSettings().bgm);
+    G.Audio.startZone(this.map.tierId || 1);
     return true;
   };
 

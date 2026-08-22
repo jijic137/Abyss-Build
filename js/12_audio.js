@@ -363,21 +363,44 @@
   };
 
   /* —— 程序化芯片音乐 BGM —— */
-  AudioSys.prototype._initMusicPattern = function () {
-    // 小调 16 步循环：琶音 + 贝斯 + 反拍踩镲
-    this._arp = [0, 7, 12, 7, 3, 10, 15, 10, 0, 7, 12, 7, 5, 12, 17, 12];
-    this._bass = [0, 0, -5, -5, 3, 3, -2, -2, 0, 0, -5, -5, 5, 5, -2, -2];
-    this._root = 220; // A3
+  /** BGM 按区域（tierId 1~5）切换不同编曲基调 */
+  var MUSIC_MODES = {
+    1: { name: 'edge',      root: 165, bpm: 112, type: 'square',  arp: [0, 7, 12, 7, 3, 10, 15, 10, 0, 7, 12, 7, 5, 12, 17, 12], bass: [0, 0, -5, -5, 3, 3, -2, -2, 0, 0, -5, -5, 5, 5, -2, -2] },  // 裂隙边缘
+    2: { name: 'corridor', root: 147, bpm: 96,  type: 'triangle', arp: [0, 7, 12, 7, 3, 7, 12, 7, 0, 7, 12, 10, 3, 10, 15, 10], bass: [0, 0, 0, -5, 3, 3, 3, -2, 0, 0, 0, -5, 5, 5, 5, -2] },    // 幽暗回廊
+    3: { name: 'mine',      root: 110, bpm: 84,  type: 'sawtooth', arp: [0, 3, 7, 3, 12, 7, 3, 7, 0, 3, 7, 3, 12, 10, 7, 10],     bass: [0, 0, -5, -5, -5, 3, 3, 3, 0, 0, -5, -5, -5, 5, 5, 5] },        // 深部矿坑
+    4: { name: 'heartland', root: 196, bpm: 128, type: 'square',  arp: [0, 7, 12, 16, 12, 16, 12, 7, 0, 7, 12, 16, 12, 19, 12, 7], bass: [0, 0, 3, 3, 7, 7, 5, 5, 0, 0, 3, 3, 8, 8, 5, 5] },       // 深渊腹地
+    5: { name: 'gate',      root: 130, bpm: 152, type: 'sawtooth', arp: [0, 7, 12, 7, 3, 12, 15, 12, 0, 7, 12, 7, 3, 15, 12, 7],  bass: [0, -5, 0, -5, 3, -2, 3, -2, 0, -5, 0, -5, 5, 3, 5, 3] },      // 终焉之门
+    0: { name: 'corridor', root: 147, bpm: 96,  type: 'triangle', arp: [0, 7, 12, 7, 3, 7, 12, 7, 0, 7, 12, 10, 3, 10, 15, 10], bass: [0, 0, 0, -5, 3, 3, 3, -2, 0, 0, 0, -5, 5, 5, 5, -2] }
   };
 
-  AudioSys.prototype.startMusic = function () {
+  AudioSys.prototype._initMusicPattern = function (mode) {
+    mode = mode || this._musicMode || (this._zone || 0);
+    this._musicMode = (mode in MUSIC_MODES) ? mode : 0;
+    var m = MUSIC_MODES[this._musicMode];
+    this._bpm = m.bpm;
+    this._arp = m.arp.slice();
+    this._bass = m.bass.slice();
+    this._root = m.root;
+    this._wave = m.type;
+  };
+
+  AudioSys.prototype.startMusic = function (mode) {
     if (!this.ctx || this._musicOn) return;
-    this._initMusicPattern();
+    this._initMusicPattern(mode);
     this._musicOn = true;
     this._step = 0;
     this._nextNoteTime = this.ctx.currentTime + 0.08;
     var self = this;
     this._musicTimer = setInterval(function () { self._scheduler(); }, 25);
+  };
+
+  /** 进入区域时切换 BGM 基调（保留开关状态） */
+  AudioSys.prototype.startZone = function (tierId) {
+    this._zone = tierId || 0;
+    if (this._musicOn) {
+      this.stopMusic();
+      if (this._bgmEnabled) this.startMusic(this._zone);
+    }
   };
 
   AudioSys.prototype.stopMusic = function () {
@@ -399,7 +422,7 @@
     var root = this._root;
     // 琶音（每步）
     var freq = root * Math.pow(2, this._arp[step] / 12);
-    this._tone(t, { type: 'square', f0: freq, f1: freq, dur: 0.16, gain: 0.05, atk: 0.005, dest: this.musicBus, send: 0.12, detune: 8 });
+    this._tone(t, { type: this._wave, f0: freq, f1: freq, dur: 0.16, gain: 0.05, atk: 0.005, dest: this.musicBus, send: 0.12, detune: 8 });
     // 贝斯（每 4 步）
     if (step % 4 === 0) {
       var bf = (root / 2) * Math.pow(2, this._bass[step] / 12);

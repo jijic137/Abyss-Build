@@ -40,7 +40,19 @@
           if (G.grantItemOrDrop(it, p.x, p.y)) G.UI.showLootCard(it);
         } },
       { id: 'key', name: '流浪者遗物', icon: '⚿', col: '#e0c860', desc: '获得 1 把深渊钥匙',
-        apply: function () { G.game.depthKeys = (G.game.depthKeys || 0) + 1; } }
+        apply: function () { G.game.depthKeys = (G.game.depthKeys || 0) + 1; } },
+      { id: 'gold', name: '深渊币袋', icon: '◆', col: '#ffd24a', desc: '获得 40 深渊币（局外）',
+        apply: function () { G.Meta.addCurrency(40); } },
+      { id: 'armor', name: '守护石匣', icon: '⛨', col: '#7fbfe8', desc: '本局护甲 +8',
+        apply: function () {
+          p.char.mods.armor = (p.char.mods.armor || 0) + 8;
+          p.recalc();
+        } },
+      { id: 'gamble', name: '双生祭坛', icon: '⚖', col: '#c0c0cc', desc: '获得 10~24 材料，或换成随机护甲',
+        apply: function () {
+          if (Math.random() < 0.5) G.game.addMaterials(G.randInt(10, 24));
+          else { p.char.mods.armor = (p.char.mods.armor || 0) + G.randInt(1, 3); p.recalc(); }
+        } }
     ];
     return G.shuffle(pool).slice(0, 2);
   }
@@ -55,15 +67,22 @@
       if (m.dist[rm.idx] >= m.dist[m.extractRoom] * 0.45) cands.push(rm);
     });
     if (!cands.length) return;
-    var rm = G.pick(cands);
-    rm.type = 'event';
-    var rc = G.Map.roomRect(rm.c, rm.r);
-    game.events = [{
-      id: 'evt' + rm.idx,
-      x: (rc.x0 + rc.x1) / 2 + G.rand(-60, 60),
-      y: (rc.y0 + rc.y1) / 2 + G.rand(-60, 60),
-      room: rm.idx, used: false
-    }];
+    /* 事件房数量：第一层 1 个，深层最多 2 个（随机分布在不同战斗房） */
+    var maxEv = m.tierId && m.tierId > 1 ? 2 : 1;
+    var pool = G.shuffle(cands.slice());
+    var n = Math.min(maxEv, pool.length);
+    game.events = [];
+    for (var i = 0; i < n; i++) {
+      var rm = pool[i];
+      rm.type = 'event';
+      var rc = G.Map.roomRect(rm.c, rm.r);
+      game.events.push({
+        id: 'evt' + rm.idx,
+        x: (rc.x0 + rc.x1) / 2 + G.rand(-60, 60),
+        y: (rc.y0 + rc.y1) / 2 + G.rand(-60, 60),
+        room: rm.idx, used: false
+      });
+    }
   }
 
   var _nr2 = G.game.newRun;

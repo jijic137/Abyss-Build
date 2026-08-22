@@ -513,6 +513,21 @@
       cell.appendChild(G.PX.node(inst.type === 'weapon' ? G.weaponIcon(inst.def, inst.tier, 3) : G.itemIcon(inst.def, 3)));
       var sell = el('div', 'stash-sell', '售 ' + G.itemWorth(inst));
       cell.appendChild(sell);
+      if (inst.type === 'weapon' && inst.tier < 4) {
+        var ev = el('div', 'stash-evolve',
+          '↓ ' + G.rarityName(inst.tier + 1) + ' · ' +
+          (G.Meta.EVOLVE_COST ? (G.Meta.EVOLVE_COST[inst.tier + 1] + ' 币') : ''));
+        ev.style.cssText = 'margin-top:3px;font-size:10px;color:#7fe0c0;cursor:pointer;';
+        ev.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var r = G.Meta.evolveStashWeapon(inst);
+          if (!r.ok) { if (G.UI.flashText) G.UI.flashText(ev, r.msg); return; }
+          if (G.Audio && G.Audio.sfx) G.Audio.sfx('upgrade');
+          if (G.UI.flashText) G.UI.flashText(ev, '进化 → ' + G.rarityName(r.tier));
+          G.UI.renderBase();
+        });
+        cell.appendChild(ev);
+      }
       bindTip2(cell, inst);
       cell.addEventListener('click', function () {
         var t = inst.type;

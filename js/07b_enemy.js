@@ -285,8 +285,30 @@
         break;
       }
 
+      case 'orbit': {
+        /* 保持中距离环绕玩家，周期性甩出扇形弹幕 */
+        var orbitDir = (((this.t * 0.8) % 2) > 1) ? -1 : 1;
+        var tang = a + Math.PI / 2 * orbitDir;
+        var radialOff = d - def.orbitR;
+        var ang = (Math.abs(radialOff) > 40) ? a : tang;
+        this.moveTo(ang + Math.sin(this.t * 1.7) * 0.22, this.spd * mul, dt);
+        this.fireT -= dt;
+        if (this.fireT <= 0) {
+          this.fireT = def.orbitCd;
+          if (!g.map || G.Map.los(g.map, this.x, this.y, p.x, p.y)) {
+            this.shoot(a, def);
+            if (def.salvoArc) this.shoot(a - def.salvoArc / 2, def);
+            else this.shoot(a - 0.28, def);
+            if (def.salvoArc) this.shoot(a + def.salvoArc / 2, def);
+            else this.shoot(a + 0.28, def);
+          }
+        }
+        break;
+      }
+
       case 'boss1': this.boss1(dt, p, g, a, d, mul); break;
       case 'boss2': this.boss2(dt, p, g, a, d, mul); break;
+      case 'boss3': this.boss3(dt, p, g, a, d, mul); break;
     }
 
     if (this.def.shockCd) {
@@ -562,6 +584,104 @@
     }
   };
 
+  /* ------------------------------------------------------------
+     BOSS 3 —— 幽影霸主
+     阶段 1：环形弹幕 + 寒潮地板（贴近减速）
+     阶段 2（<55%）：幽灵分身直线狙击 + 大范围寒潮环
+     ------------------------------------------------------------ */
+  Enemy.prototype.boss3 = function (dt, p, g, a, d, mul) {
+    if (this.hp / this.maxHp < 0.45 && this.phase === 1) {
+      this.phase = 2;
+      G.fx('ring', { x: this.x, y: this.y, r0: 20, r1: 420, col: '#7fd8ff', w: 9, life: 0.9 });
+      G.popText(this.x, this.y - 66, '寒潮迸涌！', { col: '#7fd8ff', size: 24, life: 1.6 });
+      g.shake(20, 0.6);
+      this.state = 'idle'; this.sTimer = 0.5;
+    }
+    var ps = this.phase === 2 ? 1.25 : 1;
+    this.sTimer -= dt;
+
+    switch (this.state) {
+      case 'idle':
+        this.moveTo(a, this.spd * mul * ps, dt);
+        if (this.sTimer <= 0) {
+          var opts = ['ring', 'frost', 'ghost'];
+          this.state = G.pick(opts) + 'Wind';
+          this.sTimer = 0.55;
+        }
+        break;
+
+      case 'ringWind':
+        this.vx *= 0.82; this.vy *= 0.82;
+        if (this.sTimer <= 0) { this.state = 'ring'; this.sTimer = 0; this.volley = 0; }
+        break;
+
+      case 'ring':
+        if (this.sTimer <= 0) {
+          var n = this.phase === 2 ? 22 : 16;
+          var ang0 = this.t;
+          for (var i = 0; i < n; i++) {
+            var ang = Math.PI * 2 * i / n + ang0;
+            g.ebullets.push(new G.Bullet({
+              x: this.x + Math.cos(ang) * this.r, y: this.y + Math.sin(ang) * this.r,
+              vx: Math.cos(ang) * 235, vy: Math.sin(ang) * 235,
+              dmg: this.dmg * (this.phase === 2 ? 0.5 : 0.42), r: 7,
+              sprite: 'b_orb', col: '#6fd8ff', hostile: true, life: 7, trail: 2
+            }));
+          }
+          g.shake(6, 0.12);
+          this.volley++;
+          this.sTimer = 0.5;
+          if (this.volley >= 2 + this.phase) { this.state = 'idle'; this.sTimer = 1.2 / ps; }
+        }
+        this.vx *= 0.9; this.vy *= 0.9;
+        break;
+
+      case 'frostWind':
+        this.vx *= 0.85; this.vy *= 0.85;
+        if (this.sTimer <= 0) { this.state = 'frost'; this.sTimer = 0.06; this.frostN = 0; }
+        break;
+
+      case 'frost':
+        this.vx *= 0.9; this.vy *= 0.9;
+        this.sTimer -= dt;
+        if (this.frosts) {
+          for (var fi = this.frosts.length - 1; fi >= 0; fi--) {
+            this.frosts[fi].t -= dt;
+            if (this.frosts[fi].t <= 0) this.frosts.splice(fi, 1);
+          }
+        }
+        if (this.sTimer <= 0 && this.frostN < (this.phase === 2 ? 6 : 4)) {
+          this.frostN++;
+          this.sTimer = 0.5;
+          this.frosts = this.frosts || [];
+          this.frosts.push({ x: p.x + G.rand(-70, 140), y: p.y + G.rand(-70, 140),
+            r: 96, t: 3.2 });
+          G.fx('ring', { x: this.x, y: this.y, r0: 8, r1: 120, col: '#7fd8ff', w: 4, life: 0.45 });
+        } else if (this.sTimer <= 0) {
+          this.state = 'idle'; this.sTimer = 1.2 / ps;
+        }
+        break;
+
+      case 'ghostWind':
+        this.vx *= 0.8; this.vy *= 0.8;
+        this.chargeA = a;
+        this.flash = Math.max(this.flash, 0.55);
+        if (this.sTimer <= 0) { this.state = 'ghost'; this.sTimer = 0.62; this.ghostN = 0; }
+        break;
+
+      case 'ghost':
+        this.vx = Math.cos(this.chargeA) * (this.phase === 2 ? 680 : 560) * ps;
+        this.vy = Math.sin(this.chargeA) * (this.phase === 2 ? 680 : 560) * ps;
+        if (Math.random() < dt * 40) G.burst(this.x, this.y, 1, '#9fe8ff', 60, { size: 4 });
+        if (this.sTimer <= 0) {
+          this.ghostN++;
+          if (this.ghostN % (1 + this.phase) === 0) { this.state = 'idle'; this.sTimer = 1.1 / ps; }
+          else { this.state = 'ghostWind'; this.sTimer = 0.4; }
+        }
+        break;
+    }
+  };
+
   Enemy.prototype.enterPhase = function (n, g) {
     this.phase = n;
     G.fx('ring', { x: this.x, y: this.y, r0: 20, r1: 380, col: '#ff4a6b', w: 9, life: 0.8 });
@@ -597,6 +717,22 @@
       c.lineWidth = 2;
       c.beginPath(); c.arc(this.x, this.y, pr, 0, Math.PI * 2); c.stroke();
       c.restore();
+    }
+    if (this.frosts && this.frosts.length) {
+      for (var fdi = 0; fdi < this.frosts.length; fdi++) {
+        var fp = this.frosts[fdi];
+        var fade = Math.max(0, Math.min(1, fp.t / 3.2));
+        c.save();
+        c.globalAlpha = 0.22 * fade;
+        c.fillStyle = '#8fd8ff';
+        c.beginPath(); c.arc(fp.x, fp.y, fp.r, 0, Math.PI * 2); c.fill();
+        c.globalAlpha = 0.9 * fade;
+        c.strokeStyle = '#a8ecff'; c.lineWidth = 1.5;
+        c.beginPath(); c.arc(fp.x, fp.y, fp.r, 0, Math.PI * 2); c.stroke();
+        c.globalAlpha = 0.5 * fade;
+        c.beginPath(); c.arc(fp.x, fp.y, 6, 0, Math.PI * 2); c.fill();
+        c.restore();
+      }
     }
     if (this.affixes && this.affixes.length) {
       c.save();

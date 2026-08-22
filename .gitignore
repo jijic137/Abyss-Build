@@ -8,6 +8,9 @@ node_modules/
 # 临时截图 / 中间产物（tools/cache/ 统一存放，不入库）
 tools/cache/
 
+# 演示后端运行时数据（账号 / 存档），不入库
+server/data/
+
 # 助手内部数据（非游戏内容）
 .workbuddy/
 

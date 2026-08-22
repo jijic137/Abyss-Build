@@ -25,15 +25,14 @@
     cellFor: function (where) { return this.cell[where]; },
     adapt: function () {
       var vw = window.innerWidth || 1200;
-      var sCols = 8, sCell = 52, bCols = 7, bCell = 58;
-      if (vw < 400) { sCols = 5; sCell = 38; bCols = 5; bCell = 48; }
-      else if (vw < 520) { sCols = 5; sCell = 42; bCols = 5; bCell = 54; }
-      else if (vw < 640) { sCols = 6; sCell = 46; bCols = 6; bCell = 54; }
-      else if (vw < 820) { sCols = 7; sCell = 48; bCols = 7; bCell = 56; }
-      var changed = this.stashCols !== sCols || this.cell.stash !== sCell || this.bagCols !== bCols || this.cell.bag !== bCell;
+      /* 背包固定 7×3=21 格（G.BAG_COLS/BAG_ROWS/BAG_CELLS 为唯一事实源），
+         窄屏只缩小格子视觉尺寸，绝不再改列数——否则放置边界与容量显示会脱节。 */
+      var sCols = 8, sCell = 52, bCell = 58;
+      if (vw < 640) { sCols = 6; sCell = 46; bCell = 54; }
+      else if (vw < 820) { sCols = 7; sCell = 48; bCell = 56; }
+      var changed = this.stashCols !== sCols || this.cell.stash !== sCell || this.cell.bag !== bCell;
       this.stashCols = sCols;
       this.cell.stash = sCell;
-      this.bagCols = bCols;
       this.cell.bag = bCell;
       return changed;
     }

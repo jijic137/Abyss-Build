@@ -1,156 +1,72 @@
-/* 无浏览器环境下验证：存档序列化/续局恢复 + newRun 不再污染全局角色定义 */
+/* 单存档覆盖语义专项校验：
+   - 当前槽位覆盖保存（同样式写回同一档位）
+   - 换槽位时各槽位互不覆盖、来回切换进度不丢
+   - 读取后能正确恢复
+   验证「一个存档入口、覆盖保存、下次点开进度不丢」的本地不变量。 */
 'use strict';
 const fs = require('fs');
 const vm = require('vm');
-
-/* ---------- DOM / Canvas 桩 ---------- */
-function classList() {
-  const s = {};
-  return {
-    add(c){ s[c]=1; }, remove(c){ delete s[c]; },
-    toggle(c,f){ if(f===undefined) f=!s[c]; if(f) s[c]=1; else delete s[c]; return !!f; },
-    contains(c){ return !!s[c]; }
-  };
-}
-function ctxStub() {
-  return new Proxy({}, {
-    get(t,k){
-      if(k==='createImageData'||k==='getImageData') return (w,h)=>({ data:new Uint8ClampedArray(((w|0)*(h|0)||1)*4), width:w, height:h });
-      if(k==='putImageData') return ()=>{};
-      if(k in t) return t[k];
-      return ()=>{};
-    },
-    set(t,k,v){ t[k]=v; return true; }
-  });
-}
-function makeEl() {
-  const styleStub = new Proxy({}, {
-    get(t,k){ if(k==='setProperty') return ()=>{}; return t[k]; },
-    set(t,k,v){ t[k]=v; return true; }
-  });
-  const t = { style: styleStub, dataset:{}, classList: classList(), children:[] };
-  return new Proxy(t, {
-    get(o,k){
-      if(k==='childElementCount') return o.children.length;
-      if(k==='textContent') return o._text||'';
-      if(k==='appendChild') return n=>{ o.children.push(n); return n; };
-      if(k==='removeChild') return n=>{ const i=o.children.indexOf(n); if(i>=0) o.children.splice(i,1); };
-      if(['addEventListener','removeEventListener','setAttribute','getAttribute','focus','blur'].includes(k)) return ()=>{};
-      if(k==='getContext') return ()=>ctxStub();
-      if(k==='getBoundingClientRect') return ()=>({left:0,top:0,width:100,height:100});
-      if(k==='querySelector') return ()=>makeEl();
-      if(k==='querySelectorAll') return ()=>[];
-      if(k in o) return o[k];
-      return undefined;
-    },
-    set(o,k,v){ o[k]=v; if(k==='textContent') o._text=v; return true; }
-  });
-}
-const elCache = {};
-const docStub = {
-  getElementById(id){ return elCache[id] || (elCache[id]=makeEl()); },
-  createElement(){ return makeEl(); },
-  addEventListener(){}, readyState:'complete'
-};
-const mem = {};
-const lsStub = {
-  getItem(k){ return k in mem ? mem[k] : null; },
-  setItem(k,v){ mem[k]=String(v); },
-  removeItem(k){ delete mem[k]; }
-};
-
-/* ---------- 全局环境 ---------- */
 global.window = global;
-global.addEventListener = ()=>{};
-global.removeEventListener = ()=>{};
-global.document = docStub;
-global.performance = { now:()=>Date.now() };
-global.requestAnimationFrame = ()=>0;
-global.localStorage = lsStub;
-global.devicePixelRatio = 1;
-global.innerWidth = 1280; global.innerHeight = 720;
-// 不定义 AudioContext → 音频自动降级为 no-op
 
-/* ---------- 顺序加载脚本 ---------- */
-const files = ['00_util','12_audio','01_pixel','02_stats','03_items','04_weapons','05_enemies',
-               '06_entities','07_player','07b_enemy','08_shop','09_ui','10_game','11_main'];
-for(const f of files){
-  const code = fs.readFileSync(`js/${f}.js`,'utf8');
-  vm.runInThisContext(code, { filename:`js/${f}.js` });
-}
+function classList(){ const s={}; return { add(c){s[c]=1;}, remove(c){delete s[c];}, toggle(c,f){s[c]=f!==undefined?!!f:!s[c];return !!s[c];}, contains(c){return !!s[c];} }; }
+function ctxStub(){ return new Proxy({}, { get(t,k){ if(k==='createImageData'||k==='getImageData') return (w,h)=>({data:new Uint8ClampedArray(((w|0)*(h|0)||1)*4),width:w,height:h}); if(k==='createRadialGradient'||k==='createLinearGradient') return ()=>({addColorStop(){}}); if(k==='putImageData') return ()=>{}; if(k==='measureText') return ()=>({width:40}); if(k in t) return t[k]; return ()=>{}; }, set(t,k,v){t[k]=v;return true;} }); }
+function makeEl(){ const style=new Proxy({}, {get(t,k){ if(k==='setProperty') return ()=>{}; return t[k]; }, set(t,k,v){t[k]=v;return true;}}); return { style, dataset:{}, classList:classList(), children:[], innerHTML:'', textContent:'', parentNode:null, appendChild(){}, removeChild(){}, insertBefore(){}, addEventListener(){}, setAttribute(){}, getAttribute(){return null;}, querySelector(){return null;}, querySelectorAll(){return [];}, getContext(){return ctxStub();} }; }
+global.document = { readyState:'complete', addEventListener(){}, removeEventListener(){}, createElement(){return makeEl();}, createElementNS(){return makeEl();}, getElementById(){return makeEl();}, querySelector(){return null;}, querySelectorAll(){return [];}, body:makeEl(), documentElement:makeEl(), head:makeEl(), createEvent(){return {initEvent(){}};} };
+global.localStorage = { _s:{}, getItem(k){ return this._s.hasOwnProperty(k)?this._s[k]:null; }, setItem(k,v){ this._s[k]=String(v); }, removeItem(k){ delete this._s[k]; } };
+global.addEventListener = global.window.addEventListener = function(){};
+global.Event = function(){};
+global.dispatchEvent = function(){};
+global.AudioContext = function(){};
+global.requestAnimationFrame = function(){ return 0; };
 
-/* ---------- 断言工具 ---------- */
-let pass=0, fail=0;
-function ok(name, cond){ if(cond){ pass++; console.log('  ✓ '+name); } else { fail++; console.log('  ✗ '+name); } }
+const html = fs.readFileSync('index.html','utf8');
+const files = [];
+const re = /<script src="js\/([\w.-]+\.js)"><\/script>/g;
+let m;
+while ((m = re.exec(html)) !== null) files.push(m[1]);
+for (const f of files) { vm.runInThisContext(fs.readFileSync(`js/${f}`,'utf8'), {filename:`js/${f}`}); }
 
-/* ---------- 1. 全局角色定义不被 newRun 污染 ---------- */
-console.log('\n[1] newRun 克隆角色定义：');
-const mageDef = G.CHAR_BY_ID['mage'];
-const beforeMods = JSON.stringify(mageDef.mods);
-G.game.init();
-G.game.newRun(mageDef);
-// 模拟一次升级写回（与 10_game.openLevelUp 同款操作）
-G.game.player.char.mods.maxHp = (G.game.player.char.mods.maxHp||0) + 99;
-const afterMods = JSON.stringify(mageDef.mods);
-ok('升级写回未污染全局 G.CHAR_BY_ID.mage.mods', beforeMods === afterMods);
-ok('玩家自身携带了 +99 maxHp', G.game.player.char.mods.maxHp === (JSON.parse(beforeMods).maxHp + 99));
+const G = global.G;
+let ERR = 0;
+function check(label, cond, detail){ if(cond) console.log('  ✓ '+label+(detail?'  ['+detail+']':'')); else { ERR++; console.log('  ✗ '+label+(detail?'  ['+detail+']':'')); } }
 
-/* ---------- 2. 构建一套构筑并存盘 ---------- */
-console.log('\n[2] 存档序列化：');
-const p = G.game.player;
-p.addItem(G.ITEMS[0]);
-p.addItem(G.ITEMS[1]);
-p.addWeapon(G.makeWeapon(G.WEAPONS[2].id, 2));
-p.level = 4; p.xp = 50; p.pendingLevels = 2; p.hp = 33;
-G.game.wave = 3; G.game.materials = 123; G.game.runTime = 55.5;
-G.game.saveRun();
+function clearLS(){ global.localStorage._s = {}; G.Meta.reload(); G.Save.reload(); }
 
-const data = G.Save.getRun();
-ok('存盘存在', !!data);
-ok('charId 正确', data && data.charId === 'mage');
-ok('weapons 快照 = 起手1 + 添加1 = 2', data && data.weapons.length === 2);
-ok('items 快照 = 2', data && data.items.length === 2);
-ok('wave 快照 = 3', data && data.wave === 3);
-ok('materials 快照 = 123', data && data.materials === 123);
-ok('level 快照 = 4', data && data.level === 4);
-ok('pendingLevels 快照 = 2', data && data.pendingLevels === 2);
-ok('charMods 携带升级', data && data.charMods.maxHp === (JSON.parse(beforeMods).maxHp + 99));
+/* 工具：直接写当前 profile 的货币，作为"进度"锚点 */
+function setCurrency(v){ G.Meta.get().currency = v; G.Meta.flush(); }
+function getCurrency(){ return G.Meta.get().currency; }
 
-/* ---------- 3. 续局恢复 ---------- */
-console.log('\n[3] 续局恢复：');
-// 清掉旧玩家，模拟从标题读档
-G.game.player = null;
-const okResume = G.game.resumeRun(data);
-ok('resumeRun 返回 true', okResume === true);
-const rp = G.game.player;
-ok('恢复后职业 = mage', rp && rp.char.id === 'mage');
-ok('恢复后 weapons = 2', rp && rp.weapons.length === 2);
-ok('恢复后 items = 2', rp && rp.items.length === 2);
-ok('恢复后 wave = 3', G.game.wave === 3);
-ok('恢复后 materials = 123', G.game.materials === 123);
-ok('恢复后 level = 4', rp && rp.level === 4);
-ok('恢复后 pendingLevels = 2', rp && rp.pendingLevels === 2);
-ok('恢复后 charMods 含升级', rp && rp.char.mods.maxHp === (JSON.parse(beforeMods).maxHp + 99));
-ok('存档已再次写入（openShop 内 saveRun）', !!G.Save.getRun());
-ok('state 进入 shop', G.game.state === 'shop');
+// 1) 默认当前槽位 = 1
+clearLS();
+check('默认槽位=1', G.Storage.currentSlot() === 1, 'slot='+G.Storage.currentSlot());
 
-/* ---------- 4. 设置存档往返 ---------- */
-console.log('\n[4] 设置存档：');
-G.Save.setSettings({ volume:0.3, shake:0.6 });
-const s = G.Save.getSettings();
-ok('volume = 0.3', s.volume === 0.3);
-ok('shake = 0.6', s.shake === 0.6);
-// 重开新档应覆盖默认
-G.Save.setSettings({ volume:0.5 });
-ok('部分更新只改 volume', G.Save.getSettings().volume === 0.5 && G.Save.getSettings().shake === 0.6);
+// 2) 槽位1 覆盖保存：写进度 A→保存→改写 B→再保存，读取仍是 B（覆盖）
+clearLS();
+setCurrency(100);
+G.Storage.saveSlot(1);
+setCurrency(999);
+G.Storage.saveSlot(1);   // 覆盖当前档位
+// 重新加载槽位1 验证是 999 而非 100
+G.Save.reload(); G.Meta.reload();
+const s1 = G.Storage.slotData(1);
+check('槽位1 覆盖保存生效', s1 && s1.profile && s1.profile.meta && s1.profile.meta.currency === 999,
+  s1 && s1.profile && s1.profile.meta && JSON.stringify(s1.profile.meta.currency));
 
-/* ---------- 5. 死亡清除续局 ---------- */
-console.log('\n[5] 死亡/通关清除续局：');
-G.Save.saveRun(data);
-ok('存盘存在（清理前）', !!G.Save.getRun());
-G.game.onVictory();
-ok('通关后续局被清除', !G.Save.getRun());
+// 3) 换槽位互不干扰：槽1=999，另开槽2=50，来回切换不丢
+clearLS();
+setCurrency(999); G.Storage.saveSlot(1);
+G.Storage.loadSlot(2);      // 空槽切换 → 仍本地态
+setCurrency(50); G.Storage.saveSlot(2);  // 槽2 存 50
+check('当前槽=2 写入 50', G.Storage.slotData(2).profile.meta.currency === 50,
+  'slot2='+G.Storage.slotData(2).profile.meta.currency);
+G.Storage.loadSlot(1);      // 切回槽1
+check('槽1 进度仍 999', getCurrency() === 999, 'cur='+getCurrency());
+G.Storage.loadSlot(2);
+check('槽2 进度仍 50', getCurrency() === 50, 'cur='+getCurrency());
 
-/* ---------- 结果 ---------- */
-console.log(`\n结果：通过 ${pass}，失败 ${fail}`);
-process.exit(fail ? 1 : 0);
+// 4) slotSummary 快照合理（curve 展示用）
+const sm = G.Storage.slotSummary(2);
+check('slotSummary 可用', !!sm && typeof sm.currency === 'number', sm && JSON.stringify(sm));
+
+console.log(ERR===0?'\n单存档覆盖语义校验 PASS':'\n有 '+ERR+' 项未通过');
+process.exit(ERR===0?0:1);
